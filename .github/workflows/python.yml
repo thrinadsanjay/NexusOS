@@ -1,0 +1,45 @@
+name: Python
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install ruff==0.16.9
+      - run: ruff check .
+      - run: ruff format --check packages/nexus-cli scripts tests
+
+  tests:
+    name: Unit tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.14 is the Python in Ubuntu 26.04; 3.11 is the declared minimum.
+        python: ["3.11", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install system tools used by tests
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xorriso shellcheck
+      - run: python -m pip install -e "packages/nexus-cli[test]" pyyaml pytest
+      - name: Run tests
+        run: python -m pytest -ra -m "not slow"

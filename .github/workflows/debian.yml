@@ -1,0 +1,45 @@
+name: Debian packages
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+    paths: ["packages/**", "branding/**", "desktop/**", "configs/**", "scripts/package/**", "scripts/validation/**"]
+  pull_request:
+    paths: ["packages/**", "branding/**", "desktop/**", "configs/**", "scripts/package/**", "scripts/validation/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  metadata:
+    name: Debian metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python3 scripts/validation/validate_debian.py
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends shellcheck desktop-file-utils
+      - run: shellcheck packages/*/debian/*.preinst packages/*/debian/*.postrm scripts/package/*.sh
+      - run: desktop-file-validate packages/nexusos-desktop/applications/*.desktop
+
+  build:
+    name: Build and install-test on Ubuntu 26.04
+    needs: metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build packages in ubuntu:26.04 (unprivileged builder, lintian)
+        run: scripts/package/build-in-container.sh --out build/debs
+      - name: Validate built package contents
+        run: python3 scripts/validation/validate_debian.py --debs build/debs
+      - name: Install / upgrade / remove test in a fresh ubuntu:26.04 container
+        run: scripts/validation/test-packages-container.sh build/debs
+      - run: scripts/build/checksums.sh generate build/debs
+      # Development artefacts for review only; nothing is published as a release.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nexusos-debs-${{ github.sha }}
+          path: |
+            build/debs/*.deb
+            build/debs/SHA256SUMS
+          retention-days: 7

@@ -1,0 +1,37 @@
+name: Branding assets
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+    paths: ["branding/**", "desktop/**", "configs/**", "scripts/build/**", "scripts/validation/validate_branding.py"]
+  pull_request:
+    paths: ["branding/**", "desktop/**", "configs/**", "scripts/build/**", "scripts/validation/validate_branding.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate and render branding
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Install renderers and fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends librsvg2-bin optipng webp fonts-inter fonts-jetbrains-mono shellcheck
+      - run: python scripts/validation/validate_branding.py
+      - run: python scripts/build/generate_theme_colors.py --check
+      - run: node --check desktop/panels/org.kde.plasma.desktop-layout.js
+      - run: shellcheck configs/shell/nexusos-banner.sh configs/kde/xdg/plasma-workspace/env/nexusos-xdg.sh scripts/build/*.sh
+      - name: Render PNG/WebP derivatives
+        run: scripts/build/render-branding.sh build/branding
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nexusos-branding-previews-${{ github.sha }}
+          path: build/branding
+          retention-days: 7

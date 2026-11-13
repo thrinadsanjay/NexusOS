@@ -1,0 +1,36 @@
+name: YAML and manifests
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+    paths: ["**/*.yaml", "**/*.yml", "manifests/**", "scripts/validation/validate_manifests.py"]
+  pull_request:
+    paths: ["**/*.yaml", "**/*.yml", "manifests/**", "scripts/validation/validate_manifests.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  yaml:
+    name: YAML syntax and manifest schema
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install yamllint pyyaml
+      - run: yamllint -s .
+      - run: python scripts/validation/validate_manifests.py
+
+  archive:
+    name: Package names exist in Ubuntu 26.04 (resolute)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install pyyaml
+      - run: python scripts/validation/validate_manifests.py --check-archive
