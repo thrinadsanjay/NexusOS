@@ -1,0 +1,34 @@
+# Repository-level tool configuration (the installable Python project lives in packages/nexus-cli).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "slow: builds packages or images",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["build", "packages/nexus-cli/nexus_cli/templates"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = [
+    "S603",  # subprocess with argv lists is the intended, audited pattern
+    "S607",  # programs are resolved via PATH deliberately (apt-get, docker, ...)
+    "RUF001", "RUF003",  # box-drawing / typographic characters are intentional in UI text
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S104", "S108", "S314"]
+"scripts/**" = ["S310"]
+# Parses the repository's own SVG masters, not untrusted input.
+"scripts/validation/validate_branding.py" = ["S314"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Typer declares CLI parameters through default values by design.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["nexus_cli", "tests"]

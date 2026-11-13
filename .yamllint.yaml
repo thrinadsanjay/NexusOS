@@ -1,0 +1,12 @@
+extends: default
+ignore: |
+  build/
+  .venv/
+rules:
+  line-length:
+    max: 180
+  document-start: disable
+  truthy:
+    allowed-values: ["true", "false", "on"]
+  comments:
+    min-spaces-from-content: 1

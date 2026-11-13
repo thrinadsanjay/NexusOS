@@ -12,3 +12,46 @@
 
 pkg/
 src/
+
+# --- NexusOS build artefacts (never committed) ---
+/build/
+*.iso
+*.img
+*.qcow2
+*.squashfs
+*.buildinfo
+*.changes
+SHA256SUMS
+SHA512SUMS
+
+# Rendered branding derivatives (masters are SVG)
+branding/**/*.png
+branding/**/*.webp
+desktop/**/*.png
+desktop/**/*.jpg
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Debian build directories created in-tree by dpkg-buildpackage
+packages/*/debian/.debhelper/
+packages/*/debian/debhelper-build-stamp
+packages/*/debian/files
+packages/*/debian/*.substvars
+packages/*/debian/*.debhelper.log
+packages/*/debian/rendered/
+packages/*/debian/nexus-cli/
+packages/*/debian/nexusos-*/
+packages/*/.pybuild/
+
+# Editors
+.idea/
+.vscode/
+*.swp
