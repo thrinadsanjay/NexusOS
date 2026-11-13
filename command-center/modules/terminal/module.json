@@ -1,0 +1,10 @@
+{
+  "id": "terminal",
+  "title": "Terminal & SSH",
+  "order": 40,
+  "icon": "utilities-terminal",
+  "description": "Local terminals, SSH profiles, credentials, host keys and SFTP",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}
