@@ -6,10 +6,10 @@ import os
 import shutil
 from pathlib import Path
 
-from nexus_cli.core import runner
-from nexus_cli.core.logging import get_logger
-from nexus_cli.models import CleanupItem
-from nexus_cli.services.packages import simulate_autoremove_count
+from nexus_core import runner
+from nexus_core.log import get_logger
+from nexus_core.models import CleanupItem
+from nexus_core.packages import simulate_autoremove_count
 
 log = get_logger("cleanup")
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import shlex
 from pathlib import Path
 
-from nexus_cli.models import OSRelease
+from nexus_core.models import OSRelease
 
 OS_RELEASE_PATHS = (Path("/etc/os-release"), Path("/usr/lib/os-release"))
 NEXUSOS_RELEASE_PATH = Path("/usr/lib/nexusos/release")

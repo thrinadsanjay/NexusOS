@@ -10,9 +10,15 @@ from types import ModuleType
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CLI_SRC = REPO_ROOT / "packages" / "nexus-cli"
-if str(CLI_SRC) not in sys.path:
-    sys.path.insert(0, str(CLI_SRC))
+PYTHON_SOURCES = (
+    REPO_ROOT / "command-center" / "backend",
+    REPO_ROOT / "command-center" / "privileged-agent",
+    REPO_ROOT / "command-center" / "frontend",
+    REPO_ROOT / "packages" / "nexus-cli",
+)
+for _src in PYTHON_SOURCES:
+    if str(_src) not in sys.path:
+        sys.path.insert(0, str(_src))
 
 
 def load_script(relative: str) -> ModuleType:

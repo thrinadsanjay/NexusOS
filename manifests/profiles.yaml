@@ -1,0 +1,42 @@
+# NexusOS installation profiles. The Command Center is part of every profile.
+# Profiles are applied on demand (`nexus profiles apply <id>` / Command Center > Software Center);
+# none of the optional profiles is installed automatically.
+schema_version: 1
+profiles:
+  - id: base-desktop
+    name: Base Desktop
+    default: true
+    description: KDE Plasma, Nexus Command Center, CLI, terminal & SSH workspace, storage, network and files.
+    manifests: [base, desktop]
+    nexusos_packages: [nexusos-desktop, nexusos-command-center, nexus-cli]
+    applications: []
+  - id: development
+    name: Development Workstation
+    description: Toolchains, Git, Python tooling, Docker Engine + Compose and KVM/QEMU/libvirt.
+    manifests: [development]
+    packages: [docker.io, docker-compose-v2, docker-buildx, qemu-system-x86, libvirt-daemon-system, libvirt-clients, virt-manager, ovmf]
+    nexusos_packages: []
+    applications: []
+  - id: private-cloud-host
+    name: Private Cloud Host
+    description: Docker, KVM/libvirt, the native NGINX gateway and the Private Cloud application.
+    manifests: []
+    packages: [docker.io, docker-compose-v2, qemu-system-x86, libvirt-daemon-system, libvirt-clients, certbot]
+    nexusos_packages: [nexusos-gateway]
+    applications: [private-cloud]
+  - id: infrastructure-ops
+    name: Infrastructure Operations
+    description: NexusOps and Ansible tooling (Ansible UI once it exists); Keycloak only when an app requires it.
+    manifests: []
+    packages: [docker.io, docker-compose-v2, ansible]
+    nexusos_packages: [nexusos-gateway]
+    applications: [nexusops]
+  - id: local-ai
+    name: Local AI
+    description: Ollama (external, installed on request), native chat; Open WebUI optional; NVIDIA CUDA optional.
+    manifests: []
+    packages: []
+    nexusos_packages: []
+    external: [ollama]
+    applications: []
+    optional_applications: [open-webui]

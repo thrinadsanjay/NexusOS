@@ -9,8 +9,8 @@ from importlib.resources.abc import Traversable
 from pathlib import Path
 from string import Template
 
-from nexus_cli.core import runner
-from nexus_cli.core.errors import DependencyMissingError, ValidationError
+from nexus_core import runner
+from nexus_core.errors import DependencyMissingError, ValidationError
 
 PROJECT_NAME_RE = re.compile(r"^[a-z][a-z0-9_-]{0,62}$")
 
@@ -70,7 +70,7 @@ def _walk(node: Traversable, prefix: Path = Path()) -> list[tuple[Path, Traversa
 def create_fastapi_project(name: str, parent: Path) -> tuple[Path, list[Path]]:
     validate_project_name(name)
     target = prepare_target(parent, name)
-    root = resources.files("nexus_cli.templates").joinpath("fastapi")
+    root = resources.files("nexus_core.templates").joinpath("fastapi")
     created: list[Path] = []
     target.mkdir(parents=True, exist_ok=True)
     for rel, source in sorted(_walk(root), key=lambda e: str(e[0])):

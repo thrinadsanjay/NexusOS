@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from nexus_cli.core.logging import get_logger
+from nexus_core.log import get_logger
 
 log = get_logger("runner")
 

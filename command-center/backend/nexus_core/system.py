@@ -8,10 +8,10 @@ import shutil
 import socket
 from pathlib import Path
 
-from nexus_cli.core import runner
-from nexus_cli.core.logging import get_logger
-from nexus_cli.models import DiskInfo, MemoryInfo, SystemInfo
-from nexus_cli.services.release import read_os_release
+from nexus_core import runner
+from nexus_core.log import get_logger
+from nexus_core.models import DiskInfo, MemoryInfo, SystemInfo
+from nexus_core.release import read_os_release
 
 log = get_logger("system")
 

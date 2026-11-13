@@ -1,10 +1,11 @@
 # Repository-level tool configuration (the installable Python project lives in packages/nexus-cli).
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "command-center/tests"]
 addopts = "-ra"
 markers = [
     "slow: builds packages or images",
+    "gui: starts the Qt/QML Command Center (needs PySide6 and an offscreen platform)",
 ]
 
 [tool.ruff]
@@ -21,7 +22,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S104", "S108", "S314"]
+"tests/**" = ["S101", "S104", "S105", "S106", "S108", "S314"]
+"command-center/tests/**" = ["S101", "S104", "S105", "S106", "S108", "S314", "E501"]
+"conftest.py" = ["S101"]
 "scripts/**" = ["S310"]
 # Parses the repository's own SVG masters, not untrusted input.
 "scripts/validation/validate_branding.py" = ["S314"]

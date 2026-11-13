@@ -8,8 +8,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from nexus_cli.core import runner
-from nexus_cli.models import ToolInfo
+from nexus_core import runner
+from nexus_core.models import ToolInfo
 
 _VERSION_RE = re.compile(r"v?(\d+\.\d+(?:\.\d+)?(?:[-+~][0-9A-Za-z.\-+~]*)?)")
 

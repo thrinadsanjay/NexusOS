@@ -7,11 +7,10 @@ import sys
 from typing import Any
 
 import typer
+from nexus_core.errors import AbortedError
 from pydantic import BaseModel
 from rich.console import Console
 from rich.theme import Theme
-
-from nexus_cli.core.errors import AbortedError
 
 NEXUS_THEME = Theme(
     {
@@ -55,3 +54,31 @@ def confirm(question: str, default: bool = False) -> bool:
             hint="run the command from an interactive terminal",
         )
     return typer.confirm(question, default=default)
+
+
+def table(title: str, columns: list[str], rows: list[list[Any]]) -> None:
+    """Render a simple Rich table (shared by v0.2 command groups)."""
+    from rich.table import Table
+
+    t = Table(title=title, title_style="accent", header_style="muted")
+    for column in columns:
+        t.add_column(column)
+    for row in rows:
+        t.add_row(*["" if v is None else str(v) for v in row])
+    console.print(t)
+
+
+def run_agent(op: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Call the management agent, streaming progress/log lines to stderr."""
+    from nexus_core import agent_client
+
+    def show(event: dict[str, Any]) -> None:
+        if event.get("type") == "log":
+            err_console.print(event["line"], style="muted", highlight=False, markup=False)
+        elif event.get("type") == "progress":
+            err_console.print(
+                f"[accent]{event.get('phase', '')}[/accent] {event.get('percent', 0):5.1f}% {event.get('message', '')}",
+                highlight=False,
+            )
+
+    return agent_client.call(op, params or {}, on_event=show)

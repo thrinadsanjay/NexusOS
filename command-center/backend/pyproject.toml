@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexus-core"
+version = "0.2.0"
+description = "Shared NexusOS management backend (CLI, Command Center, management agent)"
+license = "GPL-2.0-or-later"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.5", "httpx>=0.27", "PyYAML>=6"]
+
+[project.optional-dependencies]
+ssh = ["paramiko>=3", "secretstorage>=3.3"]
+
+[project.scripts]
+nexus-askpass = "nexus_core.ssh.askpass:main"
+
+[tool.setuptools.packages.find]
+include = ["nexus_core*"]
+
+[tool.setuptools.package-data]
+nexus_core = ["templates/**/*"]

@@ -7,8 +7,8 @@ from collections.abc import Callable
 from typing import ParamSpec, TypeVar
 
 import typer
+from nexus_core.errors import NexusError
 
-from nexus_cli.core.errors import NexusError
 from nexus_cli.core.output import err_console
 
 P = ParamSpec("P")

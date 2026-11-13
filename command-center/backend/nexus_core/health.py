@@ -6,10 +6,9 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 
-from nexus_cli.core import runner
-from nexus_cli.models import HealthCheck, HealthReport
-from nexus_cli.services import system
-from nexus_cli.services.release import read_os_release
+from nexus_core import runner, system
+from nexus_core.models import HealthCheck, HealthReport
+from nexus_core.release import read_os_release
 
 DISK_WARN_PERCENT = 85.0
 DISK_FAIL_PERCENT = 95.0
