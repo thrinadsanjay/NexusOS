@@ -5,16 +5,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import typer
+from nexus_core import cleanup as cleanup_service
+from nexus_core import health as health_service
+from nexus_core import packages, runner
+from nexus_core.errors import AbortedError, NexusError
+from nexus_core.system import collect_system_info, human_bytes, human_duration
 from rich.table import Table
 
-from nexus_cli.core import runner
 from nexus_cli.core.decorators import handle_errors
-from nexus_cli.core.errors import AbortedError, NexusError
-from nexus_cli.core.output import confirm, console, print_json, status_text
-from nexus_cli.services import cleanup as cleanup_service
-from nexus_cli.services import health as health_service
-from nexus_cli.services import packages
-from nexus_cli.services.system import collect_system_info, human_bytes, human_duration
+from nexus_cli.core.output import confirm, console, print_json, status_text, table
 
 app = typer.Typer(help="System information, health checks, updates and cleanup.", no_args_is_help=True)
 
@@ -164,3 +163,89 @@ def cleanup(
         else:
             freed = sum(cleanup_service.clean_user_path(Path(p)) for p in item.paths)
             console.print(status_text("ok") + f" {item.id}: freed {human_bytes(freed)}")
+
+
+# ----------------------------------------------------------------------------- v0.2
+@app.command("services")
+@handle_errors
+def services_cmd(
+    action: str = typer.Argument("list", help="list | status | start | stop | restart | enable | disable | logs"),
+    unit: str | None = typer.Argument(None, help="systemd unit, e.g. nginx.service"),
+    all_units: bool = typer.Option(False, "--all", help="List every service, not only NexusOS-manageable ones."),
+    json_output: bool = typer.Option(False, "--json", help="Emit JSON."),
+) -> None:
+    """Inspect and control approved systemd services (changes are authorized by polkit)."""
+    from nexus_core import activity
+    from nexus_core import services as svc
+
+    if action == "list":
+        units = [u for u in svc.list_units() if all_units or u.approved]
+        if json_output:
+            print_json(units)
+            return
+        table(
+            "Services" + ("" if all_units else " (manageable by NexusOS)"),
+            ["Unit", "Active", "Sub", "Description"],
+            [[u.name, u.active, u.sub, u.description] for u in units],
+        )
+        return
+    if not unit:
+        raise NexusError("a unit name is required", hint="e.g. nexus system services restart nginx.service")
+    if action == "status":
+        console.print(f"{unit}: {svc.is_active(unit)}")
+    elif action == "logs":
+        console.print(svc.logs(unit), markup=False, highlight=False)
+    elif action in ("start", "stop", "restart", "enable", "disable"):
+        console.print(
+            f"[muted]Will run:[/muted] systemctl {action} {unit}  [muted](polkit asks for authorization)[/muted]"
+        )
+        if action in ("stop", "disable") and not confirm(f"{action} {unit}?"):
+            raise AbortedError("cancelled")
+        svc.control(unit, action)  # type: ignore[arg-type]
+        activity.record(f"service.{action}", unit, "ok")
+        console.print(f"[ok]{unit}: {action} done[/ok]")
+    else:
+        raise NexusError(f"unknown action {action!r}")
+
+
+@app.command("settings")
+@handle_errors
+def settings_cmd(
+    key: str | None = typer.Argument(None, help="hostname | timezone | ntp | open"),
+    value: str | None = typer.Argument(None, help="new value (hostname, time zone, on/off, or a KCM name)"),
+) -> None:
+    """Show system settings, change hostname/time zone/NTP, or open a KDE settings module."""
+    from nexus_core import settings as st
+
+    if key is None:
+        t = st.time_status()
+        table(
+            "System settings",
+            ["Setting", "Value"],
+            [
+                ["Hostname", st.hostname()],
+                ["Time zone", t.timezone],
+                ["NTP enabled", t.ntp_enabled],
+                ["Clock synchronised", t.ntp_synchronized],
+                ["Locale", st.locale_status().get("System Locale", "")],
+            ],
+        )
+        table(
+            "Desktop settings (open with: nexus system settings open <module>)",
+            ["Category", "Setting", "Module"],
+            [[e.category, e.title, e.kcm or f"native:{e.native}"] for e in st.CATALOG],
+        )
+        return
+    if value is None:
+        raise NexusError("a value is required")
+    if key == "hostname":
+        st.set_hostname(value)
+    elif key == "timezone":
+        st.set_timezone(value)
+    elif key == "ntp":
+        st.set_ntp(value.lower() in ("on", "true", "yes", "1"))
+    elif key == "open":
+        st.open_kcm(value)
+    else:
+        raise NexusError(f"unknown setting {key!r}")
+    console.print("[ok]done[/ok]")

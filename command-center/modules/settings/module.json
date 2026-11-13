@@ -1,0 +1,10 @@
+{
+  "id": "settings",
+  "title": "System Settings",
+  "order": 30,
+  "icon": "preferences-system",
+  "description": "Unified entry point to native settings and KDE settings modules",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}
