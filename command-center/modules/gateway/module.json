@@ -1,0 +1,10 @@
+{
+  "id": "gateway",
+  "title": "Gateway",
+  "order": 70,
+  "icon": "network-server",
+  "description": "Native NGINX routes, certificates and activation",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

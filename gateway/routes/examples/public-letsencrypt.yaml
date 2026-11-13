@@ -1,0 +1,9 @@
+# Example public route with Let's Encrypt (requires a public DNS name pointing here and port 80 reachable).
+id: public-chat
+hostname: chat.example.com
+backend_host: 127.0.0.1
+backend_port: 3000
+tls: letsencrypt
+websocket: true
+access: public
+approved: false

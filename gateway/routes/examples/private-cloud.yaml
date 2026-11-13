@@ -1,0 +1,14 @@
+# Example route: the Private Cloud web UI on the LAN with an internal-CA certificate.
+# Copy into /etc/nexusos/gateway/routes/ via `nexus gateway routes add`, never by hand.
+id: private-cloud
+hostname: cloud.nexus.lan
+path_prefix: /
+backend_scheme: http
+backend_host: 127.0.0.1
+backend_port: 4100
+tls: internal-ca
+redirect_http: true
+websocket: false
+access: lan
+approved: false
+enabled: true

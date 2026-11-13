@@ -1,0 +1,124 @@
+{
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "hostname": {
+      "title": "Hostname",
+      "type": "string"
+    },
+    "path_prefix": {
+      "default": "/",
+      "title": "Path Prefix",
+      "type": "string"
+    },
+    "backend_scheme": {
+      "default": "http",
+      "enum": [
+        "http",
+        "https"
+      ],
+      "title": "Backend Scheme",
+      "type": "string"
+    },
+    "backend_host": {
+      "default": "127.0.0.1",
+      "title": "Backend Host",
+      "type": "string"
+    },
+    "backend_port": {
+      "title": "Backend Port",
+      "type": "integer"
+    },
+    "tls": {
+      "default": "none",
+      "enum": [
+        "none",
+        "self-signed",
+        "internal-ca",
+        "letsencrypt",
+        "imported"
+      ],
+      "title": "Tls",
+      "type": "string"
+    },
+    "certificate": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "certificate name for internal-ca/self-signed/imported",
+      "title": "Certificate"
+    },
+    "redirect_http": {
+      "default": true,
+      "title": "Redirect Http",
+      "type": "boolean"
+    },
+    "websocket": {
+      "default": false,
+      "title": "Websocket",
+      "type": "boolean"
+    },
+    "access": {
+      "default": "lan",
+      "enum": [
+        "localhost",
+        "lan",
+        "public"
+      ],
+      "title": "Access",
+      "type": "string"
+    },
+    "allow_public_backend": {
+      "default": false,
+      "title": "Allow Public Backend",
+      "type": "boolean"
+    },
+    "max_body_size": {
+      "default": "64m",
+      "title": "Max Body Size",
+      "type": "string"
+    },
+    "app_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "App Id"
+    },
+    "approved": {
+      "default": false,
+      "title": "Approved",
+      "type": "boolean"
+    },
+    "enabled": {
+      "default": true,
+      "title": "Enabled",
+      "type": "boolean"
+    },
+    "description": {
+      "default": "",
+      "title": "Description",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "hostname",
+    "backend_port"
+  ],
+  "title": "Route",
+  "type": "object"
+}
