@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Nexus Command Center
+GenericName=System Management
+Comment=Manage software, settings, terminals and SSH, containers, applications, gateway, storage, network and local AI
+Exec=nexus-center
+TryExec=nexus-center
+Icon=nexusos-command-center
+Terminal=false
+Categories=System;
+Keywords=nexus;nexusos;settings;software;packages;ssh;docker;gateway;nginx;ai;
+StartupWMClass=nexus-center
+SingleMainWindow=true

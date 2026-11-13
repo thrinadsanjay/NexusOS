@@ -1,0 +1,10 @@
+{
+  "id": "activity",
+  "title": "Activity History",
+  "order": 140,
+  "icon": "view-history",
+  "description": "Audit trail of operations started from NexusOS tools",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

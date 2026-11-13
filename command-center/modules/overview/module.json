@@ -1,0 +1,10 @@
+{
+  "id": "overview",
+  "title": "Overview",
+  "order": 10,
+  "icon": "computer",
+  "description": "Live system status from /proc and /sys, services and application health",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

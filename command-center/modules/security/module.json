@@ -1,0 +1,10 @@
+{
+  "id": "security",
+  "title": "Security",
+  "order": 130,
+  "icon": "security-high",
+  "description": "Privilege boundaries, secrets, exposure",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

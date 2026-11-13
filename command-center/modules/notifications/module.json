@@ -1,0 +1,10 @@
+{
+  "id": "notifications",
+  "title": "Notifications",
+  "order": 120,
+  "icon": "preferences-desktop-notification",
+  "description": "Unified notification centre",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

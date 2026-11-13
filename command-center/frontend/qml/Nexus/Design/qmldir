@@ -1,0 +1,19 @@
+module Nexus.Design
+singleton Theme 1.0 Theme.qml
+NxButton 1.0 NxButton.qml
+NxTextField 1.0 NxTextField.qml
+NxCard 1.0 NxCard.qml
+NxPageHeader 1.0 NxPageHeader.qml
+NxStatusBadge 1.0 NxStatusBadge.qml
+NxTable 1.0 NxTable.qml
+NxEmptyState 1.0 NxEmptyState.qml
+NxErrorState 1.0 NxErrorState.qml
+NxLoading 1.0 NxLoading.qml
+NxConfirmDialog 1.0 NxConfirmDialog.qml
+NxTabBar 1.0 NxTabBar.qml
+NxMetric 1.0 NxMetric.qml
+NxBanner 1.0 NxBanner.qml
+NxSectionTitle 1.0 NxSectionTitle.qml
+NxFormRow 1.0 NxFormRow.qml
+NxLogView 1.0 NxLogView.qml
+NxProgress 1.0 NxProgress.qml

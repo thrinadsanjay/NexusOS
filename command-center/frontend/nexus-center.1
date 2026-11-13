@@ -1,0 +1,28 @@
+.TH NEXUS-CENTER 1 "November 2026" "nexusos-command-center 0.2.0" "NexusOS Engineering Edition"
+.SH NAME
+nexus-center \- Nexus Command Center, native NexusOS system management
+.SH SYNOPSIS
+.B nexus-center
+[\fB\-\-page\fR \fIMODULE\fR] [\fB\-\-smoke\fR [\fB\-\-screenshots\fR \fIDIR\fR]] [\fB\-\-benchmark\fR \fISECONDS\fR]
+.SH DESCRIPTION
+Qt 6/QML application for software (APT), settings, terminal and SSH, containers,
+Nexus applications, the NGINX gateway, storage, network, files, local AI,
+notifications, security and activity history. It runs as the logged-in user;
+privileged operations are performed by nexusos-management-agent after polkit
+authorization. Press Ctrl+K for the command palette.
+.SH OPTIONS
+.TP
+.B \-\-page \fIMODULE\fR
+Open a module first (overview, packages, settings, terminal, containers,
+applications, gateway, storage, network, files, ai, notifications, security, activity).
+.TP
+.B \-\-smoke
+Open every module once, print timings and QML warnings as JSON, exit (non-zero on warnings).
+.TP
+.B \-\-benchmark \fISECONDS\fR
+Like \-\-smoke, then measure idle CPU and memory for SECONDS.
+.SH FILES
+.I ~/.local/share/nexusos/command-center.db
+(settings, SSH profiles, notifications, activity; mode 0600)
+.SH SEE ALSO
+.BR nexus (1)
