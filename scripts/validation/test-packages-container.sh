@@ -40,7 +40,7 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     command -v update-ca-certificates >/dev/null && update-ca-certificates >/dev/null 2>&1 || true
     apt-get update -qq
 
-    apt-get install -y -qq /debs/nexusos-branding_*.deb /debs/nexusos-defaults_*.deb /debs/nexus-cli_*.deb >/dev/null
+    apt-get install -y -qq /debs/nexusos-branding_*.deb /debs/nexusos-defaults_*.deb /debs/python3-nexus-core_*.deb /debs/nexus-cli_*.deb >/dev/null
     pass "branding, defaults and nexus-cli installed"
 
     . /etc/os-release
@@ -78,7 +78,7 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     python3 -c "import ast,sys; ast.parse(open(\"demo-api/app/main.py\").read())"
     pass "nexus dev create fastapi generated a project"
 
-    apt-get install -y -qq --simulate /debs/nexusos-theme_*.deb /debs/nexusos-desktop_*.deb >/tmp/sim.log 2>&1 \
+    apt-get install -y -qq --simulate /debs/*.deb >/tmp/sim.log 2>&1 \
         || { tail -20 /tmp/sim.log; fail "theme/desktop dependency resolution"; }
     pass "nexusos-theme + nexusos-desktop dependencies resolve ($(grep -c "^Inst " /tmp/sim.log) packages would be installed)"
 
@@ -86,7 +86,7 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     dpkg-divert --list /usr/lib/os-release | grep -q nexusos-branding && grep -q "^ID=nexusos" /usr/lib/os-release || fail "reinstall"
     pass "reinstall/upgrade keeps diversion"
 
-    apt-get remove -y -qq nexus-cli nexusos-defaults nexusos-branding >/dev/null
+    apt-get remove -y -qq nexus-cli python3-nexus-core nexusos-defaults nexusos-branding >/dev/null
     . /etc/os-release
     [ "$ID" = ubuntu ] || fail "os-release not restored after removal (ID=$ID)"
     [ ! -e /usr/lib/os-release.ubuntu ] || fail "stale os-release.ubuntu"

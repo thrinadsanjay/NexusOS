@@ -9,8 +9,7 @@ import subprocess
 import sys
 
 import pytest
-
-from nexus_cli.services import scaffold
+from nexus_core import scaffold
 
 FASTAPI_AVAILABLE = importlib.util.find_spec("fastapi") is not None and importlib.util.find_spec("httpx") is not None
 
@@ -67,9 +66,11 @@ def test_generated_fastapi_project_passes_its_tests(tmp_path):
 
 @pytest.mark.parametrize("name", ["Bad", "1abc", "has space", "../escape", "a" * 64, ""])
 def test_invalid_project_names_rejected(cli, tmp_path, name):
-    result = cli("dev", "create", "fastapi", name, "--path", str(tmp_path))
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    result = cli("dev", "create", "fastapi", name, "--path", str(projects))
     assert result.exit_code == 2
-    assert not any(tmp_path.iterdir())
+    assert not any(projects.iterdir())
 
 
 def test_existing_non_empty_directory_rejected(cli, tmp_path):
@@ -94,7 +95,7 @@ def test_react_without_node_reports_missing_dependency(cli, tmp_path, no_program
 
 
 def test_react_old_node_rejected(monkeypatch):
-    from nexus_cli.core import runner
+    from nexus_core import runner
 
     monkeypatch.setattr(runner, "which", lambda p: f"/usr/bin/{p}")
     monkeypatch.setattr(runner, "run", lambda *a, **k: runner.CommandResult(("node",), 0, "v16.20.0\n", ""))

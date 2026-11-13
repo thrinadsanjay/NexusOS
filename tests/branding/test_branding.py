@@ -33,10 +33,10 @@ def test_version_metadata_consistent():
     os_release = validate_branding.parse_os_release(REPO_ROOT / "configs/os-release/os-release")
     release = validate_branding.parse_os_release(REPO_ROOT / "configs/os-release/nexusos-release")
     assert release["NEXUSOS_RELEASE"] == os_release["VERSION_ID"] == "1.0"
-    assert release["NEXUSOS_BUILD"] == os_release["BUILD_ID"] == "0.1.0-dev"
+    assert release["NEXUSOS_BUILD"] == os_release["BUILD_ID"] == "0.2.0-dev"
     assert release["NEXUSOS_BASE_CODENAME"] == "resolute"
     cli_init = (REPO_ROOT / "packages/nexus-cli/nexus_cli/__init__.py").read_text()
-    assert '__version__ = "0.1.0"' in cli_init
+    assert '__version__ = "0.2.0"' in cli_init
 
 
 def test_os_release_does_not_claim_to_be_ubuntu():

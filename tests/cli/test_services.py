@@ -6,9 +6,8 @@ import json
 
 import httpx
 import pytest
-
-from nexus_cli.core.errors import ValidationError
-from nexus_cli.services import docker, ollama, tools
+from nexus_core import docker, ollama, tools
+from nexus_core.errors import ValidationError
 
 # ---------------------------------------------------------------- Ollama
 

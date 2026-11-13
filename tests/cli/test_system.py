@@ -6,10 +6,10 @@ import json
 from pathlib import Path
 
 import pytest
+from nexus_core import cleanup, health, packages, system
+from nexus_core.models import DiskInfo, HealthCheck, HealthReport, UpgradablePackage
 
 from nexus_cli.commands import system as system_cmd
-from nexus_cli.models import DiskInfo, HealthCheck, HealthReport, UpgradablePackage
-from nexus_cli.services import cleanup, health, packages, system
 
 
 def test_system_info_json_reports_real_values(cli):

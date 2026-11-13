@@ -23,7 +23,7 @@ def test_debian_metadata(name):
 
 
 def test_package_versions_aligned():
-    assert set(vd.changelog_versions().values()) == {"0.1.0~dev1"}
+    assert set(vd.changelog_versions().values()) == {"0.2.0~dev1"}
 
 
 def test_control_fields():

@@ -19,6 +19,6 @@ def cli():
 @pytest.fixture
 def no_programs(monkeypatch):
     """Simulate a system where no external programs are installed."""
-    from nexus_cli.core import runner
+    from nexus_core import runner
 
     monkeypatch.setattr(runner, "which", lambda program: None)

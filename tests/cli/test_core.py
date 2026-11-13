@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 
+from nexus_core import runner
+from nexus_core.release import parse_key_value_file, read_os_release
+
 from nexus_cli import __version__
-from nexus_cli.core import runner
-from nexus_cli.services.release import parse_key_value_file, read_os_release
 
 
 def test_version_text(cli):
@@ -20,7 +21,7 @@ def test_version_json(cli):
     result = cli("version", "--json")
     assert result.exit_code == 0
     data = json.loads(result.output)
-    assert data["cli_version"] == __version__ == "0.1.0"
+    assert data["cli_version"] == __version__ == "0.2.0"
     assert "python_version" in data
 
 
