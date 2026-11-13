@@ -1,0 +1,10 @@
+{
+  "id": "packages",
+  "title": "Software Center",
+  "order": 20,
+  "icon": "system-software-install",
+  "description": "APT/dpkg software management through the privileged agent",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

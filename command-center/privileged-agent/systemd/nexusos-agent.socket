@@ -1,0 +1,14 @@
+[Unit]
+Description=NexusOS management agent socket
+Documentation=file:///usr/share/doc/nexusos-management-agent/README.md
+
+[Socket]
+ListenStream=/run/nexusos/agent.sock
+SocketMode=0660
+SocketUser=root
+SocketGroup=sudo
+DirectoryMode=0755
+Accept=no
+
+[Install]
+WantedBy=sockets.target

@@ -1,0 +1,26 @@
+[Unit]
+Description=NexusOS management agent (privileged helper for the Command Center and nexus CLI)
+Documentation=file:///usr/share/doc/nexusos-management-agent/README.md
+Requires=nexusos-agent.socket
+After=nexusos-agent.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m nexus_agent --idle-timeout 120
+# Started on demand by the socket and exits after 2 idle minutes: no permanent daemon.
+Restart=no
+UMask=0022
+NoNewPrivileges=no
+ProtectHome=read-only
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=no
+LockPersonality=yes
+MemoryHigh=512M
+TasksMax=256
+LogsDirectory=nexusos
+LogsDirectoryMode=0750

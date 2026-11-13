@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>NexusOS</vendor>
+  <vendor_url>https://github.com/thrinadsanjay/NexusOS</vendor_url>
+  <icon_name>nexusos-command-center</icon_name>
+
+  <action id="org.nexusos.agent.packages.manage">
+    <description>Install, remove and upgrade software</description>
+    <message>Authentication is required to change installed software</message>
+    <defaults><allow_any>auth_admin</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin_keep</allow_active></defaults>
+  </action>
+
+  <action id="org.nexusos.agent.packages.repositories">
+    <description>Change software repositories</description>
+    <message>Authentication is required to change software repositories</message>
+    <defaults><allow_any>auth_admin</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin</allow_active></defaults>
+  </action>
+
+  <action id="org.nexusos.agent.gateway.manage">
+    <description>Manage the NexusOS Gateway (NGINX routes and certificates)</description>
+    <message>Authentication is required to change gateway routes or certificates</message>
+    <defaults><allow_any>auth_admin</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin_keep</allow_active></defaults>
+  </action>
+
+  <action id="org.nexusos.agent.gateway.logs">
+    <description>Read NexusOS Gateway logs</description>
+    <message>Authentication is required to read gateway logs</message>
+    <defaults><allow_any>auth_admin</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin_keep</allow_active></defaults>
+  </action>
+
+  <action id="org.nexusos.agent.storage.read">
+    <description>Read disk health (SMART) data</description>
+    <message>Authentication is required to read disk health data</message>
+    <defaults><allow_any>auth_admin</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>yes</allow_active></defaults>
+  </action>
+
+  <action id="org.nexusos.agent.firewall.read">
+    <description>Read firewall status</description>
+    <message>Authentication is required to read firewall status</message>
+    <defaults><allow_any>auth_admin</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>yes</allow_active></defaults>
+  </action>
+
+  <action id="org.nexusos.agent.firewall.manage">
+    <description>Change firewall rules</description>
+    <message>Authentication is required to change firewall rules</message>
+    <defaults><allow_any>auth_admin</allow_any><allow_inactive>auth_admin</allow_inactive><allow_active>auth_admin</allow_active></defaults>
+  </action>
+</policyconfig>
