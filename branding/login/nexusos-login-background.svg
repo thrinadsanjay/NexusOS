@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS login (SDDM) background master, 3840x2160: calm hex field, logo-free so the greeter
+     can place the horizontal lockup and login card. Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+  <title>NexusOS Login</title>
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.45" r="0.8">
+      <stop offset="0" stop-color="#123B40"/>
+      <stop offset="0.6" stop-color="#102E33"/>
+      <stop offset="1" stop-color="#0B171B"/>
+    </radialGradient>
+    <pattern id="hex" width="103.92" height="180" patternUnits="userSpaceOnUse">
+      <path d="M51.96 0 L103.92 30 L103.92 90 L51.96 120 L0 90 L0 30 Z M51.96 120 L51.96 180" fill="none" stroke="#31C6BD" stroke-opacity="0.05" stroke-width="1.5"/>
+    </pattern>
+  </defs>
+  <rect width="3840" height="2160" fill="url(#bg)"/>
+  <rect width="3840" height="2160" fill="url(#hex)"/>
+  <rect x="1620" y="1960" width="600" height="2" fill="#29434A"/>
+  <rect x="1880" y="1960" width="80" height="2" fill="#C47750"/>
+</svg>

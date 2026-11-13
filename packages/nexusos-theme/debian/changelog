@@ -1,3 +1,9 @@
+nexusos-theme (0.2.0~dev1) UNRELEASED; urgency=medium
+
+  * NexusOS 0.2.0 development: Command Center, management agent, gateway.
+
+ -- NexusOS Maintainers <maintainers@nexusos.invalid>  Fri, 13 Nov 2026 20:00:00 +0000
+
 nexusos-theme (0.1.0~dev1) UNRELEASED; urgency=medium
 
   * Initial NexusOS Engineering Edition foundation release (development).

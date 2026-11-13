@@ -16,7 +16,9 @@ Depends: ${misc:Depends},
          nexusos-branding (= ${source:Version}),
          nexusos-theme (= ${source:Version}),
          nexusos-defaults (= ${source:Version}),
-         nexus-cli,
+         nexus-cli (= ${source:Version}),
+         nexusos-command-center (= ${source:Version}),
+         nexusos-management-agent (= ${source:Version}),
          kde-plasma-desktop,
          plasma-session-wayland,
          plasma-systemmonitor,
@@ -43,5 +45,6 @@ Description: NexusOS Engineering Edition KDE Plasma desktop
   * SDDM drop-in selecting the Breeze greeter on Wayland (placeholder until
     the Nexus greeter exists)
   * Nexus Dev, Nexus Infra and Nexus AI launchers for the dock
+  * the Nexus Command Center and its management agent (installed by default)
  .
  Per-user settings in ~/.config always take precedence.

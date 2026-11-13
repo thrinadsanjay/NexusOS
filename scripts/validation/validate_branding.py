@@ -47,6 +47,8 @@ REQUIRED_SVGS = {
     "wallpapers/nexusos-default.svg": "default wallpaper",
     "wallpapers/nexusos-abstract.svg": "abstract technology wallpaper",
     "wallpapers/nexusos-engineering.svg": "Engineering Edition wallpaper",
+    "icons/nexusos-command-center.svg": "Command Center application icon",
+    "login/nexusos-login-background.svg": "login (SDDM) background",
 }
 
 REQUIRED_OS_RELEASE = {
