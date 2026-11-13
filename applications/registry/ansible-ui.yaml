@@ -1,0 +1,17 @@
+# Ansible UI -- planned. No UI implementation exists yet.
+id: ansible-ui
+name: Ansible UI
+version: "0.0.0"
+summary: Web UI for inventories, playbooks, jobs, credentials, schedules and RBAC (planned).
+category: Automation
+status: unavailable
+status_reason: >-
+  No Ansible UI implementation was found. The repository thrinadsanjay/Ansible-UI_Data
+  (Development branch, ba0365f) contains Ansible content -- playbooks, roles, inventories
+  and vaults for OCI deployments -- which a future Ansible UI can use as a project source.
+  It is not a deployable application.
+homepage: https://github.com/thrinadsanjay/Ansible-UI_Data
+contract:
+  authentication: keycloak-optional
+  capabilities: [inventories, playbooks, jobs, credentials, scheduling, rbac]
+  permissions: [restricted-execution-identity]

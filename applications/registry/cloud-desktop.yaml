@@ -1,0 +1,50 @@
+# Cloud Desktop -- browser access to a desktop session (independent project: thrinadsanjay/CloudDesk).
+id: cloud-desktop
+name: Cloud Desktop
+version: "9fe2ed4"
+summary: HTML5 remote desktop gateway (guacamole-lite + guacd) for this machine's xrdp session.
+description: >-
+  Architecture from the source repository (Development branch): browser -> Node.js
+  gateway (guacamole-lite) -> guacd -> RDP -> host xrdp on port 3389. NexusOS builds
+  the gateway image at a pinned commit and publishes it on loopback only.
+category: Remote access
+status: experimental
+status_reason: >-
+  Requires host xrdp on port 3389. xrdp provides X11 sessions; Plasma 6 on NexusOS
+  defaults to Wayland, so an X11 Plasma session must be installed for xrdp. Not yet
+  validated on NexusOS.
+homepage: https://github.com/thrinadsanjay/CloudDesk
+deployment:
+  method: compose
+  project: nexus-cloud-desktop
+  source_repo: https://github.com/thrinadsanjay/CloudDesk
+  source_ref: 9fe2ed4223d91ff83e34ab715a4ddbd70179efdf
+  build_from_source: true
+  upstream_compose: docker-compose.yml
+  files: [compose.nexusos.yaml]
+  backup_volumes: []
+config:
+  - {key: TOKEN_KEY, secret: true, generate: hex32, description: Session token encryption key}
+  - {key: ADMIN_PASSWORD, secret: true, generate: password}
+  - {key: GATE_PASSWORD, secret: true, generate: password, description: Extra password before an RDP session}
+  - {key: DESKTOP_NAME, default: "NexusOS Desktop"}
+  - {key: DISPLAY_HOSTNAME, default: "nexusos"}
+ports:
+  - {name: web, host_port: 9080}
+  - {name: tls, host_port: 9443}
+health:
+  url: http://127.0.0.1:9080/api/health
+gateway:
+  suggested_hostname: desktop.nexus.lan
+  backend_port: 9080
+  websocket: true
+dependencies:
+  host_packages: [docker.io, docker-compose-v2, git, xrdp]
+  host_ports_listening: [3389]
+contract:
+  health_endpoint: http://127.0.0.1:9080/api/health
+  authentication: local
+  embed: window
+  capabilities: [remote-desktop, rdp]
+resources:
+  memory: "~150 MiB idle"

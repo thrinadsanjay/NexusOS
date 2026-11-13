@@ -1,0 +1,6 @@
+# NexusOS overrides for CloudDesk's docker-compose.yml: loopback-only publishing.
+services:
+  web:
+    ports: !override
+      - "127.0.0.1:9080:9080"
+      - "127.0.0.1:9443:9443"

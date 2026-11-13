@@ -1,0 +1,10 @@
+{
+  "id": "applications",
+  "title": "Nexus Applications",
+  "order": 60,
+  "icon": "applications-other",
+  "description": "Optional Nexus applications: registry and lifecycle",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

@@ -1,0 +1,7 @@
+# NexusOS overrides for NexusOps' docker-compose.yml.
+# * Removes the Docker socket mount: NexusOS never hands the Docker daemon (root-equivalent)
+#   to application containers. NexusOps' "manage compose services" feature is unavailable.
+services:
+  backend:
+    volumes: !override
+      - dhcp_data:/var/lib/nexusops-dhcp:Z

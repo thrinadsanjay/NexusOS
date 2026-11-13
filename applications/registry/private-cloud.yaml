@@ -1,0 +1,53 @@
+# Private Cloud -- Forge self-service portal (independent project: thrinadsanjay/ForgeCloud).
+id: private-cloud
+name: Private Cloud (Forge)
+version: "c7daf85"
+summary: Self-service portal for provisioning VMs and containers on Proxmox VE.
+description: >-
+  Forge is a Node.js application with a PostgreSQL database. NexusOS deploys the
+  upstream compose file at a pinned commit, builds the image locally, publishes the
+  web UI on loopback only and generates all secrets.
+category: Infrastructure
+status: experimental
+status_reason: >-
+  Built from source at a pinned commit; not yet tested end-to-end on NexusOS.
+  The upstream code implements a Proxmox VE provider only -- a KVM/libvirt provider
+  and Cloud Desktop integration do not exist in the source yet.
+homepage: https://github.com/thrinadsanjay/ForgeCloud
+deployment:
+  method: compose
+  project: nexus-private-cloud
+  source_repo: https://github.com/thrinadsanjay/ForgeCloud
+  source_ref: c7daf85b2d2968bc24377a948f7fa6639b97aa98
+  build_from_source: true
+  upstream_compose: docker-compose.yml
+  files: [compose.nexusos.yaml]
+  backup_volumes: [forge-db]
+config:
+  - {key: DB_PASSWORD, secret: true, generate: password, description: PostgreSQL password}
+  - {key: JWT_SECRET, secret: true, generate: token, description: Session signing key}
+  - {key: FORGE_ADMIN_PASSWORD, secret: true, generate: password, description: First-run admin password}
+  - {key: PROXMOX_HOST, description: Proxmox VE host (configure later in the app Settings page), default: ""}
+ports:
+  - {name: web, host_port: 4100}
+health:
+  url: http://127.0.0.1:4100/health
+gateway:
+  suggested_hostname: cloud.nexus.lan
+  backend_port: 4100
+dependencies:
+  host_packages: [docker.io, docker-compose-v2, git]
+  notes:
+    - "Providers implemented upstream: Proxmox VE (API token or password)."
+    - "KVM/libvirt provider: not implemented in ForgeCloud yet."
+contract:
+  api_endpoint: http://127.0.0.1:4100/api
+  health_endpoint: http://127.0.0.1:4100/health
+  authentication: local
+  embed: window
+  navigation:
+    - {title: Portal, path: /}
+  capabilities: [vm-lifecycle, container-lifecycle, templates, approvals, proxmox-provider]
+  permissions: [network:proxmox-api]
+resources:
+  memory: "~600 MiB (node + postgres, idle)"

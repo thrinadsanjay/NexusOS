@@ -1,0 +1,34 @@
+# Open WebUI -- optional browser chat UI for Ollama. The native Command Center chat does not need it.
+id: open-webui
+name: Open WebUI
+version: "0.13.3"
+summary: Web chat interface for local Ollama models (optional).
+category: AI
+status: available
+homepage: https://github.com/open-webui/open-webui
+deployment:
+  method: compose
+  project: nexus-open-webui
+  files: [compose.yaml]
+  backup_volumes: [open-webui]
+config:
+  - {key: WEBUI_SECRET_KEY, secret: true, generate: token}
+  - {key: OPENWEBUI_IMAGE, default: "ghcr.io/open-webui/open-webui:v0.13.3"}
+ports:
+  - {name: web, host_port: 3000}
+health:
+  url: http://127.0.0.1:3000/health
+gateway:
+  suggested_hostname: chat.nexus.lan
+  backend_port: 3000
+  websocket: true
+dependencies:
+  host_packages: [docker.io, docker-compose-v2]
+  notes: ["Requires Ollama on the host (Local AI profile) for local models."]
+contract:
+  health_endpoint: http://127.0.0.1:3000/health
+  authentication: local
+  embed: window
+  capabilities: [chat]
+resources:
+  memory: "~700 MiB idle"

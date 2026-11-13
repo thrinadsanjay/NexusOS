@@ -1,0 +1,67 @@
+# NexusOps -- infrastructure operations platform (independent project: thrinadsanjay/NexusOps).
+id: nexusops
+name: NexusOps
+version: "c6ff361"
+summary: IPAM, DNS, DHCP, LDAP, PKI, inventory and network operations for homelabs and small sites.
+description: >-
+  Deployed from the upstream compose file on the main branch (published GHCR images).
+  NexusOS publishes every port on loopback, removes the Docker socket mount and
+  generates every password and signing key. NexusOps business logic stays in NexusOps.
+category: Infrastructure
+status: experimental
+status_reason: >-
+  Upstream images are referenced by the 'latest' tag (set NEXUSOPS_BACKEND_IMAGE /
+  NEXUSOPS_FRONTEND_IMAGE to a sha-* tag to pin). The upstream DHCP service uses host
+  networking with NET_ADMIN and stays disabled until enabled inside NexusOps.
+homepage: https://github.com/thrinadsanjay/NexusOps
+deployment:
+  method: compose
+  project: nexus-nexusops
+  source_repo: https://github.com/thrinadsanjay/NexusOps
+  source_ref: c6ff361898ffeefab9c579e21d45d8e952c94bd6
+  build_from_source: false
+  upstream_compose: docker-compose.yml
+  files: [compose.nexusos.yaml]
+  backup_volumes: [postgres_data, redis_data, ldap_data, ldap_config, dhcp_data]
+config:
+  - {key: POSTGRES_PASSWORD, secret: true, generate: password}
+  - {key: JWT_SECRET_KEY, secret: true, generate: token}
+  - {key: DEFAULT_ADMIN_PASSWORD, secret: true, generate: password, description: Initial admin password}
+  - {key: LDAP_ADMIN_PASSWORD, secret: true, generate: password}
+  - {key: LDAP_READONLY_USER_PASSWORD, secret: true, generate: password}
+  - {key: PUBLIC_HOST, default: "127.0.0.1", description: Host name browsers use (set to the gateway hostname)}
+  - {key: BACKEND_BIND, default: "127.0.0.1"}
+  - {key: FRONTEND_BIND, default: "127.0.0.1"}
+  - {key: POSTGRES_BIND, default: "127.0.0.1"}
+  - {key: REDIS_BIND, default: "127.0.0.1"}
+  - {key: LDAP_BIND, default: "127.0.0.1"}
+  - {key: SMTP_BIND, default: "127.0.0.1"}
+  - {key: SMTP_PORT, default: "2525", description: Host port for the SMTP listener (25 needs a free privileged port)}
+  - {key: NEXUSOPS_BACKEND_IMAGE, default: "ghcr.io/thrinadsanjay/nexusops-backend:latest"}
+  - {key: NEXUSOPS_FRONTEND_IMAGE, default: "ghcr.io/thrinadsanjay/nexusops-frontend:latest"}
+  - {key: PULL_POLICY, default: "missing"}
+ports:
+  - {name: web, host_port: 5173}
+  - {name: api, host_port: 8000}
+health:
+  url: http://127.0.0.1:8000/health
+gateway:
+  suggested_hostname: nexusops.nexus.lan
+  backend_port: 5173
+dependencies:
+  host_packages: [docker.io, docker-compose-v2, git]
+  notes:
+    - "The web UI calls the API at PUBLIC_HOST:8000; behind the gateway add a second route for the API."
+contract:
+  api_endpoint: http://127.0.0.1:8000
+  health_endpoint: http://127.0.0.1:8000/health
+  authentication: local
+  embed: window
+  navigation:
+    - {title: Dashboard, path: /}
+    - {title: IPAM, path: /ipam}
+    - {title: DNS, path: /dns}
+  capabilities: [ipam, dns, dhcp, ldap, pki, smtp, inventory, audit]
+  permissions: [net-raw]
+resources:
+  memory: "~1.2 GiB (postgres, redis, openldap, api, worker, ui)"
