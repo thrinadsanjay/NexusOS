@@ -1,0 +1,44 @@
+# NexusOS Engineering Edition -- local AI manifest.
+# Nothing here is installed in the ISO. AI components are optional post-installation
+# steps, and no model is ever downloaded during the image build.
+schema_version: 1
+name: ai
+description: Optional local AI inference (Ollama, CPU) and Open WebUI, installed after installation.
+required: false
+depends_on: [base, infrastructure]
+distribution:
+  name: ubuntu
+  version: "26.04"
+  codename: resolute
+  architecture: amd64
+  components: [main, universe]
+verified_against: "resolute main+universe Packages indices, 2026-11-13"
+policy:
+  include_in_iso: false
+  download_models_during_build: false
+  default_bind_address: 127.0.0.1
+packages:
+  optional:
+    # Archive packages useful for local AI work; none are required by Ollama itself.
+    # (python3-venv is already in base; python3-pip in development.)
+    - python3-numpy
+external:
+  - name: ollama
+    source: https://ollama.com/download/linux
+    install: opt-in post-install; review the vendor install script before running it
+    reason: not in the Ubuntu archive
+    service:
+      bind: 127.0.0.1:11434
+      exposure: local only; do not set OLLAMA_HOST=0.0.0.0 on untrusted networks
+  - name: open-webui
+    source: https://docs.openwebui.com/getting-started/quick-start
+    install: opt-in post-install as a Docker container bound to 127.0.0.1
+    reason: not in the Ubuntu archive
+    service:
+      bind: 127.0.0.1:3000
+      exposure: local only; enable authentication before exposing it
+models:
+  preinstalled: []
+  suggested_for_cpu:
+    - "llama3.2:3b"
+    - "qwen2.5-coder:1.5b"

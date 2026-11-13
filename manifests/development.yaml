@@ -1,0 +1,69 @@
+# NexusOS Engineering Edition -- development tooling manifest.
+# Included in the Engineering Edition image; every package is optional for derived images.
+schema_version: 1
+name: development
+description: Compilers, language runtimes, debuggers and terminal productivity tools.
+required: false
+depends_on: [base]
+distribution:
+  name: ubuntu
+  version: "26.04"
+  codename: resolute
+  architecture: amd64
+  components: [main, universe]
+verified_against: "resolute main+universe Packages indices, 2026-11-13"
+packages:
+  optional:
+    # Build toolchains
+    - build-essential
+    - cmake
+    - ninja-build
+    - meson
+    - pkgconf
+    - clang
+    - gdb
+    # Languages
+    - python3-dev
+    - python3-pip
+    - pipx
+    - nodejs
+    - npm
+    - golang-go
+    - rustc
+    - cargo
+    - default-jdk
+    # Version control
+    - git-lfs
+    - gh
+    # Terminal productivity
+    - tmux
+    - neovim
+    - vim
+    - ripgrep
+    - fd-find
+    - bat
+    - fzf
+    - eza
+    - jq
+    - yq
+    - tree
+    - ncdu
+    - btop
+    - direnv
+    - httpie
+    - shellcheck
+    - yamllint
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+    # Database clients
+    - sqlite3
+    - postgresql-client
+    - redis-tools
+  notes:
+    - "Ubuntu installs fd-find as 'fdfind' and bat as 'batcat'; nexus-aliases.sh maps the familiar names."
+    - "p7zip-full is not in resolute main/universe; use 7zip if needed (not verified, not included)."
+external:
+  - name: visual-studio-code
+    source: https://code.visualstudio.com/docs/setup/linux
+    install: opt-in post-install (Microsoft APT repository or snap)
+    reason: proprietary licence; not in the Ubuntu archive

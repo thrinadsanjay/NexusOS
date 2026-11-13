@@ -1,0 +1,64 @@
+# NexusOS Engineering Edition -- infrastructure manifest (virtualisation, containers, automation).
+schema_version: 1
+name: infrastructure
+description: KVM/QEMU/libvirt virtualisation, Docker Engine and infrastructure automation tools.
+required: false
+depends_on: [base]
+distribution:
+  name: ubuntu
+  version: "26.04"
+  codename: resolute
+  architecture: amd64
+  components: [main, universe]
+verified_against: "resolute main+universe Packages indices, 2026-11-13"
+packages:
+  optional:
+    # Virtualisation
+    - qemu-system-x86
+    - qemu-utils
+    - qemu-system-modules-spice
+    - libvirt-daemon-system
+    - libvirt-clients
+    - virt-manager
+    - virt-viewer
+    - virtinst
+    - ovmf
+    - swtpm
+    - cpu-checker
+    - bridge-utils
+    - cloud-image-utils
+    - libguestfs-tools
+    # Containers (Docker Engine as packaged by Ubuntu)
+    - docker.io
+    - docker-buildx
+    - docker-compose-v2
+    - podman
+    - buildah
+    - skopeo
+    # Automation and networking
+    - ansible
+    - nmap
+    - tcpdump
+    - traceroute
+    - bind9-dnsutils
+  notes:
+    - "Ubuntu's docker.io is used instead of Docker Inc.'s docker-ce, which is not in the Ubuntu archive."
+    - "Users are NOT added to the docker group automatically: it grants root-equivalent access (docs/security.md)."
+    - "qemu-kvm is not a package in resolute; KVM acceleration comes from qemu-system-x86."
+external:
+  - name: kubectl
+    source: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+    install: opt-in post-install (pkgs.k8s.io APT repository or snap)
+    reason: not in Ubuntu main/universe
+  - name: helm
+    source: https://helm.sh/docs/intro/install/
+    install: opt-in post-install
+    reason: not in Ubuntu main/universe
+  - name: terraform
+    source: https://developer.hashicorp.com/terraform/install
+    install: opt-in post-install (HashiCorp APT repository)
+    reason: BUSL licence; not in the Ubuntu archive
+  - name: opentofu
+    source: https://opentofu.org/docs/intro/install/deb/
+    install: opt-in post-install
+    reason: not in Ubuntu main/universe

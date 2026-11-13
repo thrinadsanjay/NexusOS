@@ -1,0 +1,60 @@
+# NexusOS Engineering Edition -- base system manifest.
+# Mandatory packages for every NexusOS image (live and installed).
+# Every name below was checked against the Ubuntu 26.04 "resolute" amd64
+# main+universe Packages indices (scripts/validation/validate_manifests.py --check-archive).
+schema_version: 1
+name: base
+description: Minimal bootable NexusOS system, OS identity and core command-line tools.
+required: true
+distribution:
+  name: ubuntu
+  version: "26.04"
+  codename: resolute
+  architecture: amd64
+  components: [main, universe]
+verified_against: "resolute main+universe Packages indices, 2026-11-13"
+packages:
+  mandatory:
+    # Ubuntu foundation
+    - ubuntu-minimal
+    - ubuntu-standard
+    - linux-generic
+    - linux-firmware
+    - grub-efi-amd64-signed
+    - shim-signed
+    # Networking and security
+    - network-manager
+    - openssh-client
+    - ca-certificates
+    - apparmor
+    - ufw
+    - unattended-upgrades
+    # Core tools
+    - sudo
+    - locales
+    - tzdata
+    - curl
+    - wget
+    - gnupg
+    - git
+    - htop
+    - rsync
+    - zip
+    - unzip
+    - zsh
+    - fastfetch
+    # nexus CLI runtime (Python 3 + libraries from the archive)
+    - python3
+    - python3-venv
+    - python3-typer
+    - python3-rich
+    - python3-pydantic
+    - python3-httpx
+  recommended:
+    - fwupd
+    - power-profiles-daemon
+    - bolt
+nexusos_packages:
+  - nexusos-branding
+  - nexusos-defaults
+  - nexus-cli

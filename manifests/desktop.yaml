@@ -1,0 +1,66 @@
+# NexusOS Engineering Edition -- KDE Plasma 6 desktop manifest (Wayland default).
+schema_version: 1
+name: desktop
+description: KDE Plasma 6 Wayland desktop, SDDM, core KDE applications, fonts and audio.
+required: true
+depends_on: [base]
+distribution:
+  name: ubuntu
+  version: "26.04"
+  codename: resolute
+  architecture: amd64
+  components: [main, universe]
+verified_against: "resolute main+universe Packages indices, 2026-11-13"
+packages:
+  mandatory:
+    # Plasma session
+    - kde-plasma-desktop
+    - plasma-session-wayland
+    - plasma-workspace
+    - kwin-wayland
+    - xdg-desktop-portal-kde
+    - sddm
+    - sddm-theme-breeze
+    - kde-config-sddm
+    - breeze
+    - breeze-icon-theme
+    - breeze-cursor-theme
+    - plymouth
+    - plymouth-theme-spinner
+    # Hardware integration
+    - plasma-nm
+    - plasma-pa
+    - powerdevil
+    - bluedevil
+    - kscreen
+    - pipewire
+    - pipewire-pulse
+    - wireplumber
+    # Applications
+    - konsole
+    - dolphin
+    - kate
+    - ark
+    - gwenview
+    - okular
+    - kde-spectacle
+    - kinfocenter
+    - plasma-systemmonitor
+    - partitionmanager
+    - filelight
+    # Fonts (design tokens: Inter UI, JetBrains Mono)
+    - fonts-inter
+    - fonts-jetbrains-mono
+    - fonts-noto-core
+    - fonts-noto-color-emoji
+  recommended:
+    - plasma-discover
+    - flatpak
+    - plasma-discover-backend-flatpak
+    - cups
+    - print-manager
+  notes:
+    - "firefox exists in the archive as a transitional package that installs the Firefox snap; the ISO build must seed the snap explicitly or ship another browser."
+nexusos_packages:
+  - nexusos-theme
+  - nexusos-desktop
