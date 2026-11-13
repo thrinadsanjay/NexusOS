@@ -1,0 +1,29 @@
+"""${project_name}: FastAPI application entry point."""
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from app import __version__
+
+app = FastAPI(title="${project_name}", version=__version__)
+
+
+class Health(BaseModel):
+    status: str
+    version: str
+
+
+class Greeting(BaseModel):
+    message: str
+
+
+@app.get("/health", response_model=Health)
+def health() -> Health:
+    """Liveness probe."""
+    return Health(status="ok", version=__version__)
+
+
+@app.get("/hello/{name}", response_model=Greeting)
+def hello(name: str) -> Greeting:
+    """Example endpoint with a path parameter."""
+    return Greeting(message=f"Hello, {name}!")
