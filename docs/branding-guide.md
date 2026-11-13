@@ -26,6 +26,14 @@ and CI fails if they drift. Artwork may only use token colours (validated).
 Derived tokens (hover/pressed, glass, status colours, `background-gradient-mid`)
 are in the same file. Selection uses dark text on teal for contrast (≈ 9:1).
 
+## Application UI (Command Center)
+
+`command-center/frontend/qml/Nexus/Design/Theme.qml` implements the tokens for Qt Quick:
+dark palette = the brand tokens above (default), light palette for daylight use
+(`#F4F8F9` background, `#1E8F88` accent for contrast on light). Spacing uses a 4 px grid
+(4/8/12/16/24/32), radii 4/8, controls 32 px high. Status is always colour **and** text.
+Avoid gradients, glass and animation in the app UI (only 120 ms functional transitions).
+
 ## Typography
 
 | Role | Family | Ubuntu package |
@@ -51,6 +59,8 @@ the "nexus" where systems meet.
 | Installer logo | `branding/logo/nexusos-installer-logo.svg` | Calamares, welcome screens |
 | Terminal logo | `branding/logo/nexusos-terminal-logo.svg` | Konsole profile, CLI docs |
 | Boot logo | `branding/boot/nexusos-boot-logo.svg` | Plymouth (draft) |
+| Command Center icon | `branding/icons/nexusos-command-center.svg` | `nexusos-command-center` icon name |
+| Login background | `branding/login/nexusos-login-background.svg` | SDDM greeter (planned theme) |
 | ASCII logo | `configs/shell/ascii-logo.txt` | Banner, fastfetch |
 
 Rules: keep clear space of ¼ of the mark's width; minimum size 16 px (icon) and

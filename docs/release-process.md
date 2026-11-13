@@ -4,11 +4,11 @@
 
 | Thing | Scheme | Current |
 |-------|--------|---------|
-| Repository / foundation | SemVer `MAJOR.MINOR.PATCH[-pre]` | `0.1.0-dev` |
+| Repository | SemVer `MAJOR.MINOR.PATCH[-pre]` | `0.2.0-dev` |
 | Product identity (os-release `VERSION_ID`) | `MAJOR.MINOR` per Ubuntu LTS base | `1.0` (on 26.04) |
-| Build (os-release `BUILD_ID`) | repository version | `0.1.0-dev` |
-| Debian packages | `<semver>` with `~` for pre-releases | `0.1.0~dev1` (sorts before `0.1.0`) |
-| nexus-cli | SemVer, tracks the repository | `0.1.0` |
+| Build (os-release `BUILD_ID`) | repository version | `0.2.0-dev` |
+| Debian packages (9 sources) | `<semver>` with `~` for pre-releases | `0.2.0~dev1` |
+| nexus-cli, nexus-core, nexus-center, nexus-agent | SemVer, tracks the repository | `0.2.0` |
 
 All NexusOS packages share one version and are released together. Development
 changelog entries use the `UNRELEASED` distribution; release entries use `resolute`.

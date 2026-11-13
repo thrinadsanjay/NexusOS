@@ -2,9 +2,10 @@
 
 **BUILD. AUTOMATE. DEPLOY.**
 
-NexusOS is an Ubuntu-based Linux distribution for engineers: a KDE Plasma 6
-Wayland workstation with first-class tooling for development, virtualisation,
-containers and local AI.
+NexusOS is an Ubuntu-based engineering workstation: KDE Plasma 6 on Wayland plus the
+**Nexus Command Center**, a native application that manages software, settings,
+terminals and SSH, containers, Nexus applications, the NGINX gateway, storage, network,
+files and local AI from one place, with no browser or web stack involved.
 
 > NexusOS is an independent project based on Ubuntu 26.04 LTS. It is **not** an
 > official Ubuntu product and is not affiliated with or endorsed by Canonical Ltd.
@@ -12,93 +13,110 @@ containers and local AI.
 
 | | |
 |---|---|
-| Version | `0.1.0-dev` (foundation; product identity `1.0`) |
-| Base | Ubuntu 26.04 LTS "resolute", amd64 |
-| Desktop | KDE Plasma 6, Wayland by default, SDDM |
-| Packaging | APT / `.deb` |
-| Shells | Bash and Zsh, Konsole |
-| Virtualisation / containers | KVM, QEMU, libvirt; Docker Engine (`docker.io`) |
-| Local AI | Ollama CPU inference (optional, post-install) |
+| Version | `0.2.0-dev` (product identity `1.0`) |
+| Base | Ubuntu 26.04 LTS "resolute", amd64, Ubuntu kernel |
+| Desktop | KDE Plasma 6, Wayland, SDDM |
+| Management | Nexus Command Center (Qt 6/QML + Python), `nexus` CLI, polkit-authorized agent |
+| Infrastructure | APT/dpkg, systemd, Docker Engine + Compose, native NGINX, KVM/libvirt, NetworkManager, UDisks2 |
+| Local AI | Ollama (optional, installed on request) |
 
-## Development status
-
-This branch is the **foundation**. It contains working components that can be
-reviewed and tested today, and documents what is still to be done. **No ISO has
-been built yet.** The next milestone is a review of the branding, theme and CLI.
-
-| Component | Status |
-|-----------|--------|
-| Brand system (tokens, logos, icon, wallpapers) | ✅ SVG masters, validated; rasters rendered at build time |
-| `nexusos-branding` (os-release, banner, fastfetch, wallpapers) | ✅ builds on 26.04, install/upgrade/remove tested in a container |
-| `nexusos-theme` (Nexus global theme, colours, icons, Konsole) | 🟡 builds, lintian clean, deps resolve; **not yet tested in a live Plasma session** |
-| `nexusos-desktop` (metapackage, KDE/SDDM defaults, launchers) | 🟡 builds, deps resolve; session behaviour needs VM testing |
-| `nexusos-defaults` (zsh template, aliases, prompt) | ✅ builds and installs |
-| `nexus-cli` (`nexus` command) | ✅ all commands implemented, 70+ unit tests, runs on 26.04's Python 3.14 |
-| Package manifests | ✅ 141 packages verified against the resolute archive |
-| SDDM / Plymouth themes | ⏳ placeholders with implementation notes |
-| Prototype ISO (Cubic) | 📄 documented and scripted, not yet produced |
-| Production ISO pipeline | 📄 design only |
-
-## Repository layout
+## Architecture in one picture
 
 ```
-branding/      design tokens + SVG masters (logos, icon, wallpapers, boot logo)
-desktop/       KDE global theme, colour scheme, icon theme, panel layout, wallpaper metadata
-configs/       os-release, shell (banner, zsh), KDE defaults, SDDM, Plymouth
-packages/      Debian source packages (nexusos-branding, -theme, -defaults, -desktop, nexus-cli)
-manifests/     base / desktop / development / infrastructure / ai package sets (resolute)
-scripts/       build/, package/, validation/, development/ tooling
-iso/           prototype (Cubic) guide + chroot script; production pipeline design
-tests/         branding, cli, manifests, packages, iso
-docs/          architecture, branding guide, build, installation, release, security
+Layer 1  NexusOS Desktop     Plasma 6 · branding · defaults · nexus CLI · Command Center (default)
+Layer 2  Command Center      14 modules over nexus_core · management agent (socket-activated, polkit)
+Layer 3  Application Platform  Private Cloud · NexusOps · Cloud Desktop · Open WebUI · (Ansible UI)  — optional
+Layer 4  Runtime             APT/dpkg · systemd · Docker · NGINX · libvirt · NetworkManager · UDisks2 · Ollama
 ```
+
+A failure in Docker, Ollama or any application never takes the desktop or the Command
+Center down: each module degrades to a clear empty/error state.
+
+## Status (0.2.0-dev)
+
+**Implemented** = code + automated tests · **Tested** = also verified end-to-end in a
+disposable Ubuntu 26.04 container with the built packages · **Experimental** = needs a
+real Plasma session/hardware · **Planned** · **Unsupported**.
+
+| Area | Status |
+|------|--------|
+| Branding, theme, defaults, os-release (v0.1) | Tested (install/upgrade/remove) |
+| Command Center shell, design system (dark + light), 14 lazy modules, Ctrl+K palette | Tested headless on 26.04 (no QML warnings); **Experimental** on Plasma |
+| Software Center (APT/dpkg via agent, plans, progress, locks, cancel, repos, history) | **Tested** |
+| Management agent (socket activation, polkit fail-closed, allow-list, audit) | **Tested** (polkit prompts need the VM) |
+| Gateway (native NGINX, routes, internal CA, HTTPS, redirect, SSRF guard, rollback) | **Tested** with real NGINX |
+| Terminal & SSH (profiles, OpenSSH config, Secret Service credentials, askpass, host keys, SFTP) | Implemented; Konsole/KWallet **Experimental** |
+| Containers (Docker Engine API, images, volumes, networks, Compose) | Implemented |
+| Nexus applications (registry from real repos, lifecycle, backup, gateway proposal) | Implemented; real deployments **Experimental** |
+| Storage (inventory, SMART via agent, mount, guarded format via UDisks2) | Implemented; format **Experimental** (mocked by design) |
+| Network (NetworkManager, DNS, routes, diagnostics, checkpoint rollback) | Implemented; rollback **Experimental** |
+| Files (KIO, Dolphin, Baloo, Ark) | Implemented, **Experimental** |
+| Local AI (Ollama models, streaming native chat) | Implemented; real Ollama **Experimental** |
+| Notifications, security overview, activity history | Implemented |
+| Embedded terminal / Dolphin / web UIs inside the window | Planned |
+| Production ISO | Not built (by design at this stage) |
+
+Measured (dev container, offscreen): Command Center launch **508 ms**, **131.5 MiB** idle,
+**0.29 %** idle CPU; **149.9 MiB** after opening every module; pages load in 5–39 ms.
+See [docs/performance.md](docs/performance.md).
+
+## Packages
+
+| Package | Purpose |
+|---------|---------|
+| `nexusos-branding`, `nexusos-theme`, `nexusos-defaults` | identity, artwork, Plasma theme, shell defaults |
+| `python3-nexus-core` | shared backend + application registry + manifests + `nexus-askpass` |
+| `nexusos-management-agent` | privileged helper (socket, polkit policy, audit) |
+| `nexusos-command-center` | `nexus-center` native application |
+| `nexus-cli` | `nexus` command |
+| `nexusos-gateway` | NGINX integration for the gateway |
+| `nexusos-desktop` | metapackage: Plasma + Command Center + agent + defaults |
 
 ## Quick start
 
-Prerequisites: Ubuntu 24.04+ (or any Linux with Python ≥ 3.11). Packaging needs
-`dpkg-dev debhelper dh-python pybuild-plugin-pyproject librsvg2-bin optipng`;
-the reference build uses Docker with `ubuntu:26.04`.
-
 ```bash
 git clone https://github.com/thrinadsanjay/NexusOS.git && cd NexusOS
-git checkout feature/nexusos-foundation-v0.1
+git checkout feature/nexusos-command-center-v0.2
 
-scripts/development/setup-dev-env.sh && . .venv/bin/activate
-nexus version
-nexus system health
-
-scripts/validation/run-all.sh                    # lint, validators, tests
-scripts/package/build-in-container.sh            # build all .debs on Ubuntu 26.04
-scripts/validation/test-packages-container.sh    # install/upgrade/remove test in a container
-scripts/build/render-branding.sh                 # PNG/WebP previews in build/branding
+scripts/development/setup.sh && . .venv/bin/activate      # venv with everything editable
+scripts/development/validate.sh                           # lint, validators, all tests
+scripts/development/test-command-center.sh --benchmark    # Command Center tests + resource report
+scripts/development/build-packages.sh                     # .debs built in ubuntu:26.04
+scripts/validation/integration-container.sh               # end-to-end tests in a throwaway container
+QT_QPA_PLATFORM=offscreen nexus-center --smoke            # or just: nexus-center (with a display)
 ```
 
-## The `nexus` CLI
+Testing on a real Plasma desktop: [docs/installation.md](docs/installation.md#disposable-test-vm).
+
+## CLI
 
 ```text
-nexus version | help [GROUP]
-nexus system info | health | update | cleanup
-nexus dev list | create fastapi NAME | create react NAME
-nexus cloud status
-nexus infra status | containers
-nexus ai status | models
+nexus version | help
+nexus system info | health | update | cleanup | services | settings
+nexus packages search | show | install | remove | update | list | history | lock | repo
+nexus ssh list | profiles | add | remove | connect | trust | config | credentials
+nexus containers list | start | stop | restart | rm | logs | inspect | stats | images | pull | volumes | networks | compose
+nexus apps list | status | install | uninstall | start | stop | restart | logs | update | backup | restore
+nexus gateway status | apply | rollback | routes … | ssl … | nginx …
+nexus storage list | usage | health
+nexus network status | interfaces | routes | dns | diagnostics | firewall
+nexus ai status | models | pull | rm | ps | chat
+nexus profiles list | show | apply
+nexus dev …  nexus cloud status  nexus infra …
 ```
-
-Read-only by default; `update` and `cleanup --apply` show the exact `sudo`
-command and ask before running it. See [`packages/nexus-cli/README.md`](packages/nexus-cli/README.md).
 
 ## Documentation
 
-* [Architecture](docs/architecture.md)
-* [Branding guide](docs/branding-guide.md)
-* [Build guide](docs/build-guide.md)
-* [Installation and safe testing](docs/installation.md)
-* [Release process](docs/release-process.md)
-* [Security](docs/security.md)
-* [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
+[Architecture](docs/architecture.md) · [Command Center](docs/command-center.md) ·
+[Package management](docs/package-management.md) · [Terminal & SSH](docs/ssh-workspace.md) ·
+[Gateway](docs/gateway.md) · [Application platform](docs/application-platform.md) ·
+[Security](docs/security.md) · [Performance](docs/performance.md) ·
+[Branding](docs/branding-guide.md) · [Installation & VM testing](docs/installation.md) ·
+[Build](docs/build-guide.md) · [Release](docs/release-process.md) ·
+[Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 ## License
 
-NexusOS code, configuration and artwork: GNU GPL v2 or later (see `LICENSE`).
-Packages from the Ubuntu archive keep their own licences. NexusOS names and
-logos identify this project; see the [branding guide](docs/branding-guide.md#trademark-use).
+NexusOS code, configuration and artwork: GNU GPL v2 or later (see `LICENSE`). Packages
+from the Ubuntu archive keep their own licences. Nexus applications are separate projects
+with their own licences.

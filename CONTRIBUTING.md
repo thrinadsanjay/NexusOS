@@ -29,15 +29,23 @@ build|test|chore|refactor|ci: ...
 ## Development setup
 
 ```bash
-scripts/development/setup-dev-env.sh && . .venv/bin/activate
-scripts/validation/run-all.sh
+scripts/development/setup.sh && . .venv/bin/activate
+scripts/development/validate.sh
 ```
 
 ## Guidelines
 
-* **Python** (nexus-cli): Python ≥ 3.11, type hints everywhere, `ruff check` and
-  `ruff format` clean. Keep services free of printing; commands render. Every new
-  command needs tests, including the "dependency missing" path.
+* **One implementation**: every operation lives in `command-center/backend/nexus_core`.
+  The CLI (`packages/nexus-cli`) and Command Center modules only render and confirm.
+* **Python**: ≥ 3.11, type hints, `ruff check` / `ruff format` clean. Every new operation
+  needs tests, including "dependency missing" and invalid-input paths.
+* **Command Center**: one module = `module.json` + `controller.py` + `Page.qml`; QML calls
+  controller slots only (no commands from QML); blocking work goes through `self.run(...)`;
+  timers only in `poll_interval_ms` controllers; use `Nexus.Design` components; run
+  `nexus-center --smoke` (must report no QML warnings).
+* **Privileged operations**: add them to `nexus_agent/ops.py` with a Pydantic model
+  (`extra="forbid"`), a polkit action in `org.nexusos.agent.policy`, and tests for
+  unauthorized and invalid requests. Never accept command lines or arbitrary paths.
 * **Never** run privileged operations implicitly. Show the command, ask for
   confirmation, refuse without a TTY.
 * **Never** print environment variables, tokens or credential files in diagnostics.

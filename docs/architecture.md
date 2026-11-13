@@ -1,92 +1,77 @@
 # NexusOS architecture
 
-NexusOS is a *derivative* of Ubuntu 26.04 LTS: it consumes the Ubuntu archive
-unchanged and layers a small set of NexusOS packages on top. Anything NexusOS
-ships can be removed, returning the system to stock Ubuntu/Kubuntu behaviour.
+NexusOS is an Ubuntu 26.04 derivative: the Ubuntu archive is used unchanged and NexusOS
+adds a small set of packages. Everything NexusOS installs can be removed again.
+
+## Four layers
+
+| Layer | Contents | Packages |
+|-------|----------|----------|
+| 1 Desktop | Plasma 6 (Wayland), branding, theme, defaults, CLI, Command Center | nexusos-desktop, -branding, -theme, -defaults, nexus-cli, nexusos-command-center |
+| 2 Command Center | 14 modules over `nexus_core`, privileged agent | nexusos-command-center, python3-nexus-core, nexusos-management-agent |
+| 3 Application Platform | optional Compose apps from their own repositories | registry in python3-nexus-core; apps installed on request |
+| 4 Runtime | APT/dpkg, systemd, Docker, NGINX, libvirt, NetworkManager, UDisks2, Ollama, Postgres/Redis/Keycloak inside apps | Ubuntu archive (+ Ollama upstream, opt-in) |
+
+## Repository layout
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│ User layer        ~/.config (always wins)                              │
-├────────────────────────────────────────────────────────────────────────┤
-│ NexusOS layer     nexusos-desktop   metapackage + session defaults     │
-│                   nexusos-theme     Nexus LnF, colours, icons, Konsole │
-│                   nexusos-branding  identity, artwork, banner          │
-│                   nexusos-defaults  shell defaults                     │
-│                   nexus-cli         `nexus` toolkit                    │
-├────────────────────────────────────────────────────────────────────────┤
-│ Ubuntu layer      resolute main/universe: kernel, systemd, APT,        │
-│                   Plasma 6, SDDM, KVM/libvirt, docker.io, Python 3.14  │
-└────────────────────────────────────────────────────────────────────────┘
+branding/ desktop/ configs/          identity, artwork, Plasma theme, defaults (v0.1)
+command-center/
+  backend/nexus_core/                ONE implementation of every operation (CLI + UI + agent)
+    packages.py services.py settings.py metrics.py storage.py network.py files.py
+    ssh/ (profiles, config, credentials, askpass, hostkeys, sessions, sftp)
+    docker.py compose.py apps/ (registry, lifecycle) gateway/ (model, render, apply, certs, status)
+    ollama.py chat.py notifications.py activity.py search.py security.py store.py validation.py redact.py
+  privileged-agent/nexus_agent/      socket server, polkit auth, allow-listed ops, audit; systemd + polkit files
+  frontend/                          nexus_center (PySide6 shell, TaskRunner, base controller) + qml/ (Main, Nexus.Design)
+  modules/<id>/                      module.json + controller.py + Page.qml (14 modules)
+  tests/                             backend, agent, gateway, SSH, apps, modules, GUI tests
+packages/<pkg>/debian                Debian packaging (9 source packages)
+packages/nexus-cli/nexus_cli         CLI presentation layer (Typer/Rich) over nexus_core
+applications/                        registry + deployment definitions (no application source)
+gateway/                             NGINX include, route schema, example routes
+manifests/                           package sets + installation profiles (resolute)
+scripts/ tests/ iso/ docs/ .github/
 ```
 
-## Package graph
+## Process and privilege model
 
 ```
-nexusos-desktop ──► nexusos-theme ──► nexusos-branding
-      │                  └─► plasma-workspace, breeze-icon-theme
-      ├──► nexusos-defaults
-      ├──► nexus-cli ──► python3-{typer,rich,pydantic,httpx}
-      └──► kde-plasma-desktop, plasma-session-wayland, sddm, konsole, dolphin, kate, plasma-systemmonitor
+user session                                                     root (on demand)
+┌──────────────────────────┐   JSON lines over /run/nexusos/agent.sock   ┌────────────────────────────┐
+│ nexus-center / nexus CLI │ ─────────────────────────────────────────►  │ nexusos-agent (socket unit)│
+│  nexus_core (queries,    │   SO_PEERCRED → pkcheck (polkit action)     │  allow-listed ops only     │
+│  plans, validation)      │ ◄───────── progress / log / result ──────── │  apt · gateway · SMART · ufw│
+└──────────────────────────┘                                             │  audit log, exits when idle │
+      │ direct, polkit-protected system services                         └────────────────────────────┘
+      ├─ systemctl (systemd1.manage-units) ── hostnamectl/timedatectl ── udisksctl/UDisks2 ── nmcli/NetworkManager
+      ├─ Docker Engine API (local socket, user must be authorised for Docker)
+      └─ Ollama API (127.0.0.1:11434)
 ```
 
-All NexusOS packages are `Architecture: all`, built with debhelper 13 and
-`Rules-Requires-Root: no`. Package versions move in lockstep (`0.1.0~dev1`).
+* The Command Center and CLI always run as the user. Only operations without an existing
+  polkit-protected interface (APT, gateway files + NGINX reload, certificates, SMART,
+  firewall) go through the agent.
+* The agent accepts a fixed set of operations, each with a Pydantic parameter model
+  (`extra="forbid"`) and its own polkit action; it never accepts command lines, shell
+  fragments or arbitrary write paths. Unknown/invalid requests are rejected and audited.
+* Socket `0660 root:sudo`; polkit decides per request (`auth_admin_keep` for software and
+  gateway changes, `auth_admin` for repositories and firewall changes). Without polkit the
+  agent denies everything except root.
 
-## Identity (nexusos-branding)
+## Data
 
-* `/usr/lib/os-release` is **diverted** with `dpkg-divert --rename` to
-  `/usr/lib/os-release.ubuntu`; NexusOS installs its own file there. Ubuntu's
-  `/etc/os-release` symlink follows automatically. On removal the diversion is
-  undone and Ubuntu's file is restored (tested in CI).
-* `ID=nexusos`, `ID_LIKE=ubuntu`; `VERSION_CODENAME` and `UBUNTU_CODENAME` stay
-  `resolute` so third-party APT repositories and installers keyed on the Ubuntu
-  codename keep working.
-* `/etc/lsb-release`, kernel identity (`uname`), APT sources and the hostname are
-  **not** modified. `DEFAULT_HOSTNAME=nexusos` is only a fallback for systemd and
-  the installer.
+| Data | Location | Protection |
+|------|----------|------------|
+| UI settings, SSH profiles, notifications, activity, chat | `~/.local/share/nexusos/command-center.db` | 0600, row limits |
+| Secrets (SSH passwords, passphrases) | Secret Service (KDE Wallet) | never in files/DB/logs/argv |
+| Generated SSH config | `$XDG_RUNTIME_DIR/nexusos/ssh_config` | 0600, no secrets |
+| Application deployments | `~/.local/share/nexusos/apps/<id>/` | dir 0700, `.env` 0600 |
+| Gateway routes / certificates | `/etc/nexusos/gateway/` | written by the agent; keys 0600 |
+| Agent audit | `/var/log/nexusos/agent-audit.log` | 0640, rotated (5 × 1 MB) |
 
-## Desktop configuration
+## Profiles
 
-KDE reads configuration from `$XDG_CONFIG_HOME` (`~/.config`) and then each
-directory in `$XDG_CONFIG_DIRS`. NexusOS installs its defaults in
-`/usr/share/nexusos/xdg` and prepends that directory through a Plasma env script
-(`/etc/xdg/plasma-workspace/env/nexusos-xdg.sh`). This avoids file conflicts
-with other packages that ship `/etc/xdg/*`, keeps user settings authoritative,
-and disappears cleanly when `nexusos-desktop` is removed.
-
-The global theme `org.nexusos.nexus.desktop` composes upstream components:
-Breeze application style, window decoration and Plasma style (which follow the
-colour scheme), the Nexus colour scheme, the Nexus icon theme (inherits
-`breeze-dark`) and the NexusOS wallpaper. Its layout script creates a top
-system panel and a floating bottom dock using only stock Plasma widgets.
-
-## nexus-cli
-
-```
-nexus_cli/
-├── main.py            Typer root app, global options, version/help
-├── commands/          one Typer sub-app per group (system, dev, cloud, infra, ai) — rendering only
-├── services/          data collection, no printing (system, health, packages, cleanup,
-│                      docker, ollama, tools, scaffold, release)
-├── core/              logging, safe subprocess runner, output/confirm, error types, decorators
-├── models.py          Pydantic models (shared by tables and --json)
-└── templates/         project templates (FastAPI)
-```
-
-Design rules: services return models; commands render tables or JSON; external
-programs run as argv lists with timeouts and a scrubbed environment; Docker and
-Ollama are queried through their local HTTP APIs with HTTPX; exit codes are
-stable (0 ok, 1 failure, 2 invalid input, 3 missing dependency, 4 cancelled).
-
-## Image build
-
-* **Prototype**: Kubuntu 26.04 ISO remastered with Cubic + `iso/prototype/customize-chroot.sh`.
-* **Production (planned)**: mmdebstrap rootfs from manifests + local APT repo of
-  NexusOS packages → squashfs → signed shim/GRUB → xorriso hybrid ISO, built in a
-  container, smoke-tested in QEMU/OVMF. See `iso/production/README.md`.
-
-## Optional components
-
-AI (Ollama, Open WebUI), Kubernetes tooling, Terraform/OpenTofu and VS Code are
-*external*: documented post-install steps, never part of the ISO and never
-downloaded during the build.
+`manifests/profiles.yaml`: **Base Desktop** (default), **Development Workstation**,
+**Private Cloud Host**, **Infrastructure Operations**, **Local AI**. Applied on request
+(`nexus profiles apply <id>`); applications are always installed individually.

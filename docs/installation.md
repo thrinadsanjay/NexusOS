@@ -29,6 +29,37 @@ scripts/validation/test-packages-container.sh   # installs, verifies, removes in
 5. Roll back with `sudo apt remove nexusos-desktop nexusos-theme nexusos-branding nexusos-defaults nexus-cli`
    or revert the VM snapshot.
 
+## Disposable test VM
+
+The Command Center needs a real Plasma session (polkit prompts, KDE Wallet, Konsole,
+Dolphin, NetworkManager, UDisks2). Use a throwaway VM — never your workstation or a
+production Proxmox host.
+
+```bash
+# on a Linux host with KVM (sudo apt install qemu-system-x86 qemu-utils ovmf cloud-image-utils)
+scripts/development/build-packages.sh                     # build/debs/*.deb (+ SHA256SUMS)
+scripts/development/vm/create-test-vm.sh --memory 8192 --cpus 4 --disk 60G
+#   downloads + verifies the Ubuntu 26.04 cloud image, creates a qcow2 overlay FILE,
+#   cloud-init installs kubuntu-desktop, docker.io, nginx, openssh-server; SSH on localhost:2222
+scripts/development/vm/install-packages.sh build/debs     # scp + apt install inside the VM
+```
+
+In the VM window: log in to **Plasma (Wayland)** as `nexus` (set a password first with
+`ssh -p 2222 nexus@127.0.0.1 sudo passwd nexus`), start **Nexus Command Center**, then:
+
+- [ ] Software Center: search, install `hello` → polkit prompt → progress → history; remove; cancel during download
+- [ ] System Settings: open Display/Users KCMs; change time zone (polkit); start/stop `nginx.service`
+- [ ] Terminal & SSH: new local terminal (Konsole tab, split panes); add a profile; save a password in KDE Wallet; verify host key; connect; SFTP upload/download
+- [ ] Containers: list/start/stop/logs/inspect; pull an image; deploy a compose file (user in `docker` group *in the VM only*)
+- [ ] Nexus Applications: install Open WebUI; health; logs; backup; propose route
+- [ ] Gateway: install `nexusos-gateway`; issue internal CA cert; approve + apply route; open `https://<host>` with the CA trusted; break a cert and confirm rollback
+- [ ] Storage: inventory, SMART (agent), mount/unmount a **virtual** USB disk (`-drive file=extra.qcow2,if=virtio`); format it via the guarded flow
+- [ ] Network: connectivity, diagnostics, static IPv4 with checkpoint (do not confirm → rollback)
+- [ ] Local AI: install Ollama on request, pull a small model, chat with streaming and stop
+- [ ] `scripts/benchmarks/command-center.sh --installed --runs 5` → record results in docs/performance.md
+
+Destroy the VM afterwards (`rm -rf ~/nexusos-vm`).
+
 ## Option C — prototype ISO in a VM
 
 Build it with Cubic following [`iso/prototype/README.md`](../iso/prototype/README.md),

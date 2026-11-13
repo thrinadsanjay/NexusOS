@@ -7,7 +7,7 @@ step writes to physical disks or modifies the host's OS identity.
 
 ```bash
 git clone https://github.com/thrinadsanjay/NexusOS.git && cd NexusOS
-scripts/development/setup-dev-env.sh        # .venv with nexus-cli (editable), ruff, yamllint, pytest
+scripts/development/setup.sh                # .venv: nexus-core, agent, Command Center (PySide6), CLI, ruff, pytest
 . .venv/bin/activate
 ```
 
@@ -22,11 +22,12 @@ sudo apt install dpkg-dev debhelper dh-python pybuild-plugin-pyproject python3-a
 ## 2. Validate
 
 ```bash
-scripts/validation/run-all.sh                     # everything available, with a PASS/FAIL/SKIPPED summary
+scripts/development/validate.sh [--archive]       # everything available, PASS/FAIL/SKIPPED summary
+scripts/development/test-command-center.sh [--benchmark]
+scripts/development/test-cli.sh
 python3 scripts/validation/validate_manifests.py --check-archive   # names vs resolute archive (network)
 python3 scripts/validation/validate_branding.py
 python3 scripts/validation/validate_debian.py [--debs build/debs]
-scripts/development/run-cli-tests.sh
 ```
 
 ## 3. Branding derivatives
@@ -41,8 +42,9 @@ scripts/build/render-branding.sh                 # PNG/WebP previews -> build/br
 Reference build (matches the target release exactly):
 
 ```bash
-scripts/package/build-in-container.sh            # ubuntu:26.04, unprivileged builder, lintian
-scripts/validation/test-packages-container.sh    # install / reinstall / remove / purge test
+scripts/development/build-packages.sh            # ubuntu:26.04 build of all 9 packages, lintian, checksums
+scripts/validation/test-packages-container.sh    # branding install / reinstall / remove / purge test
+scripts/validation/integration-container.sh      # agent + real APT, real NGINX gateway, CLI, Command Center
 python3 scripts/validation/validate_debian.py --debs build/debs
 scripts/build/checksums.sh generate build/debs
 ```
@@ -62,7 +64,19 @@ icons, theme previews) are rendered from SVG by each package's `debian/rules`.
 > Host builds of `nexus-cli` need a standard `/usr/bin/python3` symlink;
 > dh-python refuses non-default interpreters. Use the container build otherwise.
 
-## 5. Prototype ISO
+Source packages (9): nexusos-branding, nexusos-theme, nexusos-defaults, nexus-core
+(binary `python3-nexus-core`), nexusos-management-agent, nexusos-command-center,
+nexus-cli, nexusos-gateway, nexusos-desktop. Python projects are built with dh-python /
+pybuild-plugin-pyproject; QML, modules, the application registry and manifests are
+installed as data under `/usr/share`.
+
+## 5. Command Center benchmarks
+
+```bash
+scripts/benchmarks/command-center.sh --runs 3 --idle 20      # writes build/benchmarks/*.json
+```
+
+## 6. Prototype ISO
 
 See [`iso/prototype/README.md`](../iso/prototype/README.md) (Cubic, in a VM).
 Inspect any image read-only with:
@@ -71,6 +85,6 @@ Inspect any image read-only with:
 scripts/build/inspect-iso.sh --sums SHA256SUMS --deep nexusos.iso
 ```
 
-## 6. Production ISO
+## 7. Production ISO
 
 Planned; see [`iso/production/README.md`](../iso/production/README.md).
