@@ -1,0 +1,26 @@
+Source: nexusos-defaults
+Section: misc
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexusos-defaults
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}
+Recommends: zsh
+Suggests: zsh-autosuggestions, zsh-syntax-highlighting
+Description: NexusOS Engineering Edition shell defaults
+ Default shell environment for NexusOS:
+ .
+  * a default ~/.zshrc template in /usr/share/nexusos/skel (the NexusOS
+    image copies it to /etc/skel; packages never touch home directories)
+  * shared aliases for bash and zsh and the NexusOS zsh prompt in
+    /usr/share/nexusos/shell
+ .
+ The login shell of existing accounts is not changed.

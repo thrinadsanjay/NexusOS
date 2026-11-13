@@ -1,0 +1,12 @@
+# Repository paths staged into the source package by scripts/package/build-deb.sh.
+# Format: <repo-relative source> <destination inside the staged source tree>
+branding/logo                         assets/branding/logo
+branding/icons                        assets/branding/icons
+branding/boot                         assets/branding/boot
+branding/wallpapers                   assets/branding/wallpapers
+branding/design-tokens.json           assets/branding/design-tokens.json
+desktop/wallpapers                    assets/wallpapers
+configs/os-release                    assets/os-release
+configs/shell/ascii-logo.txt          assets/shell/ascii-logo.txt
+configs/shell/nexusos-banner.sh       assets/shell/nexusos-banner.sh
+configs/shell/fastfetch/config.jsonc  assets/shell/fastfetch/config.jsonc

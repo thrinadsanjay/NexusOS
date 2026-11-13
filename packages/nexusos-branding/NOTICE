@@ -1,0 +1,18 @@
+NexusOS Engineering Edition
+===========================
+
+NexusOS is an independent Linux distribution built on Ubuntu 26.04 LTS
+("resolute"). It is NOT an official Ubuntu product and is not affiliated with,
+sponsored by, or endorsed by Canonical Ltd.
+
+Ubuntu, Kubuntu and Canonical are registered trademarks of Canonical Ltd.
+KDE and Plasma are trademarks of KDE e.V. Linux is a registered trademark of
+Linus Torvalds. All other trademarks are the property of their respective owners.
+
+Software from the Ubuntu archive keeps its original copyright and license
+terms; see /usr/share/doc/<package>/copyright for each installed package.
+The original Ubuntu os-release file is preserved as /usr/lib/os-release.ubuntu
+while nexusos-branding is installed.
+
+NexusOS artwork and configuration are (c) NexusOS contributors and licensed
+under the GNU General Public License, version 2 or later.

@@ -1,0 +1,3 @@
+# Repository paths staged into the source package by scripts/package/build-deb.sh.
+configs/kde/xdg               xdg
+configs/sddm/50-nexusos.conf  sddm/50-nexusos.conf

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Restore Ubuntu's os-release when the package is removed or its install is aborted.
+# Upgrades keep the diversion in place.
+set -e
+
+case "$1" in
+    remove|abort-install|disappear)
+        dpkg-divert --package nexusos-branding --remove --rename \
+            --divert /usr/lib/os-release.ubuntu /usr/lib/os-release
+        ;;
+    purge|upgrade|failed-upgrade|abort-upgrade)
+        ;;
+    *)
+        echo "postrm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

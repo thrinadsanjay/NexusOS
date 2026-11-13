@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+P := debian/nexusos-defaults
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	# Template only: Debian policy keeps /etc/skel empty; the ISO build copies it there.
+	install -D -m 0644 shell/zshrc $(P)/usr/share/nexusos/skel/.zshrc
+	install -D -m 0644 shell/nexus-aliases.sh $(P)/usr/share/nexusos/shell/nexus-aliases.sh
+	install -D -m 0644 shell/nexus-prompt.zsh $(P)/usr/share/nexusos/shell/nexus-prompt.zsh

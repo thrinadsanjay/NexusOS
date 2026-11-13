@@ -1,0 +1,31 @@
+Source: nexusos-branding
+Section: misc
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13),
+               librsvg2-bin,
+               optipng,
+               fonts-inter,
+               fonts-jetbrains-mono
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexusos-branding
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}
+Recommends: fastfetch
+Description: NexusOS Engineering Edition identity and artwork
+ Provides the NexusOS operating system identity and brand assets:
+ .
+  * /usr/lib/os-release identifying NexusOS (ID_LIKE=ubuntu); the Ubuntu
+    original is kept via dpkg-divert and restored when the package is removed
+  * NexusOS release metadata (/usr/lib/nexusos/release)
+  * default hostname for installers (never applied to the running system)
+  * terminal banner and ASCII logo, fastfetch configuration
+  * logos, application icon and KDE wallpaper packages
+ .
+ Kernel identity, /etc/lsb-release and APT configuration are not modified.

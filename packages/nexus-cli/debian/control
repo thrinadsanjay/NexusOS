@@ -1,0 +1,33 @@
+Source: nexus-cli
+Section: admin
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools,
+               pybuild-plugin-pyproject
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexus-cli
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3-typer,
+         python3-rich,
+         python3-pydantic (>= 2),
+         python3-httpx
+Suggests: docker.io, ollama, nodejs, npm
+Description: NexusOS Engineering Edition command-line toolkit
+ The "nexus" command provides system information and read-only health
+ checks, APT update and cleanup previews (privileged steps run only after
+ explicit confirmation), FastAPI and React project scaffolding, cloud tool
+ detection, Docker/KVM/libvirt status and local Ollama model listing.
+ .
+ Works on any Ubuntu-based system; NexusOS-specific details are shown when
+ nexusos-branding is installed.

@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+P := debian/nexusos-desktop
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -d $(P)/usr/share/nexusos/xdg
+	install -m 0644 xdg/kdeglobals xdg/konsolerc xdg/kcm-about-distrorc xdg/ksplashrc $(P)/usr/share/nexusos/xdg/
+	install -D -m 0644 xdg/plasma-workspace/env/nexusos-xdg.sh $(P)/etc/xdg/plasma-workspace/env/nexusos-xdg.sh
+	install -D -m 0644 sddm/50-nexusos.conf $(P)/etc/sddm.conf.d/50-nexusos.conf
+	install -d $(P)/usr/share/applications
+	install -m 0644 applications/*.desktop $(P)/usr/share/applications/

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Nexus Dev
+GenericName=NexusOS CLI
+Comment=Project templates and development toolchains
+Exec=konsole --profile Nexus --hold -e nexus dev list
+TryExec=nexus
+Icon=nexusos
+Terminal=false
+Categories=Development;
+Keywords=nexus;nexusos;

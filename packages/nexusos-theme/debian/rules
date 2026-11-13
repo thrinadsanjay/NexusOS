@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+
+P := debian/nexusos-theme
+LNF := $(P)/usr/share/plasma/look-and-feel/org.nexusos.nexus.desktop
+ICONS := $(P)/usr/share/icons/Nexus
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	mkdir -p debian/rendered
+	rsvg-convert -w 1920 -h 1080 previews/nexusos-default.svg -o debian/rendered/preview.png
+	optipng -quiet -o2 debian/rendered/preview.png
+
+override_dh_auto_install:
+	# Look-and-feel package
+	install -D -m 0644 lookandfeel/metadata.json $(LNF)/metadata.json
+	install -D -m 0644 lookandfeel/contents/defaults $(LNF)/contents/defaults
+	install -D -m 0644 lookandfeel/contents/layouts/org.kde.plasma.desktop-layout.js \
+	  $(LNF)/contents/layouts/org.kde.plasma.desktop-layout.js
+	install -D -m 0644 debian/rendered/preview.png $(LNF)/contents/previews/preview.png
+	# Colour scheme
+	install -D -m 0644 color-schemes/Nexus.colors $(P)/usr/share/color-schemes/Nexus.colors
+	# Icon theme: brand icons over breeze-dark
+	install -D -m 0644 icons/Nexus/index.theme $(ICONS)/index.theme
+	install -D -m 0644 icons/nexus-n.svg $(ICONS)/apps/scalable/nexusos.svg
+	set -e; for name in start-here start-here-kde start-here-kde-plasma distributor-logo; do \
+	  install -D -m 0644 icons/nexus-n.svg $(ICONS)/places/scalable/$$name.svg; \
+	done
+	# Konsole
+	install -D -m 0644 konsole/Nexus.profile $(P)/usr/share/konsole/Nexus.profile
+	install -D -m 0644 konsole/Nexus.colorscheme $(P)/usr/share/konsole/Nexus.colorscheme
+
+override_dh_clean:
+	dh_clean debian/rendered/

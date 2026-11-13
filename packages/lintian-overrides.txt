@@ -1,0 +1,7 @@
+# Lintian tags suppressed for all NexusOS packages (one tag per line).
+# Each entry needs a justification.
+
+# Development builds target UNRELEASED until the release process assigns "resolute".
+bad-distribution-in-changes-file
+# Placeholder maintainer address until the project has a public contact.
+maintainer-address-causes-mail-loops-or-bounces

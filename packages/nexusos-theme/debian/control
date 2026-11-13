@@ -1,0 +1,32 @@
+Source: nexusos-theme
+Section: kde
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13),
+               librsvg2-bin,
+               optipng
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexusos-theme
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         nexusos-branding (= ${source:Version}),
+         breeze-icon-theme,
+         plasma-workspace
+Recommends: fonts-inter, fonts-jetbrains-mono, konsole
+Description: Nexus global theme for KDE Plasma 6
+ The NexusOS Engineering Edition look-and-feel package "Nexus":
+ .
+  * Nexus colour scheme (dark, teal accent) generated from design tokens
+  * global theme with top system panel and floating bottom dock layout
+  * Nexus icon theme (Breeze Dark plus NexusOS launcher icons)
+  * Nexus Konsole profile and terminal palette
+ .
+ Installing the package only makes the theme available; it does not change
+ any existing user's configuration. Select it in System Settings > Global
+ Theme, or install nexusos-desktop to make it the default for new sessions.

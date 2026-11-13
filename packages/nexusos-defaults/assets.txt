@@ -1,0 +1,4 @@
+# Repository paths staged into the source package by scripts/package/build-deb.sh.
+configs/shell/zshrc             shell/zshrc
+configs/shell/nexus-aliases.sh  shell/nexus-aliases.sh
+configs/shell/nexus-prompt.zsh  shell/nexus-prompt.zsh

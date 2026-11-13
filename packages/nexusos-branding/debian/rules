@@ -1,0 +1,62 @@
+#!/usr/bin/make -f
+# Rasters are rendered from the SVG masters at build time; none are stored in Git.
+
+WALLPAPER_SIZES := 3840x2160 2560x1440 1920x1080 1366x768
+ICON_SIZES := 16 22 24 32 48 64 128 256 512
+P := debian/nexusos-branding
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	set -e; \
+	for spec in default:NexusOS abstract:NexusOS-Abstract engineering:NexusOS-Engineering; do \
+	  src=$${spec%%:*}; pkg=$${spec##*:}; \
+	  mkdir -p debian/rendered/wallpapers/$$pkg/contents/images; \
+	  for size in $(WALLPAPER_SIZES); do \
+	    w=$${size%x*}; h=$${size#*x}; \
+	    rsvg-convert -w $$w -h $$h assets/branding/wallpapers/nexusos-$$src.svg \
+	      -o debian/rendered/wallpapers/$$pkg/contents/images/$$size.png; \
+	  done; \
+	  rsvg-convert -w 400 -h 225 assets/branding/wallpapers/nexusos-$$src.svg \
+	    -o debian/rendered/wallpapers/$$pkg/contents/screenshot.png; \
+	done
+	set -e; mkdir -p debian/rendered/icons; \
+	for s in $(ICON_SIZES); do \
+	  rsvg-convert -w $$s -h $$s assets/branding/icons/nexus-n.svg -o debian/rendered/icons/nexusos-$$s.png; \
+	done
+	find debian/rendered -name '*.png' -print0 | xargs -0 -r optipng -quiet -o2
+
+override_dh_auto_install:
+	# OS identity (Ubuntu's /usr/lib/os-release is diverted in preinst)
+	install -D -m 0644 assets/os-release/os-release $(P)/usr/lib/os-release
+	install -D -m 0644 assets/os-release/nexusos-release $(P)/usr/lib/nexusos/release
+	install -D -m 0644 assets/os-release/hostname $(P)/usr/share/nexusos/defaults/hostname
+	# Terminal identity
+	install -D -m 0644 assets/shell/ascii-logo.txt $(P)/usr/share/nexusos/ascii-logo.txt
+	install -D -m 0644 assets/shell/nexusos-banner.sh $(P)/etc/profile.d/nexusos-banner.sh
+	install -D -m 0644 assets/shell/fastfetch/config.jsonc $(P)/etc/xdg/fastfetch/config.jsonc
+	# Brand masters
+	install -d $(P)/usr/share/nexusos/branding
+	install -m 0644 assets/branding/logo/*.svg assets/branding/icons/*.svg assets/branding/boot/*.svg \
+	  assets/branding/design-tokens.json $(P)/usr/share/nexusos/branding/
+	install -D -m 0644 assets/branding/icons/nexus-n.svg $(P)/usr/share/icons/hicolor/scalable/apps/nexusos.svg
+	set -e; for s in $(ICON_SIZES); do \
+	  install -D -m 0644 debian/rendered/icons/nexusos-$$s.png $(P)/usr/share/icons/hicolor/$${s}x$${s}/apps/nexusos.png; \
+	done
+	# KDE wallpaper packages
+	set -e; for pkg in NexusOS NexusOS-Abstract NexusOS-Engineering; do \
+	  install -D -m 0644 assets/wallpapers/$$pkg/metadata.json $(P)/usr/share/wallpapers/$$pkg/metadata.json; \
+	  install -D -m 0644 debian/rendered/wallpapers/$$pkg/contents/screenshot.png \
+	    $(P)/usr/share/wallpapers/$$pkg/contents/screenshot.png; \
+	  install -d $(P)/usr/share/wallpapers/$$pkg/contents/images; \
+	  install -m 0644 debian/rendered/wallpapers/$$pkg/contents/images/*.png \
+	    $(P)/usr/share/wallpapers/$$pkg/contents/images/; \
+	done
+	install -d $(P)/usr/share/backgrounds/nexusos
+	install -m 0644 assets/branding/wallpapers/*.svg $(P)/usr/share/backgrounds/nexusos/
+	# Legal / attribution
+	install -D -m 0644 NOTICE $(P)/usr/share/nexusos/legal/NOTICE
+
+override_dh_clean:
+	dh_clean debian/rendered/

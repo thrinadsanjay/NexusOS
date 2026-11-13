@@ -1,0 +1,47 @@
+Source: nexusos-desktop
+Section: kde
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexusos-desktop
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         nexusos-branding (= ${source:Version}),
+         nexusos-theme (= ${source:Version}),
+         nexusos-defaults (= ${source:Version}),
+         nexus-cli,
+         kde-plasma-desktop,
+         plasma-session-wayland,
+         plasma-systemmonitor,
+         sddm,
+         konsole,
+         dolphin,
+         kate
+Recommends: fastfetch,
+            fonts-inter,
+            fonts-jetbrains-mono,
+            kde-config-sddm,
+            kde-spectacle,
+            plasma-nm,
+            plasma-pa,
+            xdg-desktop-portal-kde,
+            zsh
+Description: NexusOS Engineering Edition KDE Plasma desktop
+ Metapackage and session defaults for the NexusOS desktop:
+ .
+  * pulls in KDE Plasma 6 (Wayland session), SDDM and core applications
+  * makes the Nexus global theme, fonts and Konsole profile the system-wide
+    defaults through a dedicated XDG configuration directory
+    (/usr/share/nexusos/xdg) instead of overwriting files in /etc/xdg
+  * SDDM drop-in selecting the Breeze greeter on Wayland (placeholder until
+    the Nexus greeter exists)
+  * Nexus Dev, Nexus Infra and Nexus AI launchers for the dock
+ .
+ Per-user settings in ~/.config always take precedence.

@@ -1,0 +1,57 @@
+.TH NEXUS 1 "November 2026" "nexus-cli 0.1.0" "NexusOS Engineering Edition"
+.SH NAME
+nexus \- NexusOS Engineering Edition command-line toolkit
+.SH SYNOPSIS
+.B nexus
+[\fB\-\-verbose\fR] [\fB\-\-log\-file\fR \fIPATH\fR]
+\fICOMMAND\fR [\fIARGS\fR...]
+.SH DESCRIPTION
+.B nexus
+reports system, development, infrastructure and local-AI status on NexusOS
+and other Ubuntu-based systems. Commands are read-only unless stated
+otherwise; privileged steps are shown first and run through
+.BR sudo (8)
+only after interactive confirmation.
+.SH COMMANDS
+.TP
+.B version
+CLI, operating system and Python versions.
+.TP
+.B help \fR[\fIGROUP\fR]
+Help for all commands or one group.
+.TP
+.B system info\fR | \fBhealth\fR | \fBupdate\fR | \fBcleanup
+System information; read-only health checks (exit 1 on failure); APT upgrade
+preview with confirmation (\fB\-\-refresh\fR, \fB\-\-dry\-run\fR); cleanup preview
+(\fB\-\-apply\fR to clean after per-item confirmation).
+.TP
+.B dev list\fR | \fBdev create fastapi \fINAME\fR | \fBdev create react \fINAME
+Templates and toolchains; generate a FastAPI project offline; scaffold React
+with Vite via npm (\fB\-\-dry\-run\fR, \fB\-\-yes\fR).
+.TP
+.B cloud status
+Detect cloud and Kubernetes CLIs. Credentials are never read or printed.
+.TP
+.B infra status\fR | \fBinfra containers
+Docker, KVM, libvirt and Podman status; list Docker containers via the Engine API.
+.TP
+.B ai status\fR | \fBai models
+Detect Ollama and list locally installed models. Models are never downloaded.
+.PP
+Most read-only commands accept \fB\-\-json\fR.
+.SH EXIT STATUS
+0 success; 1 failure or failed health check; 2 invalid input;
+3 missing dependency or unreachable service; 4 cancelled; 70 internal error.
+.SH ENVIRONMENT
+.TP
+.B OLLAMA_HOST
+Ollama endpoint (default http://127.0.0.1:11434). URLs with credentials are rejected.
+.TP
+.B DOCKER_HOST
+Only unix:// sockets are queried.
+.SH FILES
+.I /etc/os-release\fR, \fI/usr/lib/nexusos/release
+.SH SEE ALSO
+.BR apt-get (8),
+.BR docker (1),
+.BR ollama (1)

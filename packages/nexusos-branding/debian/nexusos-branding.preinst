@@ -1,0 +1,15 @@
+#!/bin/sh
+# Divert Ubuntu's /usr/lib/os-release before our copy is unpacked. Nothing else
+# on the system is changed: no hostname, kernel or APT configuration edits.
+set -e
+
+case "$1" in
+    install|upgrade)
+        dpkg-divert --package nexusos-branding --add --rename \
+            --divert /usr/lib/os-release.ubuntu /usr/lib/os-release
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

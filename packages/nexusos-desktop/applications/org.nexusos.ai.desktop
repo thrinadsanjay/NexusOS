@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Nexus AI
+GenericName=NexusOS CLI
+Comment=Local AI (Ollama) status and installed models
+Exec=konsole --profile Nexus --hold -e nexus ai status
+TryExec=nexus
+Icon=nexusos
+Terminal=false
+Categories=Utility;
+Keywords=nexus;nexusos;

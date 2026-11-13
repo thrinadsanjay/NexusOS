@@ -1,0 +1,32 @@
+# NexusOS default ~/.zshrc -- shipped as /usr/share/nexusos/skel/.zshrc by nexusos-defaults.
+# The NexusOS image build copies it to /etc/skel, so only *new* accounts receive it.
+# Existing users can opt in with: cp /usr/share/nexusos/skel/.zshrc ~/.zshrc
+
+# History
+HISTFILE=${HISTFILE:-$HOME/.zsh_history}
+HISTSIZE=50000
+SAVEHIST=50000
+setopt APPEND_HISTORY SHARE_HISTORY HIST_IGNORE_DUPS HIST_IGNORE_SPACE HIST_REDUCE_BLANKS
+setopt AUTO_CD INTERACTIVE_COMMENTS NO_BEEP
+
+# Completion
+autoload -Uz compinit && compinit -d "${XDG_CACHE_HOME:-$HOME/.cache}/zcompdump"
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+bindkey -e
+
+# NexusOS shared shell defaults (aliases, prompt). Safe to remove.
+[ -r /usr/share/nexusos/shell/nexus-aliases.sh ] && . /usr/share/nexusos/shell/nexus-aliases.sh
+[ -r /usr/share/nexusos/shell/nexus-prompt.zsh ] && . /usr/share/nexusos/shell/nexus-prompt.zsh
+
+# Optional Ubuntu-packaged plugins (installed by the development manifest).
+for _nx_plugin in \
+    /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+    /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
+    [ -r "$_nx_plugin" ] && . "$_nx_plugin"
+done
+unset _nx_plugin
+
+# Local overrides
+[ -r "$HOME/.zshrc.local" ] && . "$HOME/.zshrc.local"

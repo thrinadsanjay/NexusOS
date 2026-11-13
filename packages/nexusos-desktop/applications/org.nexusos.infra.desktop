@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Nexus Infra
+GenericName=NexusOS CLI
+Comment=Docker, KVM and libvirt status
+Exec=konsole --profile Nexus --hold -e nexus infra status
+TryExec=nexus
+Icon=nexusos
+Terminal=false
+Categories=System;Monitor;
+Keywords=nexus;nexusos;
