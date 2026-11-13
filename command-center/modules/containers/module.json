@@ -1,0 +1,10 @@
+{
+  "id": "containers",
+  "title": "Containers",
+  "order": 50,
+  "icon": "docker",
+  "description": "Docker Engine containers, images, volumes, networks and Compose",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}
