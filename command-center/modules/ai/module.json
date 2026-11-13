@@ -1,0 +1,10 @@
+{
+  "id": "ai",
+  "title": "Local AI",
+  "order": 110,
+  "icon": "applications-science",
+  "description": "Ollama models and the native chat",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

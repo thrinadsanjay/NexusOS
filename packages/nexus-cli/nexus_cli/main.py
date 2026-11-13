@@ -7,15 +7,29 @@ import sys
 from pathlib import Path
 
 import typer
+from nexus_core.errors import ValidationError
+from nexus_core.models import VersionInfo
+from nexus_core.release import read_nexusos_release, read_os_release
 
 from nexus_cli import __version__
-from nexus_cli.commands import ai, cloud, dev, infra, system
+from nexus_cli.commands import (
+    ai,
+    apps,
+    cloud,
+    containers,
+    dev,
+    gateway,
+    infra,
+    network,
+    packages,
+    profiles,
+    ssh,
+    storage,
+    system,
+)
 from nexus_cli.core.decorators import handle_errors
-from nexus_cli.core.errors import ValidationError
 from nexus_cli.core.logging import configure_logging, get_logger
 from nexus_cli.core.output import console, err_console, print_json
-from nexus_cli.models import VersionInfo
-from nexus_cli.services.release import read_nexusos_release, read_os_release
 
 app = typer.Typer(
     name="nexus",
@@ -29,6 +43,14 @@ app.add_typer(dev.app, name="dev")
 app.add_typer(cloud.app, name="cloud")
 app.add_typer(infra.app, name="infra")
 app.add_typer(ai.app, name="ai")
+app.add_typer(packages.app, name="packages")
+app.add_typer(ssh.app, name="ssh")
+app.add_typer(containers.app, name="containers")
+app.add_typer(apps.app, name="apps")
+app.add_typer(gateway.app, name="gateway")
+app.add_typer(storage.app, name="storage")
+app.add_typer(network.app, name="network")
+app.add_typer(profiles.app, name="profiles")
 
 
 @app.callback()
