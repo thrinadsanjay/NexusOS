@@ -1,0 +1,2 @@
+debian/nexusos-management-agent.nexusos-agent.socket
+debian/nexusos-management-agent.nexusos-agent.service

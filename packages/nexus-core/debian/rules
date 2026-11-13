@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME = nexus_core
+export PYBUILD_DISABLE = test
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_install:
+	dh_auto_install
+	# askpass helper at a stable path referenced by generated SSH commands
+	install -d debian/python3-nexus-core/usr/lib/nexusos
+	mv debian/python3-nexus-core/usr/bin/nexus-askpass debian/python3-nexus-core/usr/lib/nexusos/nexus-askpass
+	rmdir --ignore-fail-on-non-empty debian/python3-nexus-core/usr/bin
+	# shared read-only data: application registry + deployment definitions, manifests and profiles
+	install -d debian/python3-nexus-core/usr/share/nexusos
+	cp -r applications debian/python3-nexus-core/usr/share/nexusos/applications
+	install -d debian/python3-nexus-core/usr/share/nexusos/manifests
+	install -m 0644 manifests/*.yaml debian/python3-nexus-core/usr/share/nexusos/manifests/

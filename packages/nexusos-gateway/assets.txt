@@ -1,0 +1,3 @@
+gateway/nginx/nexusos-gateway.conf   nginx/nexusos-gateway.conf
+gateway/schema/route.schema.json     schema/route.schema.json
+gateway/routes/examples              examples

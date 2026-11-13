@@ -1,0 +1,35 @@
+Source: nexusos-management-agent
+Section: admin
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools,
+               pybuild-plugin-pyproject
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexusos-management-agent
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3-nexus-core (= ${source:Version}),
+         polkitd,
+         apt,
+         openssl
+Recommends: smartmontools, ufw
+Description: NexusOS management agent (privileged helper)
+ A small privileged helper for the Nexus Command Center and the nexus CLI.
+ It is started on demand by systemd socket activation
+ (/run/nexusos/agent.sock, group sudo), authorizes every request with polkit,
+ performs only allow-listed operations (APT changes with progress and safe
+ cancellation, repository management, gateway activation with nginx -t and
+ rollback, certificate issuance, SMART and firewall status), audits each
+ request and exits after two idle minutes.
+ .
+ The Command Center itself always runs as the logged-in user.

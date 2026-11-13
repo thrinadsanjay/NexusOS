@@ -1,0 +1,5 @@
+# The Python project lives in command-center/backend.
+command-center/backend/pyproject.toml   pyproject.toml
+command-center/backend/nexus_core       nexus_core
+applications                            applications
+manifests                               manifests

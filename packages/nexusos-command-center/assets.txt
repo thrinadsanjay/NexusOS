@@ -1,0 +1,7 @@
+command-center/frontend/pyproject.toml                      pyproject.toml
+command-center/frontend/nexus_center                        nexus_center
+command-center/frontend/qml                                 qml
+command-center/frontend/org.nexusos.CommandCenter.desktop   org.nexusos.CommandCenter.desktop
+command-center/frontend/nexus-center.1                      nexus-center.1
+command-center/modules                                      modules
+branding/icons/nexusos-command-center.svg                   nexusos-command-center.svg

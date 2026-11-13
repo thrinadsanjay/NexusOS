@@ -1,0 +1,25 @@
+#!/bin/sh
+# On purge remove generated configuration and backups. Route definitions and
+# certificates (user data, private keys) are kept and reported.
+set -e
+
+case "$1" in
+    purge)
+        rm -rf /etc/nexusos/gateway/generated /etc/nexusos/gateway/generated.prev \
+               /etc/nexusos/gateway/generated.staging /etc/nexusos/gateway/backups \
+               /etc/nexusos/gateway/state.json
+        if [ -d /etc/nexusos/gateway/routes ] || [ -d /etc/nexusos/gateway/certificates ]; then
+            echo "nexusos-gateway: kept /etc/nexusos/gateway/routes and certificates (remove manually if unwanted)" >&2
+        fi
+        ;;
+    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        ;;
+    *)
+        echo "postrm called with unknown argument '$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

@@ -5,13 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import typer
+from nexus_core import runner, scaffold, tools
+from nexus_core.errors import AbortedError, NexusError
 from rich.table import Table
 
-from nexus_cli.core import runner
 from nexus_cli.core.decorators import handle_errors
-from nexus_cli.core.errors import AbortedError, NexusError
 from nexus_cli.core.output import confirm, console, print_json
-from nexus_cli.services import scaffold, tools
 
 app = typer.Typer(help="Development templates and toolchains.", no_args_is_help=True)
 create_app = typer.Typer(help="Create a new project from a template.", no_args_is_help=True)

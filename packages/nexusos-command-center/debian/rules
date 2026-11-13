@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME = nexus_center
+export PYBUILD_DISABLE = test
+P := debian/nexusos-command-center
+SHARE := $(P)/usr/share/nexusos-command-center
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_install:
+	dh_auto_install
+	install -d $(SHARE)
+	cp -r qml $(SHARE)/qml
+	cp -r modules $(SHARE)/modules
+	find $(SHARE) -name '__pycache__' -prune -exec rm -r {} +
+	find $(SHARE) -type f -exec chmod 0644 {} +
+	install -D -m 0644 org.nexusos.CommandCenter.desktop $(P)/usr/share/applications/org.nexusos.CommandCenter.desktop
+	install -D -m 0644 nexusos-command-center.svg $(P)/usr/share/icons/hicolor/scalable/apps/nexusos-command-center.svg

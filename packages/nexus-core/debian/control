@@ -1,0 +1,34 @@
+Source: nexus-core
+Section: python
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools,
+               pybuild-plugin-pyproject
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: python3-nexus-core
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3-pydantic (>= 2),
+         python3-httpx,
+         python3-yaml
+Recommends: python3-secretstorage, python3-paramiko, openssh-client, udisks2, network-manager
+Description: NexusOS shared management backend
+ The single implementation of NexusOS management operations used by the
+ nexus CLI, the Nexus Command Center and the NexusOS management agent:
+ APT/dpkg queries and plans, systemd services, settings, SSH profiles and
+ Secret Service credentials, Docker Engine and Compose, the Nexus application
+ registry, the NGINX gateway model, storage, NetworkManager, Ollama and the
+ notification/activity store.
+ .
+ Also ships /usr/lib/nexusos/nexus-askpass, which answers OpenSSH password
+ prompts from the Secret Service and refuses every other prompt.

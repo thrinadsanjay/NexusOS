@@ -25,7 +25,19 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGES_DIR = REPO_ROOT / "packages"
-PACKAGES = ("nexusos-branding", "nexusos-theme", "nexus-cli", "nexusos-defaults", "nexusos-desktop")
+PACKAGES = (
+    "nexusos-branding",
+    "nexusos-theme",
+    "nexus-core",
+    "nexusos-management-agent",
+    "nexusos-command-center",
+    "nexus-cli",
+    "nexusos-defaults",
+    "nexusos-gateway",
+    "nexusos-desktop",
+)
+# Binary package name when it differs from the source package.
+BINARY = {"nexus-core": "python3-nexus-core"}
 MAINTAINER_SCRIPTS = ("preinst", "postinst", "prerm", "postrm")
 CHANGELOG_RE = re.compile(r"^(?P<name>[a-z0-9.+-]+) \((?P<version>[^)]+)\) (?P<dist>[A-Za-z-]+); urgency=\w+")
 
@@ -60,6 +72,27 @@ EXPECTED_PATHS = {
         "./usr/share/nexusos/skel/.zshrc",
         "./usr/share/nexusos/shell/nexus-aliases.sh",
         "./usr/share/nexusos/shell/nexus-prompt.zsh",
+    ],
+    "nexus-core": [
+        "./usr/lib/nexusos/nexus-askpass",
+    ],
+    "nexusos-management-agent": [
+        "./usr/share/polkit-1/actions/org.nexusos.agent.policy",
+        "./usr/lib/systemd/system/nexusos-agent.socket",
+        "./usr/lib/systemd/system/nexusos-agent.service",
+    ],
+    "nexusos-command-center": [
+        "./usr/bin/nexus-center",
+        "./usr/share/nexusos-command-center/qml/Main.qml",
+        "./usr/share/nexusos-command-center/qml/Nexus/Design/Theme.qml",
+        "./usr/share/nexusos-command-center/modules/overview/module.json",
+        "./usr/share/nexusos-command-center/modules/packages/controller.py",
+        "./usr/share/applications/org.nexusos.CommandCenter.desktop",
+        "./usr/share/icons/hicolor/scalable/apps/nexusos-command-center.svg",
+    ],
+    "nexusos-gateway": [
+        "./etc/nginx/conf.d/nexusos-gateway.conf",
+        "./usr/share/nexusos/gateway/route.schema.json",
     ],
     "nexusos-desktop": [
         "./usr/share/nexusos/xdg/kdeglobals",
@@ -179,7 +212,8 @@ def check_debs(deb_dir: Path) -> list[str]:
     versions = changelog_versions()
     for name in PACKAGES:
         before = len(errors)
-        debs = sorted(deb_dir.glob(f"{name}_*.deb"))
+        binary = BINARY.get(name, name)
+        debs = sorted(deb_dir.glob(f"{binary}_*.deb"))
         if not debs:
             errors.append(f"{name}: no .deb in {deb_dir}")
             continue
@@ -191,7 +225,7 @@ def check_debs(deb_dir: Path) -> list[str]:
             check=True,
         ).stdout
         meta = {k.strip(): v.strip() for k, v in (line.split(":", 1) for line in fields.splitlines() if ":" in line)}
-        if meta.get("Package") != name or meta.get("Version") != versions[name]:
+        if meta.get("Package") != binary or meta.get("Version") != versions[name]:
             errors.append(f"{name}: built metadata {meta} does not match changelog {versions[name]}")
         listing = subprocess.run(
             ["dpkg-deb", "--contents", str(deb)], capture_output=True, text=True, check=True

@@ -18,7 +18,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BUILD_DIR="${NEXUSOS_BUILD_DIR:-$REPO_ROOT/build}"
 OUT_DIR="$BUILD_DIR/debs"
 RUN_LINTIAN=1
-ALL_PACKAGES=(nexusos-branding nexusos-theme nexus-cli nexusos-defaults nexusos-desktop)
+ALL_PACKAGES=(nexusos-branding nexusos-theme nexus-core nexusos-management-agent nexusos-command-center nexus-cli nexusos-defaults nexusos-gateway nexusos-desktop)
 
 die() { printf 'build-deb: error: %s\n' "$*" >&2; exit 1; }
 log() { printf '\033[38;2;49;198;189m==>\033[0m %s\n' "$*"; }
@@ -40,6 +40,10 @@ command -v dpkg-buildpackage >/dev/null || die "dpkg-buildpackage not found (apt
 
 STAGE_ROOT="$BUILD_DIR/pkgsrc"
 mkdir -p "$STAGE_ROOT" "$OUT_DIR"
+
+binaries() { # binary package names declared in a source package's debian/control
+    sed -n 's/^Package: *//p' "$1/debian/control"
+}
 
 copy_asset() {
     local from="$1" to="$2" stage="$3"
@@ -82,9 +86,12 @@ build_one() {
         tail -n 40 "$STAGE_ROOT/$pkg.build.log" >&2
         die "build failed for $pkg (full log: $STAGE_ROOT/$pkg.build.log)"
     }
-    find "$STAGE_ROOT" -maxdepth 1 -type f \( -name "${pkg}_*.deb" -o -name "${pkg}_*.buildinfo" -o -name "${pkg}_*.changes" \) \
+    find "$STAGE_ROOT" -maxdepth 1 -type f \( -name "${pkg}_*.buildinfo" -o -name "${pkg}_*.changes" \) \
         -exec mv -f {} "$OUT_DIR/" \;
-    log "built $(cd "$OUT_DIR" && ls "${pkg}"_*.deb)"
+    for bin in $(binaries "$src"); do
+        find "$STAGE_ROOT" -maxdepth 1 -type f -name "${bin}_*.deb" -exec mv -f {} "$OUT_DIR/" \;
+        log "built $(cd "$OUT_DIR" && ls "${bin}"_*.deb)"
+    done
 }
 
 for pkg in "${packages[@]}"; do
@@ -94,8 +101,10 @@ done
 if [ "$RUN_LINTIAN" -eq 1 ] && command -v lintian >/dev/null; then
     log "lintian"
     for pkg in "${packages[@]}"; do
-        lintian --fail-on error --display-info --suppress-tags-from-file "$REPO_ROOT/packages/lintian-overrides.txt" \
-            "$OUT_DIR/${pkg}"_*.deb || die "lintian errors in $pkg"
+        for bin in $(binaries "$REPO_ROOT/packages/$pkg"); do
+            lintian --fail-on error --display-info --suppress-tags-from-file "$REPO_ROOT/packages/lintian-overrides.txt" \
+                "$OUT_DIR/${bin}"_*.deb || die "lintian errors in $bin"
+        done
     done
 fi
 log "packages in $OUT_DIR"

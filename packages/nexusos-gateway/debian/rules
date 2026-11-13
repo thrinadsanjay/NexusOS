@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+P := debian/nexusos-gateway
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -D -m 0644 nginx/nexusos-gateway.conf $(P)/etc/nginx/conf.d/nexusos-gateway.conf
+	install -D -m 0644 schema/route.schema.json $(P)/usr/share/nexusos/gateway/route.schema.json
+	install -d $(P)/usr/share/doc/nexusos-gateway/examples
+	install -m 0644 examples/*.yaml $(P)/usr/share/doc/nexusos-gateway/examples/

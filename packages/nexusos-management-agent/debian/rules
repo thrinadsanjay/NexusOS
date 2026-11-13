@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME = nexus_agent
+export PYBUILD_DISABLE = test
+
+%:
+	dh $@ --with python3 --buildsystem=pybuild
+
+override_dh_auto_install:
+	dh_auto_install
+	install -D -m 0644 polkit/org.nexusos.agent.policy \
+	  debian/nexusos-management-agent/usr/share/polkit-1/actions/org.nexusos.agent.policy
+
+override_dh_installsystemd:
+	dh_installsystemd --name=nexusos-agent nexusos-agent.socket
+	dh_installsystemd --name=nexusos-agent --no-enable --no-start nexusos-agent.service
+
+execute_before_dh_installsystemd:
+	cp systemd/nexusos-agent.socket debian/nexusos-management-agent.nexusos-agent.socket
+	cp systemd/nexusos-agent.service debian/nexusos-management-agent.nexusos-agent.service

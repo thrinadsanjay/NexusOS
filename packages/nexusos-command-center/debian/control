@@ -1,0 +1,54 @@
+Source: nexusos-command-center
+Section: admin
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools,
+               pybuild-plugin-pyproject
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexusos-command-center
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         python3-nexus-core (= ${source:Version}),
+         python3-pyside6.qtcore,
+         python3-pyside6.qtgui,
+         python3-pyside6.qtqml,
+         python3-pyside6.qtquick,
+         qml6-module-qtquick,
+         qml6-module-qtquick-controls,
+         qml6-module-qtquick-layouts,
+         qml6-module-qtquick-dialogs,
+         qml6-module-qtquick-templates,
+         qml6-module-qtqml-workerscript,
+         konsole,
+         openssh-client
+Recommends: nexusos-management-agent,
+            python3-paramiko,
+            python3-secretstorage,
+            dolphin,
+            kde-cli-tools,
+            ark,
+            udisks2,
+            network-manager,
+            libsecret-tools
+Suggests: docker.io, docker-compose-v2, nexusos-gateway, smartmontools
+Description: Nexus Command Center (native NexusOS system management)
+ One native Qt 6/QML application to manage NexusOS: overview, Software Center
+ (APT/dpkg), system settings (with KDE settings modules), terminal and SSH
+ workspace with Secret Service credentials and SFTP, Docker containers and
+ Compose, Nexus applications, the NGINX gateway, storage, network, files,
+ local AI (Ollama) with a native chat, notifications, security and activity
+ history.
+ .
+ Resource-efficient by design: modules load on demand, monitoring only runs
+ while a page is visible, no browser engine, no background daemon. Privileged
+ work goes through nexusos-management-agent (polkit).

@@ -1,0 +1,27 @@
+Source: nexusos-gateway
+Section: httpd
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: nexusos-gateway
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         nginx,
+         openssl,
+         nexusos-management-agent (= ${source:Version})
+Recommends: certbot
+Description: NexusOS Gateway (native NGINX reverse proxy)
+ Connects the native NGINX web server to the NexusOS declarative route
+ registry in /etc/nexusos/gateway. Routes, certificates and activation are
+ managed from the Command Center or `nexus gateway`; NGINX is reloaded only
+ after `nginx -t` succeeds, with automatic rollback.
+ .
+ Installing this package does not publish anything: no route is active until
+ a user approves it.

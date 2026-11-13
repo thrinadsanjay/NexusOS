@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import typer
+from nexus_core import docker as docker_service
+from nexus_core import tools
+from nexus_core.errors import DependencyMissingError
+from nexus_core.models import ToolInfo
 from rich.table import Table
 
 from nexus_cli.core.decorators import handle_errors
-from nexus_cli.core.errors import DependencyMissingError
 from nexus_cli.core.output import console, print_json, status_text
-from nexus_cli.models import ToolInfo
-from nexus_cli.services import docker as docker_service
-from nexus_cli.services import tools
 
 app = typer.Typer(help="Containers and virtualisation.", no_args_is_help=True)
 

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Create the gateway layout. No route is activated and NGINX is only reloaded if its
+# configuration test passes (the included directory starts empty).
+set -e
+
+case "$1" in
+    configure)
+        for d in routes generated certificates acme; do
+            install -d -m 0755 "/etc/nexusos/gateway/$d"
+        done
+        install -d -m 0700 /etc/nexusos/gateway/backups /etc/nexusos/gateway/ca
+        if command -v nginx >/dev/null 2>&1 && nginx -t -q >/dev/null 2>&1; then
+            if [ -d /run/systemd/system ]; then
+                deb-systemd-invoke try-reload-or-restart nginx.service >/dev/null 2>&1 || true
+            fi
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
