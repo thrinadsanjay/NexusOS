@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS boot splash master (Plymouth placeholder). Transparent background so Plymouth can paint #0B171B.
+     The progress track below the mark is a separate layer ("progress-track") for the future Plymouth script theme.
+     Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="360" viewBox="0 0 320 360" role="img" aria-labelledby="title">
+  <title id="title">NexusOS boot logo</title>
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#31C6BD" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#31C6BD" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="160" cy="140" r="150" fill="url(#glow)"/>
+  <g id="mark" transform="translate(32 12)">
+    <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="none" stroke="#31C6BD" stroke-opacity="0.7" stroke-width="3" stroke-linejoin="round"/>
+    <polygon points="76,180 76,76 100,76 156,148 156,76 180,76 180,180 156,180 100,108 100,180" fill="#31C6BD"/>
+    <circle cx="208" cy="60" r="9" fill="#C47750"/>
+  </g>
+  <g id="progress-track">
+    <rect x="80" y="320" width="160" height="4" rx="2" fill="#29434A"/>
+    <rect x="80" y="320" width="56" height="4" rx="2" fill="#31C6BD"/>
+  </g>
+</svg>

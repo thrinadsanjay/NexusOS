@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS terminal logo: the mark inside a terminal window glyph, used for Konsole profile and CLI branding.
+     Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">NexusOS Terminal</title>
+  <rect x="12" y="28" width="232" height="200" rx="14" fill="#0B171B" stroke="#29434A" stroke-width="4"/>
+  <rect x="12" y="28" width="232" height="34" rx="14" fill="#1B3036"/>
+  <rect x="12" y="48" width="232" height="14" fill="#1B3036"/>
+  <circle cx="36" cy="45" r="6" fill="#C47750"/>
+  <circle cx="56" cy="45" r="6" fill="#29434A"/>
+  <circle cx="76" cy="45" r="6" fill="#29434A"/>
+  <path d="M40 100 L72 124 L40 148" fill="none" stroke="#31C6BD" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(96 82) scale(0.5)">
+    <polygon points="76,180 76,76 100,76 156,148 156,76 180,76 180,180 156,180 100,108 100,180" fill="#E8F1F2"/>
+  </g>
+  <rect x="190" y="160" width="28" height="10" rx="2" fill="#31C6BD"/>
+  <rect x="40" y="190" width="120" height="6" rx="3" fill="#29434A"/>
+</svg>

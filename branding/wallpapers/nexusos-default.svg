@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS default wallpaper master, 3840x2160 (16:9). Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+  <title>NexusOS Default</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B171B"/>
+      <stop offset="0.55" stop-color="#102E33"/>
+      <stop offset="1" stop-color="#123B40"/>
+    </linearGradient>
+    <radialGradient id="glowTeal" cx="0.72" cy="0.42" r="0.45">
+      <stop offset="0" stop-color="#31C6BD" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#31C6BD" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCopper" cx="0.12" cy="0.92" r="0.35">
+      <stop offset="0" stop-color="#C47750" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#C47750" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="hexgrid" width="103.92" height="180" patternUnits="userSpaceOnUse">
+      <path d="M51.96 0 L103.92 30 L103.92 90 L51.96 120 L0 90 L0 30 Z M51.96 120 L51.96 180" fill="none" stroke="#31C6BD" stroke-opacity="0.06" stroke-width="1.5"/>
+    </pattern>
+    <radialGradient id="gridMask" cx="0.7" cy="0.45" r="0.6">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="fade"><rect width="3840" height="2160" fill="url(#gridMask)"/></mask>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8F1F2" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#E8F1F2" stop-opacity="0.01"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="2160" fill="url(#bg)"/>
+  <rect width="3840" height="2160" fill="url(#hexgrid)" mask="url(#fade)"/>
+  <rect width="3840" height="2160" fill="url(#glowTeal)"/>
+  <rect width="3840" height="2160" fill="url(#glowCopper)"/>
+  <!-- Layered glass hexagons centred at (2760, 950) -->
+  <g transform="translate(2760 950)">
+    <polygon points="0,-760 658.2,-380 658.2,380 0,760 -658.2,380 -658.2,-380" fill="url(#glass)" stroke="#31C6BD" stroke-opacity="0.18" stroke-width="3"/>
+    <polygon points="0,-560 485,-280 485,280 0,560 -485,280 -485,-280" fill="none" stroke="#31C6BD" stroke-opacity="0.30" stroke-width="2"/>
+    <polygon points="0,-360 311.8,-180 311.8,180 0,360 -311.8,180 -311.8,-180" fill="#0B171B" fill-opacity="0.35" stroke="#31C6BD" stroke-opacity="0.55" stroke-width="4"/>
+    <g transform="translate(-180 -180) scale(1.40625)">
+      <polygon points="76,180 76,76 100,76 156,148 156,76 180,76 180,180 156,180 100,108 100,180" fill="#31C6BD" fill-opacity="0.9"/>
+    </g>
+    <path d="M311.8 -180 L460 -265" stroke="#C47750" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="472" cy="-272" r="16" fill="#C47750"/>
+    <circle cx="658.2" cy="380" r="8" fill="#31C6BD" fill-opacity="0.7"/>
+    <circle cx="-658.2" cy="-380" r="8" fill="#31C6BD" fill-opacity="0.5"/>
+  </g>
+  <!-- Fine engineering rule lines -->
+  <g stroke="#9EB3B7" stroke-opacity="0.10" stroke-width="2">
+    <line x1="240" y1="1840" x2="1500" y2="1840"/>
+    <line x1="240" y1="1870" x2="900" y2="1870"/>
+  </g>
+  <rect x="240" y="1820" width="80" height="4" fill="#C47750" fill-opacity="0.8"/>
+</svg>

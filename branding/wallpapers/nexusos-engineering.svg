@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS "Engineering Edition" wallpaper master, 3840x2160. Blueprint grid with the edition lockup.
+     Text is live (Inter / JetBrains Mono); outline before raster export if those fonts are unavailable.
+     Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+  <title>NexusOS Engineering Edition</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B171B"/>
+      <stop offset="1" stop-color="#102E33"/>
+    </linearGradient>
+    <pattern id="minor" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0 H0 V48" fill="none" stroke="#9EB3B7" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+    <pattern id="major" width="240" height="240" patternUnits="userSpaceOnUse">
+      <rect width="240" height="240" fill="url(#minor)"/>
+      <path d="M240 0 H0 V240" fill="none" stroke="#31C6BD" stroke-opacity="0.09" stroke-width="2"/>
+    </pattern>
+    <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="0.6" stop-color="#0B171B" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0B171B" stop-opacity="0.85"/>
+    </radialGradient>
+  </defs>
+  <rect width="3840" height="2160" fill="url(#bg)"/>
+  <rect width="3840" height="2160" fill="url(#major)"/>
+  <!-- Dimension lines -->
+  <g stroke="#C47750" stroke-opacity="0.6" stroke-width="2" fill="none">
+    <path d="M1440 640 V600 M2400 640 V600 M1440 620 H2400"/>
+    <path d="M1380 760 H1340 M1380 1240 H1340 M1360 760 V1240"/>
+  </g>
+  <text x="1920" y="590" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="28" fill="#C47750" fill-opacity="0.8">960.00</text>
+  <!-- Mark -->
+  <g transform="translate(1680 760) scale(1.875)">
+    <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="#142328" fill-opacity="0.8" stroke="#31C6BD" stroke-width="2.5"/>
+    <polygon points="76,180 76,76 100,76 156,148 156,76 180,76 180,180 156,180 100,108 100,180" fill="#31C6BD"/>
+    <circle cx="208" cy="60" r="9" fill="#C47750"/>
+  </g>
+  <text x="1920" y="1440" text-anchor="middle" font-family="Inter, 'Noto Sans', sans-serif" font-weight="700" font-size="120" letter-spacing="6" fill="#E8F1F2">Nexus<tspan fill="#31C6BD">OS</tspan></text>
+  <text x="1920" y="1530" text-anchor="middle" font-family="Inter, 'Noto Sans', sans-serif" font-weight="500" font-size="44" letter-spacing="18" fill="#9EB3B7">ENGINEERING EDITION</text>
+  <text x="1920" y="1640" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="34" letter-spacing="8" fill="#31C6BD" fill-opacity="0.8">BUILD. AUTOMATE. DEPLOY.</text>
+  <rect width="3840" height="2160" fill="url(#vignette)"/>
+</svg>

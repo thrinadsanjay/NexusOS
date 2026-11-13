@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NexusOS design tokens",
+  "type": "object",
+  "required": ["brand", "color", "typography"],
+  "properties": {
+    "brand": {
+      "type": "object",
+      "required": ["name", "edition", "tagline"]
+    },
+    "color": {
+      "type": "object",
+      "required": [
+        "background-primary", "background-secondary", "accent-primary",
+        "accent-secondary", "text-primary", "text-secondary", "surface",
+        "surface-elevated", "border"
+      ],
+      "additionalProperties": { "type": "string", "pattern": "^#[0-9A-F]{6}$" }
+    }
+  }
+}

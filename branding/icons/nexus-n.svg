@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS geometric "N" application icon. Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">NexusOS</title>
+  <defs>
+    <linearGradient id="hexFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B3036"/>
+      <stop offset="1" stop-color="#0B171B"/>
+    </linearGradient>
+    <linearGradient id="nFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FD3CB"/>
+      <stop offset="1" stop-color="#31C6BD"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E8F1F2" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#E8F1F2" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="url(#hexFill)" stroke="#29434A" stroke-width="4" stroke-linejoin="round"/>
+  <polygon points="128,22 219.8,75 219.8,128 36.2,128 36.2,75" fill="url(#glass)"/>
+  <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="none" stroke="#31C6BD" stroke-opacity="0.45" stroke-width="2" stroke-linejoin="round"/>
+  <polygon points="76,180 76,76 100,76 156,148 156,76 180,76 180,180 156,180 100,108 100,180" fill="url(#nFill)"/>
+  <path d="M180 76 L204 62" stroke="#C47750" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="208" cy="60" r="9" fill="#C47750"/>
+  <circle cx="208" cy="60" r="3.5" fill="#0B171B"/>
+</svg>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS installer logo: mark with "Install NexusOS" caption, sized for installer sidebars and welcome screens.
+     Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-labelledby="title">
+  <title id="title">Install NexusOS</title>
+  <defs>
+    <radialGradient id="halo" cx="0.5" cy="0.42" r="0.5">
+      <stop offset="0" stop-color="#31C6BD" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#31C6BD" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hexFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B3036"/>
+      <stop offset="1" stop-color="#0B171B"/>
+    </linearGradient>
+    <linearGradient id="nFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FD3CB"/>
+      <stop offset="1" stop-color="#31C6BD"/>
+    </linearGradient>
+  </defs>
+  <circle cx="200" cy="168" r="170" fill="url(#halo)"/>
+  <g transform="translate(88 56) scale(0.875)">
+    <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="url(#hexFill)" stroke="#31C6BD" stroke-opacity="0.55" stroke-width="3" stroke-linejoin="round"/>
+    <polygon points="76,180 76,76 100,76 156,148 156,76 180,76 180,180 156,180 100,108 100,180" fill="url(#nFill)"/>
+    <path d="M180 76 L204 62" stroke="#C47750" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="208" cy="60" r="9" fill="#C47750"/>
+  </g>
+  <text x="200" y="320" text-anchor="middle" font-family="Inter, 'Noto Sans', sans-serif" font-weight="700" font-size="36" letter-spacing="1.5" fill="#E8F1F2">Install Nexus<tspan fill="#31C6BD">OS</tspan></text>
+  <text x="200" y="352" text-anchor="middle" font-family="Inter, 'Noto Sans', sans-serif" font-size="15" letter-spacing="4" fill="#9EB3B7">ENGINEERING EDITION</text>
+</svg>

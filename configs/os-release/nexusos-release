@@ -1,0 +1,11 @@
+# NexusOS release information (machine-readable, shell-sourceable KEY=VALUE).
+# Installed as /usr/lib/nexusos/release by nexusos-branding and read by `nexus version`.
+NEXUSOS_PRODUCT="NexusOS"
+NEXUSOS_EDITION="Engineering Edition"
+NEXUSOS_TAGLINE="BUILD. AUTOMATE. DEPLOY."
+NEXUSOS_RELEASE="1.0"
+NEXUSOS_BUILD="0.1.0-dev"
+NEXUSOS_CHANNEL="development"
+NEXUSOS_BASE="Ubuntu 26.04 LTS"
+NEXUSOS_BASE_CODENAME="resolute"
+NEXUSOS_ARCH="amd64"

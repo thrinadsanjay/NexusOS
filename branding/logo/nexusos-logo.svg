@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS primary logo (stacked mark + wordmark). Original artwork, (c) NexusOS contributors, GPL-2.0-or-later.
+     The wordmark is live text set in Inter Bold; outline it to paths before print production. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">NexusOS Engineering Edition</title>
+  <defs>
+    <linearGradient id="hexFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B3036"/>
+      <stop offset="1" stop-color="#0B171B"/>
+    </linearGradient>
+    <linearGradient id="nFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FD3CB"/>
+      <stop offset="1" stop-color="#31C6BD"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0B171B"/>
+  <g transform="translate(128 40)">
+    <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="url(#hexFill)" stroke="#31C6BD" stroke-opacity="0.5" stroke-width="3" stroke-linejoin="round"/>
+    <polygon points="76,180 76,76 100,76 156,148 156,76 180,76 180,180 156,180 100,108 100,180" fill="url(#nFill)"/>
+    <path d="M180 76 L204 62" stroke="#C47750" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="208" cy="60" r="9" fill="#C47750"/>
+  </g>
+  <text x="256" y="356" text-anchor="middle" font-family="Inter, 'Noto Sans', sans-serif" font-weight="700" font-size="64" letter-spacing="2.5" fill="#E8F1F2">Nexus<tspan fill="#31C6BD">OS</tspan></text>
+  <text x="256" y="400" text-anchor="middle" font-family="Inter, 'Noto Sans', sans-serif" font-weight="500" font-size="20" letter-spacing="6" fill="#9EB3B7">ENGINEERING EDITION</text>
+  <rect x="196" y="428" width="120" height="2" fill="#C47750"/>
+  <text x="256" y="466" text-anchor="middle" font-family="'JetBrains Mono', 'Noto Sans Mono', monospace" font-size="14" letter-spacing="3" fill="#9EB3B7">BUILD. AUTOMATE. DEPLOY.</text>
+</svg>

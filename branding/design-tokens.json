@@ -1,0 +1,74 @@
+{
+  "$schema": "./design-tokens.schema.json",
+  "name": "NexusOS Engineering Edition design tokens",
+  "version": "0.1.0",
+  "brand": {
+    "name": "NexusOS",
+    "edition": "Engineering Edition",
+    "tagline": "BUILD. AUTOMATE. DEPLOY."
+  },
+  "color": {
+    "background-primary": "#0B171B",
+    "background-secondary": "#123B40",
+    "accent-primary": "#31C6BD",
+    "accent-secondary": "#C47750",
+    "text-primary": "#E8F1F2",
+    "text-secondary": "#9EB3B7",
+    "surface": "#142328",
+    "surface-elevated": "#1B3036",
+    "border": "#29434A"
+  },
+  "derived": {
+    "background-gradient-mid": "#102E33",
+    "accent-primary-hover": "#4FD3CB",
+    "accent-primary-pressed": "#24A39B",
+    "accent-secondary-hover": "#D28B66",
+    "glass-fill": "rgba(27, 48, 54, 0.62)",
+    "glass-stroke": "rgba(49, 198, 189, 0.28)",
+    "positive": "#3DBE7A",
+    "warning": "#D9A441",
+    "negative": "#D9574F"
+  },
+  "typography": {
+    "ui": {
+      "family": "Inter",
+      "fallback": [
+        "Noto Sans",
+        "sans-serif"
+      ],
+      "ubuntu-package": "fonts-inter"
+    },
+    "monospace": {
+      "family": "JetBrains Mono",
+      "fallback": [
+        "Noto Sans Mono",
+        "monospace"
+      ],
+      "ubuntu-package": "fonts-jetbrains-mono"
+    },
+    "wordmark": {
+      "family": "Inter",
+      "weight": 700,
+      "letter-spacing": "0.04em"
+    },
+    "scale-pt": {
+      "small": 9,
+      "body": 10,
+      "title": 12,
+      "display": 18
+    }
+  },
+  "shape": {
+    "radius-px": {
+      "small": 4,
+      "medium": 8,
+      "large": 14
+    },
+    "stroke-px": {
+      "hairline": 1,
+      "regular": 2,
+      "emphasis": 4
+    },
+    "motif": "pointy-top hexagon, 30/60 degree geometry"
+  }
+}
