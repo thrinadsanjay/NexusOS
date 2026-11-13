@@ -1,0 +1,10 @@
+{
+  "id": "network",
+  "title": "Network",
+  "order": 90,
+  "icon": "network-wired",
+  "description": "NetworkManager devices, connections, DNS, routes and diagnostics",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

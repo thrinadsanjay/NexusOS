@@ -1,0 +1,10 @@
+{
+  "id": "files",
+  "title": "Files",
+  "order": 100,
+  "icon": "system-file-manager",
+  "description": "Browse files with Dolphin and KIO integration",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}

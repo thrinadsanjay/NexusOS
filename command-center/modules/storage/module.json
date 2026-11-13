@@ -1,0 +1,10 @@
+{
+  "id": "storage",
+  "title": "Storage",
+  "order": 80,
+  "icon": "drive-harddisk",
+  "description": "Disks, partitions, filesystems, SMART health and mounts",
+  "page": "Page.qml",
+  "controller": "controller.py",
+  "class": "Controller"
+}
