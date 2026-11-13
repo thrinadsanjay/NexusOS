@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=NexusOS
+Description=NexusOS boot splash (DRAFT - not installed or activated by any package)
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nexus
+ScriptFile=/usr/share/plymouth/themes/nexus/nexus.script

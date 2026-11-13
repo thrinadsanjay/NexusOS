@@ -1,0 +1,27 @@
+// NexusOS Plymouth script theme -- DRAFT, untested on hardware.
+// Expects logo.png (rendered from branding/boot/nexusos-boot-logo.svg) in ImageDir.
+
+Window.SetBackgroundTopColor(0.043, 0.090, 0.106);    // #0B171B
+Window.SetBackgroundBottomColor(0.071, 0.231, 0.251); // #123B40
+
+logo.image = Image("logo.png");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
+logo.sprite.SetY(Window.GetY() + Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
+
+// Progress bar under the logo, teal on the border colour.
+bar_width = 160;
+track.image = Image("progress-track.png");
+track.sprite = Sprite(track.image);
+track.sprite.SetPosition(Window.GetX() + Window.GetWidth() / 2 - bar_width / 2,
+                         logo.sprite.GetY() + logo.image.GetHeight() + 24, 1);
+fill.original = Image("progress-fill.png");
+fill.sprite = Sprite();
+fill.sprite.SetPosition(track.sprite.GetX(), track.sprite.GetY(), 2);
+
+fun progress_callback(duration, progress) {
+    width = Math.Int(bar_width * progress);
+    if (width < 1) width = 1;
+    fill.sprite.SetImage(fill.original.Scale(width, fill.original.GetHeight()));
+}
+Plymouth.SetBootProgressFunction(progress_callback);

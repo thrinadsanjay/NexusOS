@@ -1,0 +1,18 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "NexusOS contributors"
+            }
+        ],
+        "Category": "",
+        "Description": "Nexus: the NexusOS Engineering Edition desktop (dark, teal accent, top system bar and bottom dock)",
+        "Id": "org.nexusos.nexus.desktop",
+        "License": "GPL-2.0-or-later",
+        "Name": "Nexus",
+        "Version": "0.1.0",
+        "Website": "https://github.com/thrinadsanjay/NexusOS"
+    },
+    "X-Plasma-APIVersion": "2"
+}
