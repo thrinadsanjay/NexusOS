@@ -17,7 +17,8 @@ All notable changes to NexusOS are documented here. The format follows
   desktop manifests plus the NexusOS packages, casper live session, Calamares, zstd squashfs,
   hybrid BIOS/UEFI ISO with Canonical-signed shim and GRUB, on-disc pool for the installer's EFI
   step, checksums and package manifest. Test images only, not a release.
-  `scripts/validation/iso-boot-smoke.sh` boots it in QEMU (BIOS, UEFI Secure Boot, live session).
+  `scripts/validation/iso-boot-smoke.sh` boots it in QEMU (BIOS, UEFI Secure Boot, live session):
+  all 16 checks pass on the 2026-11-14 test image.
 - **Operations dashboard** (Overview): CPU, memory, GPU, storage, vulnerabilities (packages
   with Ubuntu security fixes), updates, network and mount tiles with live sparklines and one
   hardware line each; (i) spec cards with CPU specification and per-core load, memory slots

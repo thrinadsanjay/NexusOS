@@ -50,6 +50,15 @@ qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 -machine q35 \
 
 Then follow the checklist in [`docs/installation.md`](../../docs/installation.md#option-c--nexusos-test-iso-in-a-vm).
 
+Automated boot test (QEMU in a container, no host disks):
+`scripts/validation/iso-boot-smoke.sh build/iso/nexusos-*.iso --live-minutes 40`.
+Last result (2026-11-14, `nexusos-1.0-dev-20261114`, software emulation): all 16 checks pass:
+BIOS GRUB menu, UEFI with Secure Boot enforced (shim, Canonical-signed GRUB), live console
+login, systemd `running` with no failed units, SDDM autologin into Plasma on Wayland, KWin,
+plasmashell, os-release, `nexus` CLI, Command Center and installer, desktop install icon,
+boot splash, console banner. The installation itself (Calamares to a virtual disk) has not
+been run automatically yet; use the manual checklist.
+
 ## Before a release
 
 1. Signed NexusOS APT archive and `nexusos-archive-keyring` (also signs the on-disc pool).
