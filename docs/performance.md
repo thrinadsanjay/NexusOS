@@ -76,6 +76,11 @@ KWin Wayland (virtual output, **software** rendering, no GPU), packages installe
 | Idle RSS after all 14 modules | 255.9 MiB ✘ | **200 – 203 MiB** | ≤ 250 MiB ✔ |
 | QML warnings | 0 | 0 | 0 ✔ |
 
+With the operations dashboard (0.2.0-dev, same harness): plain launch **343 ms**, idle RSS
+**158.7 MiB**; after all modules **238.7 MiB** (≤ 250 ✔). The dashboard refreshes live values
+every 5 s, services/mounts/infrastructure every minute and APT/sysstat every 30 minutes, each
+in a background task, and only while the page is visible.
+
 The KDE platform theme plugin (`plasma-integration`) loads KF6 configuration, KIO and the
 Breeze style machinery into the process: about **93 MiB RSS and 9 threads** for a UI that
 draws every control itself. `xdgdesktopportal` measured the same as `kde` (it wraps it).

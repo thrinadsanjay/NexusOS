@@ -2,17 +2,47 @@
 
 ## Principles
 
-1. **Least privilege** — the Command Center and CLI run as the user; a small agent does
-   the few things that need root, one allow-listed operation at a time.
-2. **Explicit authorization** — polkit per operation; destructive actions need confirmation
-   (and for disks a typed device token).
+1. **Least privilege** — the Command Center and CLI run as the logged-in user; a small
+   helper does the few things that need root, one allow-listed operation at a time.
+2. **The user's own rights** — administrative tasks use the signed-in user's `sudo` rights
+   (see *Administrative access*); users see only what they can access; destructive actions
+   need confirmation (and for disks a typed device token).
 3. **Local by default** — application ports bind to 127.0.0.1; gateway routes default to
    LAN-only; the Docker daemon is never exposed.
 4. **No secrets at rest outside the Secret Service** — no plaintext passwords anywhere.
 5. **Reversible and audited** — backups before gateway changes, automatic rollback, audit log.
 6. **Upstream first** — security updates come from Ubuntu unchanged.
 
-## Privileged agent
+## Administrative access (sudo)
+
+Everything in the Command Center and the CLI runs as the logged-in user. Administrative tasks
+(packages, repositories, services, hostname/time, gateway, certificates, SMART, firewall) run
+`sudo /usr/lib/nexusos/nexus-admin run` with that user's own sudo rights:
+
+| The user's sudo rights | What happens |
+|------------------------|--------------|
+| `NOPASSWD` rule (or credentials sudo has cached) | The task runs immediately |
+| sudo with password (member of `sudo`/`admin`/`wheel`) | A floating password box asks for the user's password; it is written to `sudo -S` once and never stored, logged or kept in the UI. Wrong password → retry (3 attempts); Cancel → task cancelled. sudo's own credential cache then applies to the next tasks of the session |
+| No sudo | "Access denied" — no password prompt; administrative actions are hidden or disabled in the UI and the sidebar shows *Standard user* |
+
+* **sudo decides.** NexusOS never parses `/etc/sudoers`; it starts `sudo` and reads the outcome
+  (works with sudo-rs, the 26.04 default, and sudo 1.9 — both are tested). sudo logs every run.
+* **Classification does not call sudo** (that would log a failed attempt at every start):
+  group membership marks an administrator; whether a password is needed is learned at the
+  first task. A non-member with a NOPASSWD rule is recognised (`sudo -n` succeeds); a
+  non-member with a password rule is treated as a standard user.
+* **The helper is narrow.** `nexus-admin` speaks the agent protocol over stdio and executes
+  only the operations in `nexus_agent.ops.REGISTRY`, with the same Pydantic validation, unit
+  allow-list and audit log (`"via": "sudo"`, `SUDO_UID` as the caller). It never runs a
+  command line, shell fragment or arbitrary path. Its Python runs with `-I` (no environment
+  or user site). sudo resets the environment.
+* **Background reads never prompt.** Reads the user did not ask for (firewall status on page
+  load) return "locked" and offer an explicit *Unlock* instead of a password box.
+* **Visibility follows access.** Docker without socket access, libvirt without the group,
+  system logs without `adm`/`systemd-journal` are shown as "no access", never guessed.
+* The socket-activated agent with polkit remains available (`NEXUSOS_ADMIN_TRANSPORT=agent`).
+
+## Privileged agent (socket transport)
 
 | Control | Implementation |
 |---------|----------------|
@@ -70,6 +100,9 @@ upstream mount is removed by the NexusOS override; validated by `validate_apps.p
 * polkit prompts, KDE Wallet as Secret Service and the agent under real systemd are verified
   in containers only partially (fail-closed path); interactive authorization needs the VM.
 * Members of the `sudo` group can reach the agent socket; polkit is the actual gate.
+* With sudo the password crosses the Command Center process (a Python string, which cannot
+  be wiped from memory); it is never written anywhere. Formatting (UDisks2) and network
+  changes (NetworkManager) still authorize through polkit, not sudo.
 * The audit log is local and not tamper-proof (forward it with journald/rsyslog if needed).
 * Third-party application images (GHCR/Docker Hub) are referenced by tag; NexusOps uses
   `latest` upstream (pinnable via configuration).

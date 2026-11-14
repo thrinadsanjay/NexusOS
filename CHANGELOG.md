@@ -8,6 +8,20 @@ All notable changes to NexusOS are documented here. The format follows
 ## [Unreleased] — 0.2.0-dev "Command Center"
 
 ### Added
+- **Operations dashboard** (Overview): CPU, memory, GPU, storage, vulnerabilities (packages
+  with Ubuntu security fixes), updates, network and mount tiles with live sparklines and one
+  hardware line each; (i) spec cards with CPU specification and per-core load, memory slots
+  and modules (SMBIOS via udev, no root), GPU details (DRM sysfs, lspci, nvidia-smi) and
+  every drive with interface link, temperature and mount usage; attention list; 24 h usage
+  chart (sysstat, or since start); services, infrastructure, activity, sar 7-day history,
+  backup timers and gateway certificates. Polls only while visible.
+- **Administrative access through the user's own sudo rights**: `nexus-admin` helper run via
+  `sudo` executes the same allow-listed, audited operations; NOPASSWD runs directly,
+  password sudo shows a floating password box (retry, cancel, sudo's cache), no sudo is
+  denied without a prompt and administrative actions are hidden. Tested with sudo-rs and
+  sudo 1.9. Services, hostname, time zone and NTP now run through it too.
+- `nexus_core.hardware`, `nexus_core.dashboard`, `nexus_core.privilege`; design components
+  `NxIcon`, `NxSparkline`, `NxPasswordPrompt`; `nexus-center --size`.
 - **Nexus Command Center** (`nexusos-command-center`, `nexus-center`): native Qt 6/QML
   application with 14 lazily loaded modules (Overview, Software Center, System Settings,
   Terminal & SSH, Containers, Nexus Applications, Gateway, Storage, Network, Files, Local AI,

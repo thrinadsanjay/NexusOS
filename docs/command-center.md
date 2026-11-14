@@ -42,7 +42,7 @@ QML pages (modules/<id>/Page.qml)  ──slots/props──►  module controller
 
 | # | Module | Backend | Status |
 |---|--------|---------|--------|
-| 1 | Overview | `metrics`, `services`, `storage`, `ollama`, `apps` | **Tested** on Plasma Wayland (real systemd states); customisable widgets, missing sensors labelled |
+| 1 | Overview (operations dashboard) | `dashboard`, `hardware`, `metrics`, `storage`, `packages` | **Tested** on Plasma Wayland with real systemd/APT data: 8 tiles with sparklines, hardware spec cards (CPU, memory modules, GPUs, drives) on (i) hover/click, attention list, 24 h chart (sysstat or session), services, infrastructure, activity, sar history, backups, certificates |
 | 2 | Software Center | `packages` + agent `apt.*` | **Tested** (search 88k packages, plans, real install/remove via agent, progress, lock, cancel before dpkg) |
 | 3 | System Settings | `settings`, `services` + KDE KCMs | **Tested** on Plasma 6.6: catalogue checked against `kcmshell6 --list`, KCMs open, missing ones name their package; service control refused without polkit authentication |
 | 4 | Terminal & SSH | `terminal`, `ssh.*` | **Tested**: local and SSH sessions open as Konsole tabs with the Nexus profile on Plasma; KDE Wallet storage and SFTP against a real server **Experimental** |
@@ -61,6 +61,13 @@ Global search / command palette: **Ctrl+K** (or Ctrl+Shift+P). Pages, settings,
 installed/available packages, SSH profiles, Nexus apps, files (Baloo) and quick actions
 ("restart nginx"). Actions never run on match; administrative ones always confirm.
 
+## Who may do what
+
+The sidebar shows the signed-in user and their role. Administrative actions (marked
+`admin: true` on `NxButton`) are hidden for users without sudo rights. When a task needs the
+user's sudo password, a floating password box appears (`NxPasswordPrompt`); passwordless
+sudo runs immediately; no sudo means "access denied". Details: `docs/security.md`.
+
 ## Design system
 
 `command-center/frontend/qml/Nexus/Design/` — `Theme` (dark default + light, tokens
@@ -68,7 +75,8 @@ from `branding/design-tokens.json`, spacing scale, typography), `NxButton` (prim
 secondary, danger, ghost), `NxTextField`, `NxTable`, `NxCard`, `NxPageHeader`
 (breadcrumb/title/actions), `NxStatusBadge` (colour + label), `NxBanner`, `NxEmptyState`,
 `NxErrorState`, `NxLoading`, `NxConfirmDialog` (shows exact command/plan; optional typed
-confirmation token), `NxTabBar`, `NxMetric`, `NxProgress`, `NxLogView`, `NxFormRow`.
+confirmation token), `NxTabBar`, `NxMetric`, `NxProgress`, `NxLogView`, `NxFormRow`,
+`NxIcon` (line icons recoloured per theme), `NxSparkline`, `NxPasswordPrompt`.
 Toasts and the palette live in `Main.qml`, which also sets a complete Qt palette from the
 tokens so Basic-style controls (combo boxes, spin boxes, check boxes, menus, dialogs) never
 pick up the desktop's palette.
@@ -85,7 +93,7 @@ with `NEXUS_CENTER_PLATFORMTHEME=kde`, or `desktop` to keep the session's settin
 ```bash
 nexus-center                          # installed
 QT_QPA_PLATFORM=offscreen nexus-center --smoke                 # load every module, report QML warnings
-nexus-center --smoke --screenshots /tmp/shots                  # PNG of each page
+nexus-center --smoke --size 1680x980 --screenshots /tmp/shots # PNG of each page (+ page states, e.g. spec cards)
 nexus-center --benchmark 20 [--no-visit --page overview]       # resource report (JSON)
 # from a checkout:
 PYTHONPATH=command-center/backend:command-center/frontend python3 -m nexus_center
