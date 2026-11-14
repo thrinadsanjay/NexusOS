@@ -31,6 +31,9 @@ override_dh_auto_install:
 	# OS identity (Ubuntu's /usr/lib/os-release is diverted in preinst)
 	install -D -m 0644 assets/os-release/os-release $(P)/usr/lib/os-release
 	install -D -m 0644 assets/os-release/nexusos-release $(P)/usr/lib/nexusos/release
+	# Console login banners: /etc/issue{,.net} symlinks are created in postinst (Ubuntu originals diverted)
+	install -D -m 0644 assets/os-release/issue $(P)/usr/share/nexusos/issue
+	install -D -m 0644 assets/os-release/issue.net $(P)/usr/share/nexusos/issue.net
 	install -D -m 0644 assets/os-release/hostname $(P)/usr/share/nexusos/defaults/hostname
 	# Terminal identity
 	install -D -m 0644 assets/shell/ascii-logo.txt $(P)/usr/share/nexusos/ascii-logo.txt

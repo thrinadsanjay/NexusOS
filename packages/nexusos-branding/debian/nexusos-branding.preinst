@@ -1,12 +1,19 @@
 #!/bin/sh
-# Divert Ubuntu's /usr/lib/os-release before our copy is unpacked. Nothing else
-# on the system is changed: no hostname, kernel or APT configuration edits.
+# Divert Ubuntu's identity files before our copies are unpacked: /usr/lib/os-release and the
+# console login banners /etc/issue and /etc/issue.net (all from base-files). The originals are
+# kept as *.ubuntu and restored on removal. Nothing else on the system is changed: no
+# hostname, kernel or APT configuration edits.
 set -e
+
+divert() {
+    dpkg-divert --package nexusos-branding --add --rename --divert "$1.ubuntu" "$1"
+}
 
 case "$1" in
     install|upgrade)
-        dpkg-divert --package nexusos-branding --add --rename \
-            --divert /usr/lib/os-release.ubuntu /usr/lib/os-release
+        divert /usr/lib/os-release
+        divert /etc/issue
+        divert /etc/issue.net
         ;;
 esac
 

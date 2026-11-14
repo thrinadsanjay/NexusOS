@@ -52,6 +52,8 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     divert=$(dpkg-divert --list /usr/lib/os-release)
     grep -q nexusos-branding <<<"$divert" || fail "diversion missing"
     pass "Ubuntu os-release preserved at /usr/lib/os-release.ubuntu (dpkg-divert)"
+    grep -q "^NexusOS Engineering Edition" /etc/issue && grep -q "^Ubuntu" /etc/issue.ubuntu || fail "console banner /etc/issue"
+    pass "console login banner: $(head -c 40 /etc/issue) (Ubuntu original kept as /etc/issue.ubuntu)"
     grep -q "^DISTRIB_ID=Ubuntu" /etc/lsb-release && pass "/etc/lsb-release untouched (Ubuntu)"
     [ "$(cat /etc/hostname 2>/dev/null || hostname)" != nexusos ] && pass "hostname not changed by package"
 
@@ -95,10 +97,12 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     . /etc/os-release
     [ "$ID" = ubuntu ] || fail "os-release not restored after removal (ID=$ID)"
     [ ! -e /usr/lib/os-release.ubuntu ] || fail "stale os-release.ubuntu"
-    [ -z "$(dpkg-divert --list /usr/lib/os-release)" ] || fail "diversion left behind"
+    grep -q "^Ubuntu" /etc/issue && [ ! -e /etc/issue.ubuntu ] || fail "/etc/issue not restored after removal"
+    [ -z "$(dpkg-divert --list /usr/lib/os-release; dpkg-divert --list /etc/issue; dpkg-divert --list /etc/issue.net)" ] || fail "diversion left behind"
     pass "removal restores Ubuntu os-release ($PRETTY_NAME)"
     apt-get purge -y -qq nexusos-branding >/dev/null 2>&1 || true
     [ ! -e /etc/profile.d/nexusos-banner.sh ] || fail "conffile left after purge"
+    grep -q "^Ubuntu" /etc/issue && grep -q "^Ubuntu" /etc/issue.net || fail "Ubuntu console banners missing after purge"
     pass "purge removes conffiles"
     echo "ALL PACKAGE TESTS PASSED"
 '

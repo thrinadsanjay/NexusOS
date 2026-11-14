@@ -1,12 +1,22 @@
 #!/bin/sh
-# Restore Ubuntu's os-release when the package is removed or its install is aborted.
-# Upgrades keep the diversion in place.
+# Restore Ubuntu's os-release and console banners when the package is removed or its install
+# is aborted. Upgrades keep the diversions in place.
 set -e
+
+undivert() {
+    dpkg-divert --package nexusos-branding --remove --rename --divert "$1.ubuntu" "$1"
+}
 
 case "$1" in
     remove|abort-install|disappear)
-        dpkg-divert --package nexusos-branding --remove --rename \
-            --divert /usr/lib/os-release.ubuntu /usr/lib/os-release
+        undivert /usr/lib/os-release
+        for f in /etc/issue /etc/issue.net; do
+            # drop our symlink first so the Ubuntu original can be renamed back
+            if [ -L "$f" ] && [ "$(readlink "$f")" = "/usr/share/nexusos/${f#/etc/}" ]; then
+                unlink "$f"
+            fi
+            undivert "$f"
+        done
         ;;
     purge|upgrade|failed-upgrade|abort-upgrade)
         ;;

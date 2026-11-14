@@ -1,0 +1,19 @@
+#!/bin/sh
+# Console login banners: Ubuntu's /etc/issue and /etc/issue.net are diverted to *.ubuntu in
+# preinst; point the original paths at the NexusOS banners. Symlinks, not package files, so
+# they are never conffiles (base-files updates go to the diverted Ubuntu copies).
+set -e
+
+case "$1" in
+    configure)
+        for f in issue issue.net; do
+            if [ ! -e "/etc/$f" ] || [ -L "/etc/$f" ]; then
+                ln -sfn "/usr/share/nexusos/$f" "/etc/$f"
+            fi
+        done
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
