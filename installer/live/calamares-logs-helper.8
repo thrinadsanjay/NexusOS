@@ -1,0 +1,11 @@
+.TH CALAMARES-LOGS-HELPER 8 "November 2026" "NexusOS 0.2" "NexusOS"
+.SH NAME
+calamares-logs-helper \- copy installer logs into the installed system
+.SH SYNOPSIS
+.B calamares-logs-helper
+.I target-root
+.SH DESCRIPTION
+Called by the installer at the end of an installation. Copies the Calamares session log,
+the live medium information, the casper log and the boot journal to
+\fItarget-root\fR/var/log/installer, together with a compressed copy of the installed
+package list. Logs are readable by root only.

@@ -10,3 +10,4 @@ configs/os-release                    assets/os-release
 configs/shell/ascii-logo.txt          assets/shell/ascii-logo.txt
 configs/shell/nexusos-banner.sh       assets/shell/nexusos-banner.sh
 configs/shell/fastfetch/config.jsonc  assets/shell/fastfetch/config.jsonc
+configs/grub/50-nexusos.cfg           assets/grub/50-nexusos.cfg

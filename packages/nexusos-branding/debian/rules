@@ -55,6 +55,8 @@ override_dh_auto_install:
 	done
 	install -d $(P)/usr/share/backgrounds/nexusos
 	install -m 0644 assets/branding/wallpapers/*.svg $(P)/usr/share/backgrounds/nexusos/
+	# GRUB: keep Ubuntu's EFI directory (Secure Boot), see the file header
+	install -D -m 0644 assets/grub/50-nexusos.cfg $(P)/etc/default/grub.d/50-nexusos.cfg
 	# Legal / attribution
 	install -D -m 0644 NOTICE $(P)/usr/share/nexusos/legal/NOTICE
 

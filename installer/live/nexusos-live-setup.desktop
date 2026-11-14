@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=NexusOS live session setup
+Comment=Adds the installer to the desktop of the live session
+Exec=/usr/libexec/nexusos/nexusos-live-setup
+NoDisplay=true
+X-KDE-autostart-phase=2
+OnlyShowIn=KDE;

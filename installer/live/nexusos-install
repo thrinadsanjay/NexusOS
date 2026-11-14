@@ -1,0 +1,24 @@
+#!/bin/bash
+# Start the NexusOS installer (Calamares) from the live session.
+# Run as root through sudo (the live account has passwordless sudo); Calamares writes only to
+# the disk chosen in its partitioning page, after the summary is confirmed.
+set -u
+
+if [ "$(id -u)" -ne 0 ]; then
+    exec sudo /usr/bin/nexusos-install "$@"
+fi
+
+if [ -e /etc/calamares/OEM_MODE_ACTIVATED ]; then
+    kdialog --msgbox "The installer was started in OEM mode before. Restart the live system and try again." 2>/dev/null
+    exit 1
+fi
+
+# The live session is the only place this runs; refuse on an installed system.
+if ! grep -qw "boot=casper" /proc/cmdline; then
+    kdialog --error "The NexusOS installer runs from the live USB/DVD only." 2>/dev/null \
+        || echo "nexusos-install: not a live session" >&2
+    exit 1
+fi
+
+export BROWSER="sudo -H -u ${SUDO_USER:-nexus-live} xdg-open"
+exec calamares -D6 "$@"

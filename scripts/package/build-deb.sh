@@ -18,7 +18,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BUILD_DIR="${NEXUSOS_BUILD_DIR:-$REPO_ROOT/build}"
 OUT_DIR="$BUILD_DIR/debs"
 RUN_LINTIAN=1
-ALL_PACKAGES=(nexusos-branding nexusos-theme nexus-core nexusos-management-agent nexusos-command-center nexus-cli nexusos-defaults nexusos-gateway nexusos-desktop)
+ALL_PACKAGES=(nexusos-branding nexusos-theme nexus-core nexusos-management-agent nexusos-command-center nexus-cli nexusos-defaults nexusos-gateway nexusos-desktop plymouth-theme-nexusos calamares-settings-nexusos)
 
 die() { printf 'build-deb: error: %s\n' "$*" >&2; exit 1; }
 log() { printf '\033[38;2;49;198;189m==>\033[0m %s\n' "$*"; }

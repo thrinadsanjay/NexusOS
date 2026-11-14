@@ -1,0 +1,20 @@
+.TH NEXUSOS-INSTALL 1 "November 2026" "NexusOS 0.2" "NexusOS"
+.SH NAME
+nexusos-install \- start the NexusOS installer from the live session
+.SH SYNOPSIS
+.B nexusos-install
+.RI [ calamares-options ]
+.SH DESCRIPTION
+Starts Calamares with the NexusOS settings as root (through sudo; the live account has
+passwordless sudo). It refuses to run outside the live session (kernel parameter
+\fBboot=casper\fR). Calamares writes only to the disk chosen on its partitioning page,
+after the summary has been confirmed.
+.SH FILES
+.TP
+.I /etc/calamares/settings.conf
+module sequence
+.TP
+.I /etc/calamares/branding/nexusos/
+NexusOS branding and slides
+.SH SEE ALSO
+.BR calamares (8)

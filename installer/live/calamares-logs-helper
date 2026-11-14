@@ -1,0 +1,21 @@
+#!/bin/sh
+# Copy the installer logs into the installed system (/var/log/installer), as Ubuntu flavours do.
+# Called by the shared "logs" shellprocess step with the target root as $1.
+set -eu
+
+root=$1
+dir="$root/var/log/installer"
+mkdir -p "$dir"
+
+for spec in "$HOME/.cache/calamares/session.log:debug" "/cdrom/.disk/info:media-info" \
+            "/var/log/casper.log:casper.log"; do
+    src=${spec%%:*}
+    [ -r "$src" ] && cp "$src" "$dir/${spec##*:}"
+done
+journalctl -b --no-pager > "$dir/journal.txt" 2>/dev/null || true
+gzip --stdout "$root/var/lib/dpkg/status" > "$dir/initial-status.gz"
+
+chmod 600 "$dir"/*
+chmod 644 "$dir/initial-status.gz"
+[ -e "$dir/media-info" ] && chmod 644 "$dir/media-info"
+exit 0

@@ -35,6 +35,8 @@ PACKAGES = (
     "nexusos-defaults",
     "nexusos-gateway",
     "nexusos-desktop",
+    "plymouth-theme-nexusos",
+    "calamares-settings-nexusos",
 )
 # Binary package name when it differs from the source package.
 BINARY = {"nexus-core": "python3-nexus-core"}
@@ -53,6 +55,25 @@ EXPECTED_PATHS = {
         "./usr/share/wallpapers/NexusOS/metadata.json",
         "./usr/share/wallpapers/NexusOS/contents/images/1920x1080.png",
         "./usr/share/nexusos/legal/NOTICE",
+        "./etc/default/grub.d/50-nexusos.cfg",
+    ],
+    "plymouth-theme-nexusos": [
+        "./usr/share/plymouth/themes/nexusos/nexusos.plymouth",
+        "./usr/share/plymouth/themes/nexusos/watermark.png",
+        "./usr/share/plymouth/themes/nexusos/animation-0001.png",
+        "./usr/share/plymouth/themes/nexusos/throbber-0036.png",
+    ],
+    "calamares-settings-nexusos": [
+        "./etc/calamares/settings.conf",
+        "./etc/calamares/modules/users.conf",
+        "./etc/calamares/modules/partition.conf",
+        "./etc/calamares/branding/nexusos/branding.desc",
+        "./etc/calamares/branding/nexusos/show.qml",
+        "./etc/calamares/branding/nexusos/logo.png",
+        "./usr/bin/nexusos-install",
+        "./usr/bin/calamares-logs-helper",
+        "./usr/share/applications/nexusos-install.desktop",
+        "./etc/xdg/autostart/nexusos-live-setup.desktop",
     ],
     "nexusos-theme": [
         "./usr/share/plasma/look-and-feel/org.nexusos.nexus.desktop/metadata.json",

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install NexusOS
+GenericName=Install NexusOS Engineering Edition
+Comment=Install NexusOS on this computer
+Exec=/usr/bin/nexusos-install
+Icon=nexusos
+Terminal=false
+StartupNotify=true
+Categories=Qt;System;
+Keywords=installer;calamares;install;nexusos;

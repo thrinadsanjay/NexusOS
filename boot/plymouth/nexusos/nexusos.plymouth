@@ -1,0 +1,61 @@
+[Plymouth Theme]
+Name=NexusOS
+Description=NexusOS boot splash: the NexusOS mark over a teal hexagon animation.
+ModuleName=two-step
+
+[two-step]
+Font=Inter 12
+TitleFont=Inter Light 28
+ImageDir=/usr/share/plymouth/themes/nexusos
+DialogHorizontalAlignment=.5
+DialogVerticalAlignment=.62
+TitleHorizontalAlignment=.5
+TitleVerticalAlignment=.62
+HorizontalAlignment=.5
+VerticalAlignment=.60
+WatermarkHorizontalAlignment=.5
+WatermarkVerticalAlignment=.42
+Transition=none
+TransitionDuration=0.0
+BackgroundStartColor=0x0b171b
+BackgroundEndColor=0x0b171b
+ProgressBarBackgroundColor=0x1b3036
+ProgressBarForegroundColor=0x31c6bd
+MessageBelowAnimation=true
+
+[boot-up]
+UseEndAnimation=false
+
+[shutdown]
+UseEndAnimation=false
+
+[reboot]
+UseEndAnimation=false
+
+[updates]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Installing updates…
+SubTitle=Do not turn off your computer
+
+[system-upgrade]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Upgrading NexusOS…
+SubTitle=Do not turn off your computer
+
+[firmware-upgrade]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Upgrading firmware…
+SubTitle=Do not turn off your computer
+
+[system-reset]
+SuppressMessages=true
+ProgressBarShowPercentComplete=true
+UseProgressBar=true
+Title=Resetting the system…
+SubTitle=Do not turn off your computer

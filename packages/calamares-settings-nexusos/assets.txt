@@ -1,0 +1,6 @@
+# Repository paths staged into the source package by scripts/package/build-deb.sh.
+installer/calamares                       calamares
+installer/live                            live
+branding/logo/nexusos-logo.svg            images/nexusos-logo.svg
+branding/logo/nexusos-logo-horizontal.svg images/nexusos-logo-horizontal.svg
+branding/icons/nexus-n.svg                images/nexus-n.svg

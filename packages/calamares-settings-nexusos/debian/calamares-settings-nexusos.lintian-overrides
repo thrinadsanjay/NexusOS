@@ -1,0 +1,3 @@
+# The installer log helper stores a compressed copy of the freshly installed system's package
+# list in /var/log/installer (as Ubuntu flavours do); it only reads the file.
+calamares-settings-nexusos: uses-dpkg-database-directly [usr/bin/calamares-logs-helper]

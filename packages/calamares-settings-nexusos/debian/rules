@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+# Branding images are rendered from the SVG masters at build time; no rasters are stored in Git.
+
+P := debian/calamares-settings-nexusos
+BRAND := $(P)/etc/calamares/branding/nexusos
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	mkdir -p debian/rendered
+	rsvg-convert -h 256 images/nexusos-logo.svg -o debian/rendered/logo.png
+	rsvg-convert -w 128 -h 128 images/nexus-n.svg -o debian/rendered/icon.png
+	rsvg-convert -w 720 images/nexusos-logo-horizontal.svg -o debian/rendered/welcome.png
+	optipng -quiet -o2 debian/rendered/*.png
+
+override_dh_auto_install:
+	install -D -m 0644 calamares/settings.conf $(P)/etc/calamares/settings.conf
+	install -d $(P)/etc/calamares/modules
+	install -m 0644 calamares/modules/*.conf $(P)/etc/calamares/modules/
+	install -D -m 0644 calamares/branding/nexusos/branding.desc $(BRAND)/branding.desc
+	install -m 0644 calamares/branding/nexusos/show.qml $(BRAND)/show.qml
+	install -m 0644 debian/rendered/logo.png debian/rendered/icon.png debian/rendered/welcome.png $(BRAND)/
+	# Live session launcher, desktop icon helper and log helper
+	install -D -m 0755 live/nexusos-install $(P)/usr/bin/nexusos-install
+	install -D -m 0755 live/calamares-logs-helper $(P)/usr/bin/calamares-logs-helper
+	install -D -m 0644 live/nexusos-install.desktop $(P)/usr/share/applications/nexusos-install.desktop
+	install -D -m 0755 live/nexusos-live-setup $(P)/usr/libexec/nexusos/nexusos-live-setup
+	install -D -m 0644 live/nexusos-live-setup.desktop $(P)/etc/xdg/autostart/nexusos-live-setup.desktop
+	install -D -m 0644 live/nexusos-install.1 $(P)/usr/share/man/man1/nexusos-install.1
+	install -D -m 0644 live/calamares-logs-helper.8 $(P)/usr/share/man/man8/calamares-logs-helper.8
+
+override_dh_clean:
+	dh_clean debian/rendered/

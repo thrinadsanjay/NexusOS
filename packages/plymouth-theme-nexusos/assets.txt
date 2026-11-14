@@ -1,0 +1,5 @@
+# Repository paths staged into the source package by scripts/package/build-deb.sh.
+boot/plymouth/nexusos/nexusos.plymouth                   plymouth/nexusos.plymouth
+boot/plymouth/generate-frames.py                         plymouth/generate-frames.py
+branding/design-tokens.json                              plymouth/design-tokens.json
+branding/logo/nexusos-logo.svg                           plymouth/nexusos-logo.svg

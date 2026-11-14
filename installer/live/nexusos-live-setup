@@ -1,0 +1,13 @@
+#!/bin/sh
+# Live session only: put "Install NexusOS" on the desktop of the live account.
+# Started from /etc/xdg/autostart; does nothing on an installed system.
+grep -qw "boot=casper" /proc/cmdline 2>/dev/null || exit 0
+
+desktop="$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")"
+mkdir -p "$desktop"
+target="$desktop/nexusos-install.desktop"
+if [ ! -e "$target" ]; then
+    cp /usr/share/applications/nexusos-install.desktop "$target"
+    chmod +x "$target"   # Plasma runs executable .desktop files on the desktop without a prompt
+fi
+exit 0

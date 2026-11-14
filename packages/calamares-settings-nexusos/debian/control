@@ -1,0 +1,36 @@
+Source: calamares-settings-nexusos
+Section: admin
+Priority: optional
+Maintainer: NexusOS Maintainers <maintainers@nexusos.invalid>
+Build-Depends: debhelper-compat (= 13),
+               librsvg2-bin,
+               optipng,
+               fonts-inter
+Standards-Version: 4.7.0
+Homepage: https://github.com/thrinadsanjay/NexusOS
+Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
+Vcs-Git: https://github.com/thrinadsanjay/NexusOS.git
+Rules-Requires-Root: no
+
+Package: calamares-settings-nexusos
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends},
+         calamares,
+         calamares-settings-ubuntu-common-data,
+         qml6-module-qtquick,
+         cryptsetup,
+         kdialog,
+         sudo | sudo-rs,
+         xdg-user-dirs,
+         nexusos-branding
+Conflicts: calamares-settings-kubuntu
+Description: NexusOS installer configuration (Calamares)
+ Calamares settings and branding for installing NexusOS Engineering Edition
+ from the live image: NexusOS slides and colours, erase-disk installs with
+ optional LUKS2 encryption, the first account created as the administrator
+ (sudo group), Plasma on Wayland with SDDM, Ubuntu's signed boot chain, and
+ removal of the installer and live-session tools from the installed system.
+ .
+ Live session only: an "Install NexusOS" launcher and desktop icon. The
+ launcher refuses to run outside the live session (boot=casper).

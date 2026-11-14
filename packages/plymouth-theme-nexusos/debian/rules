@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+# Frames and the watermark are rendered from SVG at build time; no rasters are stored in Git.
+
+THEME := debian/plymouth-theme-nexusos/usr/share/plymouth/themes/nexusos
+FRAMES := 36
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	mkdir -p debian/rendered/frames
+	python3 plymouth/generate-frames.py plymouth/design-tokens.json debian/rendered/frames $(FRAMES)
+	set -e; for svg in debian/rendered/frames/*.svg; do \
+	  rsvg-convert -w 64 -h 64 $$svg -o $${svg%.svg}.png; \
+	done
+	rsvg-convert -h 220 plymouth/nexusos-logo.svg -o debian/rendered/watermark.png
+	find debian/rendered -name '*.png' -print0 | xargs -0 -r optipng -quiet -o2
+
+override_dh_auto_install:
+	install -D -m 0644 plymouth/nexusos.plymouth $(THEME)/nexusos.plymouth
+	install -m 0644 debian/rendered/watermark.png $(THEME)/watermark.png
+	install -m 0644 debian/rendered/frames/*.png $(THEME)/
+	# Password/keyboard dialog images: the spinner theme's, shared rather than copied.
+	set -e; for img in bullet capslock entry keyboard keymap-render lock; do \
+	  ln -s ../spinner/$$img.png $(THEME)/$$img.png; \
+	done
+
+override_dh_clean:
+	dh_clean debian/rendered/

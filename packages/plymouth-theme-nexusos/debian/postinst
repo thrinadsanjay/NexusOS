@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Higher than Ubuntu's bgrt (110) and spinner themes: NexusOS becomes the default splash.
+        update-alternatives \
+            --install /usr/share/plymouth/themes/default.plymouth default.plymouth \
+            /usr/share/plymouth/themes/nexusos/nexusos.plymouth 150
+        dpkg-trigger update-initramfs || true
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
