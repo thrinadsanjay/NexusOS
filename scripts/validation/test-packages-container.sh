@@ -44,7 +44,7 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     pass "branding, defaults and nexus-cli installed"
 
     . /etc/os-release
-    [ "$ID" = nexusos ] && [ "$ID_LIKE" = ubuntu ] && [ "$VERSION_ID" = 1.0 ] || fail "os-release identity ($ID/$ID_LIKE/$VERSION_ID)"
+    [ "$ID" = nexusos ] && [ "$ID_LIKE" = "ubuntu debian" ] && [ "$VERSION_ID" = 1.0 ] || fail "os-release identity ($ID/$ID_LIKE/$VERSION_ID)"
     [ "$PRETTY_NAME" = "NexusOS Engineering Edition 1.0" ] || fail "PRETTY_NAME=$PRETTY_NAME"
     [ "$UBUNTU_CODENAME" = resolute ] || fail "UBUNTU_CODENAME"
     pass "os-release: $PRETTY_NAME (ID=$ID, ID_LIKE=$ID_LIKE)"

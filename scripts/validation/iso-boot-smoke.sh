@@ -7,8 +7,9 @@
 #   1. legacy BIOS: GRUB shows the NexusOS menu
 #   2. UEFI with Secure Boot enforced (OVMF + Microsoft keys): shim -> Canonical-signed GRUB
 #      -> NexusOS menu (proves the signed boot chain on the medium)
-#   3. live boot (kernel/initrd from the ISO, serial console): casper finds the medium and
-#      the squashfs, systemd reaches the graphical target and SDDM starts
+#   3. live boot (kernel/initrd from the ISO): log in as the live account on the serial
+#      console and check systemd, SDDM autologin into a Plasma Wayland session, KWin,
+#      plasmashell, no failed units, the CLI, Command Center, installer icon, splash, banner
 # Uses KVM when /dev/kvm exists, otherwise software emulation (slow: allow ~20 minutes).
 set -euo pipefail
 
@@ -29,7 +30,8 @@ mkdir -p "$OUT"
 kvm_args=()
 [ -e /dev/kvm ] && kvm_args=(--device /dev/kvm)
 
-docker run --rm "${kvm_args[@]}" -e LIVE_MIN="$LIVE_MIN" -v "$ISO:/test.iso:ro" -v "$OUT:/out" ubuntu:26.04 bash -euo pipefail -c '
+docker run --rm "${kvm_args[@]}" -e LIVE_MIN="$LIVE_MIN" -v "$ISO:/test.iso:ro" -v "$OUT:/out" \
+    -v "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/iso-live-checks.py:/checks/iso-live-checks.py:ro" ubuntu:26.04 bash -euo pipefail -c '
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq && apt-get install -y -qq --no-install-recommends qemu-system-x86 ovmf python3 python3-pil \
     xorriso socat >/dev/null
@@ -77,28 +79,18 @@ else
     fail "UEFI Secure Boot menu"
 fi
 
-echo "== 3. live boot (serial console, up to ${LIVE_MIN} min)"
+echo "== 3. live boot to the Plasma desktop (serial console login, up to ${LIVE_MIN} min)"
 mkdir -p /tmp/k && cd /tmp/k
 xorriso -osirrox on -indev /test.iso -extract /casper/vmlinuz vmlinuz -extract /casper/initrd initrd >/dev/null 2>&1
-qemu-system-x86_64 $accel -m 4096 -smp 4 -machine q35 -display none -qmp unix:/tmp/live.qmp,server,nowait \
+qemu-system-x86_64 $accel -m 6144 -smp 4 -machine q35 -vga std -display none -qmp unix:/tmp/live.qmp,server,nowait \
     -cdrom /test.iso -kernel vmlinuz -initrd initrd \
-    -append "boot=casper console=ttyS0,115200n8 systemd.show_status=1 ---" \
-    -serial file:/out/live-serial.log &
+    -append "boot=casper quiet splash console=tty0 console=ttyS0,115200n8 ---" \
+    -serial unix:/tmp/serial.sock,server,nowait &
 pid=$!
-deadline=$(( $(date +%s) + LIVE_MIN * 60 ))
-while [ "$(date +%s)" -lt "$deadline" ]; do
-    sleep 20
-    grep -qE "Started (sddm|SDDM).*|Reached target .*[Gg]raphical" /out/live-serial.log 2>/dev/null && break
-    grep -q "Kernel panic" /out/live-serial.log 2>/dev/null && break
-done
-sleep 60   # let SDDM autologin start Plasma
+python3 /checks/iso-live-checks.py /tmp/serial.sock /out "$LIVE_MIN" || fails=$((fails + $?))
+sleep 20
 shot /tmp/live.qmp live-desktop
 kill $pid 2>/dev/null; wait $pid 2>/dev/null || true
-grep -q "Kernel panic" /out/live-serial.log && fail "kernel panic during live boot (see live-serial.log)"
-grep -q "squashfs" /out/live-serial.log && pass "live: casper found the medium and mounted filesystem.squashfs" || fail "casper medium/squashfs (see live-serial.log)"
-grep -qE "Reached target .*[Gg]raphical" /out/live-serial.log && pass "live: systemd reached the graphical target" || fail "graphical target not reached in ${LIVE_MIN} min"
-grep -qiE "Started.*(sddm|Simple Desktop Display Manager)" /out/live-serial.log && pass "live: SDDM started" || fail "SDDM not started"
-grep -E "\[FAILED\]" /out/live-serial.log | sed "s/^/      /" | head -20 || true
 echo "screenshots and serial log: /out"
 exit $fails
 '

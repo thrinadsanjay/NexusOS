@@ -37,9 +37,14 @@ def test_control_fields():
 def test_branding_diversion_scripts_are_symmetric():
     preinst = (REPO_ROOT / "packages/nexusos-branding/debian/nexusos-branding.preinst").read_text()
     postrm = (REPO_ROOT / "packages/nexusos-branding/debian/nexusos-branding.postrm").read_text()
-    assert "--add --rename" in preinst and "/usr/lib/os-release.ubuntu" in preinst
-    assert "--remove --rename" in postrm and "/usr/lib/os-release.ubuntu" in postrm
+    assert "--add --rename" in preinst and '--divert "$1.ubuntu"' in preinst
+    assert "--remove --rename" in postrm and '--divert "$1.ubuntu"' in postrm
+    for path in ("/usr/lib/os-release", "/etc/issue", "/etc/issue.net"):
+        assert f"divert {path}" in preinst, path  # every diversion added ...
+        assert path in postrm, path  # ... is removed again
     assert "abort-install" in postrm
+    postinst = (REPO_ROOT / "packages/nexusos-branding/debian/nexusos-branding.postinst").read_text()
+    assert "/usr/share/nexusos/$f" in postinst  # banners are symlinks, never conffiles
 
 
 def test_desktop_package_never_writes_etc_xdg_kdeglobals():

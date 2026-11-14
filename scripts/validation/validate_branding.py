@@ -55,7 +55,7 @@ REQUIRED_OS_RELEASE = {
     "NAME": "NexusOS",
     "PRETTY_NAME": "NexusOS Engineering Edition 1.0",
     "ID": "nexusos",
-    "ID_LIKE": "ubuntu",
+    "ID_LIKE": "ubuntu debian",  # tools (apport, installers) look for debian in ID_LIKE
     "VERSION_ID": "1.0",
     "VERSION": "1.0 LTS",
     "UBUNTU_CODENAME": "resolute",

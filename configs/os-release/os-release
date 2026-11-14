@@ -10,7 +10,7 @@
 NAME="NexusOS"
 PRETTY_NAME="NexusOS Engineering Edition 1.0"
 ID=nexusos
-ID_LIKE=ubuntu
+ID_LIKE="ubuntu debian"
 VERSION_ID="1.0"
 VERSION="1.0 LTS"
 VERSION_CODENAME=resolute

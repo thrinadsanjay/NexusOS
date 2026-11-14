@@ -24,7 +24,7 @@ def test_os_release_identity(key, value):
 
 def test_os_release_keeps_ubuntu_compatibility():
     data = validate_branding.parse_os_release(REPO_ROOT / "configs/os-release/os-release")
-    assert data["ID_LIKE"] == "ubuntu"
+    assert data["ID_LIKE"] == "ubuntu debian"
     assert data["UBUNTU_CODENAME"] == data["VERSION_CODENAME"] == "resolute"
     assert data["DEFAULT_HOSTNAME"] == "nexusos"
 
