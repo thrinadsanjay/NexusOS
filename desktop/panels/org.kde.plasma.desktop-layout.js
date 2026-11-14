@@ -65,7 +65,7 @@ var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", [
     /* Everyday */
-    "preferred://filemanager",
+    "applications:org.kde.dolphin.desktop",
     "preferred://browser",
     /* Development */
     "applications:org.kde.konsole.desktop",
@@ -77,5 +77,6 @@ tasks.writeConfig("launchers", [
     /* Local AI */
     "applications:org.nexusos.ai.desktop",
     /* System */
+    "applications:org.nexusos.CommandCenter.desktop",
     "applications:systemsettings.desktop"
 ]);
