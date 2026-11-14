@@ -43,13 +43,13 @@ Item {
         }
         RowLayout {
             enabled: !!page.sel
-            NxButton { text: "SMART health"; enabled: !!(page.sel && page.sel.depth === 0); onClicked: controller.readSmart(page.sel.path) }
+            NxButton { admin: true; text: "SMART health"; enabled: !!(page.sel && page.sel.depth === 0); onClicked: controller.readSmart(page.sel.path) }
             NxButton { text: "Mount"; enabled: !!(page.sel && page.sel.fstype && page.sel.mountpoints.length === 0); onClicked: controller.mount(page.sel.path) }
             NxButton { text: "Unmount"; enabled: !!(page.sel && page.sel.mountpoints.length > 0); onClicked: controller.unmount(page.sel.path) }
             Item { Layout.fillWidth: true }
             ComboBox { id: fs; model: ["ext4", "xfs", "btrfs", "exfat", "vfat", "ntfs"] }
             NxTextField { id: fsLabel; placeholderText: "label"; Layout.preferredWidth: 120 }
-            NxButton { text: "Format…"; variant: "danger"; enabled: !!(page.sel && page.sel.mountpoints.length === 0); onClicked: controller.planFormat(page.sel.path, fs.currentText, fsLabel.text) }
+            NxButton { admin: true; text: "Format…"; variant: "danger"; enabled: !!(page.sel && page.sel.mountpoints.length === 0); onClicked: controller.planFormat(page.sel.path, fs.currentText, fsLabel.text) }
         }
         RowLayout {
             Layout.fillWidth: true

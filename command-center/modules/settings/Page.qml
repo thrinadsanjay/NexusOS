@@ -57,9 +57,9 @@ Item {
             }
             ColumnLayout {
                 spacing: Theme.s3
-                NxFormRow { label: "Hostname"; RowLayout { width: parent.width; NxTextField { id: host; text: d.hostname || ""; Layout.fillWidth: true } NxButton { text: "Apply"; onClicked: confirm.ask("Change hostname", "Set the hostname to '" + host.text + "'? Network names and SSH known_hosts entries elsewhere may need updating.", ["$ hostnamectl set-hostname " + host.text], "Change", false, () => controller.setHostname(host.text)) } } }
-                NxFormRow { label: "Time zone"; RowLayout { width: parent.width; ComboBox { id: tz; model: d.timezones || []; Layout.fillWidth: true; currentIndex: (d.timezones || []).indexOf(d.time ? d.time.timezone : "") } NxButton { text: "Apply"; onClicked: controller.setTimezone(tz.currentText) } } }
-                NxFormRow { label: "Network time (NTP)"; Switch { checked: d.time ? !!d.time.ntp_enabled : false; onToggled: controller.setNtp(checked) } }
+                NxFormRow { label: "Hostname"; RowLayout { width: parent.width; NxTextField { id: host; text: d.hostname || ""; Layout.fillWidth: true } NxButton { admin: true; text: "Apply"; onClicked: confirm.ask("Change hostname", "Set the hostname to '" + host.text + "'? Network names and SSH known_hosts entries elsewhere may need updating.", ["$ hostnamectl set-hostname " + host.text], "Change", false, () => controller.setHostname(host.text)) } } }
+                NxFormRow { label: "Time zone"; RowLayout { width: parent.width; ComboBox { id: tz; model: d.timezones || []; Layout.fillWidth: true; currentIndex: (d.timezones || []).indexOf(d.time ? d.time.timezone : "") } NxButton { admin: true; text: "Apply"; onClicked: controller.setTimezone(tz.currentText) } } }
+                NxFormRow { label: "Network time (NTP)"; Switch { enabled: App.canAdmin; checked: d.time ? !!d.time.ntp_enabled : false; onToggled: controller.setNtp(checked) } }
                 NxFormRow { label: "Clock synchronised"; Text { text: d.time ? (d.time.ntp_synchronized ? "yes" : "no") : "unknown"; color: Theme.c.text; font.family: Theme.fontFamily } }
                 NxFormRow { label: "Locale"; Text { text: d.locale ? (d.locale["System Locale"] || "") : ""; color: Theme.c.text; font.family: Theme.fontFamily } }
                 NxButton { text: "Language and region…"; onClicked: controller.openKcm("kcm_regionandlang") }
@@ -80,7 +80,7 @@ Item {
                     enabled: !!unitTable.currentRow
                     Repeater {
                         model: ["start", "stop", "restart", "enable", "disable"]
-                        NxButton { required property string modelData; text: modelData; enabled: !!(unitTable.currentRow && unitTable.currentRow.approved)
+                        NxButton { admin: true; required property string modelData; text: modelData; enabled: !!(unitTable.currentRow && unitTable.currentRow.approved)
                             onClicked: confirm.ask(modelData + " " + unitTable.currentRow.name, "systemd will ask for administrator authentication.", ["$ systemctl " + modelData + " " + unitTable.currentRow.name], modelData, modelData === "stop" || modelData === "disable", () => controller.control(unitTable.currentRow.name, modelData)) }
                     }
                     NxButton { text: "Logs"; onClicked: controller.loadLogs(unitTable.currentRow.name) }

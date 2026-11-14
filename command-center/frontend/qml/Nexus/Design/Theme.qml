@@ -21,6 +21,15 @@ QtObject {
         readonly property color positive: "#3DBE7A"
         readonly property color warning: "#D9A441"
         readonly property color negative: "#D9574F"
+        // dashboard metric colours (categorical, tested for contrast on surface)
+        readonly property color mCpu: "#31C6BD"
+        readonly property color mMemory: "#3DBE7A"
+        readonly property color mGpu: "#A38BF5"
+        readonly property color mDisk: "#E0AE4A"
+        readonly property color mVuln: "#E0625A"
+        readonly property color mUpdates: "#5AA9E6"
+        readonly property color mNetwork: "#3DBE7A"
+        readonly property color mMounts: "#4FC3E0"
     }
     readonly property QtObject lightPalette: QtObject {
         readonly property color background: "#F4F8F9"
@@ -36,6 +45,14 @@ QtObject {
         readonly property color positive: "#25864F"
         readonly property color warning: "#9A6B0F"
         readonly property color negative: "#B43C35"
+        readonly property color mCpu: "#1E8F88"
+        readonly property color mMemory: "#25864F"
+        readonly property color mGpu: "#6E55D6"
+        readonly property color mDisk: "#A87308"
+        readonly property color mVuln: "#B9423A"
+        readonly property color mUpdates: "#2B7BC0"
+        readonly property color mNetwork: "#25864F"
+        readonly property color mMounts: "#1B8FB0"
     }
     readonly property QtObject c: dark ? darkPalette : lightPalette
 

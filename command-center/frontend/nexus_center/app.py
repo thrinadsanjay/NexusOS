@@ -12,6 +12,7 @@ import importlib.util
 import json
 import os
 import sys
+import threading
 import time
 from collections.abc import MutableMapping
 from pathlib import Path
@@ -19,10 +20,10 @@ from typing import Any
 
 PROCESS_START = time.monotonic()
 
-from nexus_core import notifications, search, services, settings  # noqa: E402
+from nexus_core import notifications, privilege, search, services, settings  # noqa: E402
 from nexus_core.log import get_logger  # noqa: E402
 from nexus_core.store import default_store  # noqa: E402
-from PySide6.QtCore import Property, QObject, QTimer, QUrl, Signal, Slot  # noqa: E402
+from PySide6.QtCore import Q_ARG, Property, QMetaObject, QObject, QTimer, QUrl, Signal, Slot  # noqa: E402
 from PySide6.QtGui import QGuiApplication, QIcon  # noqa: E402
 from PySide6.QtQml import QQmlApplicationEngine  # noqa: E402
 
@@ -86,6 +87,9 @@ class AppController(QObject):
     pageTimed = Signal(str, float)
     toastRequested = Signal(str, str)
     navigateRequested = Signal(str, str)
+    accessChanged = Signal()
+    authRequested = Signal("QVariantMap")  # the floating password box (Main.qml)
+    authPreviewClosed = Signal()
 
     def __init__(self, tasks: TaskRunner, modules: list[dict[str, Any]]) -> None:
         super().__init__()
@@ -103,6 +107,82 @@ class AppController(QObject):
         self._unread_timer.timeout.connect(self.refreshUnread)
         self._unread_timer.start(60_000)  # cheap SQLite count once a minute
         QTimer.singleShot(0, self.refreshUnread)
+        self._access = to_qml(privilege.access())
+        self._auth_answer: str | None = None
+        self._auth_event = threading.Event()
+        privilege.set_password_provider(self._ask_password)
+        privilege.add_listener(self._access_changed)
+        self.accessChanged.connect(self._reload_access)  # queued: listeners fire in worker threads
+
+    # ------------------------------------------------------------ access / sudo authentication
+    def _get_access(self) -> dict:
+        return self._access
+
+    access = Property("QVariantMap", _get_access, notify=accessChanged)
+
+    def _get_can_admin(self) -> bool:
+        return self._access.get("admin") != "none"
+
+    canAdmin = Property(bool, _get_can_admin, notify=accessChanged)
+
+    def _access_changed(self) -> None:
+        self.accessChanged.emit()
+
+    @Slot()
+    def _reload_access(self) -> None:
+        fresh = to_qml(privilege.access())
+        if fresh != self._access:
+            self._access = fresh
+            self.accessChanged.emit()
+
+    def _ask_password(self, request: privilege.AuthRequest) -> str | None:
+        """Password provider for nexus_core.privilege: runs in a worker thread, waits for the QML dialog."""
+        if threading.current_thread() is threading.main_thread():
+            log.error("sudo authentication requested on the UI thread; refusing to block it")
+            return None
+        self._auth_answer = None
+        self._auth_event.clear()
+        self.authRequested.emit(
+            {
+                "user": request.user,
+                "action": request.action,
+                "detail": request.detail,
+                "attempt": request.attempt,
+                "error": request.error or "",
+            }
+        )
+        if not self._auth_event.wait(timeout=300):
+            return None
+        answer, self._auth_answer = self._auth_answer, None
+        return answer
+
+    @Slot(str)
+    def submitPassword(self, password: str) -> None:
+        self._auth_answer = password
+        self._auth_event.set()
+
+    @Slot()
+    def previewAuthPrompt(self) -> None:
+        """Show the password box with sample text (screenshots only; nothing waits for an answer)."""
+        user = self._access.get("user", "user")
+        self.authRequested.emit(
+            {
+                "user": user,
+                "action": "Restart nginx.service",
+                "detail": "service.control",
+                "attempt": 2,
+                "error": "Incorrect password, try again",
+            }
+        )
+
+    @Slot()
+    def closeAuthPreview(self) -> None:
+        self.authPreviewClosed.emit()
+
+    @Slot()
+    def cancelAuth(self) -> None:
+        self._auth_answer = None
+        self._auth_event.set()
 
     # ------------------------------------------------------------ theme / preferences
     def _get_dark(self) -> bool:
@@ -200,6 +280,10 @@ class AppController(QObject):
 
         self.tasks.submit(slow, done)
 
+    @Slot(str, str)
+    def navigate(self, page: str, intent: str = "") -> None:
+        self.navigateRequested.emit(page, intent)
+
     @Slot(str)
     def openSetting(self, kcm: str) -> None:
         try:
@@ -281,6 +365,7 @@ def main(argv: list[str] | None = None) -> int:
         help="with --benchmark: stay on --page (measures a plain launch instead of all modules)",
     )
     parser.add_argument("--screenshots", metavar="DIR", help="with --smoke: save a PNG of every page into DIR")
+    parser.add_argument("--size", metavar="WxH", help="initial window size, e.g. 1680x980 (screenshots, tests)")
     parser.add_argument("--version", action="version", version=f"nexus-center {__version__}")
     args = parser.parse_args(argv)
 
@@ -319,6 +404,11 @@ def main(argv: list[str] | None = None) -> int:
         sys.stderr.write("failed to load Main.qml\n" + "\n".join(warnings) + "\n")
         return 1
     window = engine.rootObjects()[0]
+    if args.size:
+        w, _, h = args.size.lower().partition("x")
+        if w.isdigit() and h.isdigit():
+            window.setProperty("width", int(w))
+            window.setProperty("height", int(h))
     startup_ms = round((time.monotonic() - PROCESS_START) * 1000, 1)
     controller.timings["startup_to_window_ms"] = startup_ms
 
@@ -331,23 +421,52 @@ def main(argv: list[str] | None = None) -> int:
         if shots:
             shots.mkdir(parents=True, exist_ok=True)
 
+        def grab(target: str) -> None:
+            QMetaObject.invokeMethod(window, "capture", Q_ARG("QVariant", target))
+
+        def page_states() -> list[str]:
+            """A page may declare ``smokeStates`` (e.g. open cards) and ``applySmokeState(name)``."""
+            page = window.findChild(QObject, f"{ids[state['index'] - 1]}Page")
+            states = page.property("smokeStates") if page is not None else None
+            return [str(x) for x in (states.toVariant() if hasattr(states, "toVariant") else states or [])]
+
         def visit_next() -> None:
             if shots and state["index"] > 0:
-                try:
-                    from PySide6.QtCore import Q_ARG, QMetaObject
+                name = ids[state["index"] - 1]
+                grab(str(shots / f"{state['index']:02d}-{name}.png"))
+                extra = page_states()
+                if extra:
+                    page = window.findChild(QObject, f"{name}Page")
 
-                    target = str(shots / f"{state['index']:02d}-{ids[state['index'] - 1]}.png")
-                    QMetaObject.invokeMethod(window, "capture", Q_ARG("QVariant", target))
-                except Exception as exc:
-                    warnings.append(f"screenshot failed: {exc}")
+                    def capture_state(i: int = 0) -> None:
+                        if i >= len(extra):
+                            QMetaObject.invokeMethod(page, "applySmokeState", Q_ARG("QVariant", ""))
+                            QTimer.singleShot(300, advance)
+                            return
+                        QMetaObject.invokeMethod(page, "applySmokeState", Q_ARG("QVariant", extra[i]))
+                        QTimer.singleShot(
+                            700,
+                            lambda: (
+                                grab(str(shots / f"{state['index']:02d}-{name}-{extra[i]}.png")),
+                                QTimer.singleShot(500, lambda: capture_state(i + 1)),  # grabToImage is async
+                            ),
+                        )
+
+                    QTimer.singleShot(500, capture_state)  # let the async page grab finish first
+                    return
+            advance()
+
+        def advance() -> None:
             if state["index"] < len(ids):
 
                 def go() -> None:
                     window.setProperty("currentPage", ids[state["index"]])
                     state["index"] += 1
-                    QTimer.singleShot(1500 if shots else 300, visit_next)
+                    QTimer.singleShot(
+                        int(os.environ.get("NEXUS_CENTER_SHOT_DELAY_MS", 1500)) if shots else 300, visit_next
+                    )
 
-                QTimer.singleShot(600 if shots and state["index"] > 0 else 0, go)  # let async grabs finish
+                QTimer.singleShot(0, go)
             else:
                 window.setProperty("currentPage", "overview")
                 QTimer.singleShot(1000, measure_idle)

@@ -2,9 +2,13 @@ import QtQuick
 import QtQuick.Controls.Basic as B
 
 // Buttons: "primary" (one per view), "secondary", "danger", "ghost".
+// admin: true marks an administrative action (runs through the user's sudo rights); it is
+// hidden for users without administrator access (App.access.admin === "none").
 B.Button {
     id: control
     property string variant: "secondary"
+    property bool admin: false
+    visible: !admin || typeof App === "undefined" || App.canAdmin
     implicitHeight: Theme.controlHeight
     leftPadding: Theme.s3
     rightPadding: Theme.s3

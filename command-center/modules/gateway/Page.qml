@@ -22,9 +22,9 @@ Item {
         NxPageHeader {
             title: "Gateway"
             subtitle: "Native NGINX on this host. Routes in /etc/nexusos/gateway/routes, generated configuration kept separately."
-            NxButton { text: "Test config"; enabled: d.agent; onClicked: controller.testNginx() }
-            NxButton { text: "Roll back"; enabled: d.agent; onClicked: confirm.ask("Roll back", "Restore the most recent backup of the generated configuration (only if it passes nginx -t).", [], "Roll back", true, () => controller.rollback()) }
-            NxButton { text: "Apply"; variant: "primary"; enabled: d.agent; onClicked: page.askApply() }
+            NxButton { admin: true; text: "Test config"; enabled: d.agent; onClicked: controller.testNginx() }
+            NxButton { admin: true; text: "Roll back"; enabled: d.agent; onClicked: confirm.ask("Roll back", "Restore the most recent backup of the generated configuration (only if it passes nginx -t).", [], "Roll back", true, () => controller.rollback()) }
+            NxButton { admin: true; text: "Apply"; variant: "primary"; enabled: d.agent; onClicked: page.askApply() }
         }
         NxBanner { kind: "warning"; text: d.agent ? "" : "The management agent is not installed: routes can be viewed but not changed." }
         NxBanner { kind: "warning"; text: st && !st.nginx_installed ? "NGINX is not installed. Install the nexusos-gateway package (Private Cloud Host / Infrastructure profiles)." : "" }
@@ -57,11 +57,11 @@ Item {
                     ]
                 }
                 RowLayout {
-                    NxButton { text: "Add route"; enabled: d.agent; onClicked: { routeDialog.load(null); routeDialog.open() } }
-                    NxButton { text: "Edit"; enabled: !!(d.agent && !!page.route); onClicked: { routeDialog.load(page.route); routeDialog.open() } }
-                    NxButton { text: "Approve"; variant: "primary"; enabled: !!(d.agent && page.route && !page.route.approved); onClicked: confirm.ask("Approve route", "Serve " + page.route.hostname + " (" + page.route.access + " access, TLS " + page.route.tls + ") after the next Apply?", [], "Approve", false, () => controller.approve(page.route.id)) }
+                    NxButton { admin: true; text: "Add route"; enabled: d.agent; onClicked: { routeDialog.load(null); routeDialog.open() } }
+                    NxButton { admin: true; text: "Edit"; enabled: !!(d.agent && !!page.route); onClicked: { routeDialog.load(page.route); routeDialog.open() } }
+                    NxButton { admin: true; text: "Approve"; variant: "primary"; enabled: !!(d.agent && page.route && !page.route.approved); onClicked: confirm.ask("Approve route", "Serve " + page.route.hostname + " (" + page.route.access + " access, TLS " + page.route.tls + ") after the next Apply?", [], "Approve", false, () => controller.approve(page.route.id)) }
                     NxButton { text: "Test backend"; enabled: !!page.route; onClicked: controller.testBackend(page.route.id) }
-                    NxButton { text: "Delete"; variant: "danger"; enabled: !!(d.agent && !!page.route); onClicked: confirm.ask("Delete route", "Delete " + page.route.hostname + "? It stops being served after the next Apply.", [], "Delete", true, () => controller.deleteRoute(page.route.id)) }
+                    NxButton { admin: true; text: "Delete"; variant: "danger"; enabled: !!(d.agent && !!page.route); onClicked: confirm.ask("Delete route", "Delete " + page.route.hostname + "? It stops being served after the next Apply.", [], "Delete", true, () => controller.deleteRoute(page.route.id)) }
                 }
             }
             ColumnLayout {
@@ -76,15 +76,15 @@ Item {
                     NxTextField { id: certName; placeholderText: "certificate name"; Layout.preferredWidth: 160 }
                     NxTextField { id: certHosts; placeholderText: "hostnames (space separated)"; Layout.fillWidth: true }
                     NxTextField { id: certEmail; visible: certMode.currentText === "letsencrypt"; placeholderText: "contact e-mail" }
-                    NxButton { text: "Issue"; enabled: !!(d.agent && certName.text && certHosts.text); onClicked: controller.issueCertificate(certMode.currentText, certName.text, certHosts.text, certEmail.text) }
-                    NxButton { text: "Renew due"; enabled: d.agent; onClicked: controller.renew() }
+                    NxButton { admin: true; text: "Issue"; enabled: !!(d.agent && certName.text && certHosts.text); onClicked: controller.issueCertificate(certMode.currentText, certName.text, certHosts.text, certEmail.text) }
+                    NxButton { admin: true; text: "Renew due"; enabled: d.agent; onClicked: controller.renew() }
                 }
                 Text { text: "Let's Encrypt only works for public DNS names reachable on port 80 (.local / .lan / .internal names are refused). Internal-CA certificates need the NexusOS CA (/etc/nexusos/gateway/ca/ca.crt) trusted on clients."; wrapMode: Text.WordWrap; Layout.fillWidth: true; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall }
                 RowLayout {
                     NxTextField { id: impName; placeholderText: "import as name"; Layout.preferredWidth: 160 }
                     NxButton { text: "Certificate…"; onClicked: certFile.open() }
                     NxButton { text: "Private key…"; onClicked: keyFile.open() }
-                    NxButton { text: "Import"; enabled: !!(d.agent && impName.text && certFile.selectedFile.toString() && keyFile.selectedFile.toString()); onClicked: controller.importCertificate(impName.text, certFile.selectedFile.toString(), keyFile.selectedFile.toString()) }
+                    NxButton { admin: true; text: "Import"; enabled: !!(d.agent && impName.text && certFile.selectedFile.toString() && keyFile.selectedFile.toString()); onClicked: controller.importCertificate(impName.text, certFile.selectedFile.toString(), keyFile.selectedFile.toString()) }
                     FileDialog { id: certFile; nameFilters: ["PEM (*.pem *.crt)"] }
                     FileDialog { id: keyFile; nameFilters: ["PEM key (*.pem *.key)"] }
                 }

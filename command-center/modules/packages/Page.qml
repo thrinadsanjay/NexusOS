@@ -47,7 +47,7 @@ Item {
         NxPageHeader {
             title: "Software Center"
             subtitle: "Ubuntu APT and dpkg — the same packages and history as the terminal (apt, dpkg remain fully available)."
-            NxButton { text: "Refresh indexes"; enabled: !!(d.agent && !(d.op && d.op.running)); onClicked: page.askUpdateIndexes() }
+            NxButton { admin: true; text: "Refresh indexes"; enabled: !!(d.agent && !(d.op && d.op.running)); onClicked: page.askUpdateIndexes() }
         }
         NxBanner { kind: "warning"; text: d.agent ? "" : "The NexusOS management agent is not installed: you can browse, but installing and removing are disabled. Install nexusos-management-agent." }
         NxBanner { kind: "warning"; text: d.lock && d.lock.locked ? "The package manager is in use by " + (d.lock.holder_name || "another program") + " (pid " + d.lock.holder_pid + "). Operations will wait until it finishes." : "" }
@@ -132,10 +132,10 @@ Item {
                             Text { text: page.details ? "Download " + Theme.bytes(page.details.download_size_bytes) + "  ·  installed size " + Theme.bytes((page.details.installed_size_kib || 0) * 1024) + (page.details.origin ? "  ·  " + page.details.origin : "") : ""; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall }
                             RowLayout {
                                 enabled: !!(d.agent && !(d.op && d.op.running) && !!page.details)
-                                NxButton { text: "Install"; variant: "primary"; visible: !!(page.details && !page.details.installed_version); onClicked: controller.plan("install", JSON.stringify([page.details.name])) }
-                                NxButton { text: "Remove"; variant: "danger"; visible: !!(page.details && !!page.details.installed_version && !page.details.essential); onClicked: controller.plan("remove", JSON.stringify([page.details.name])) }
-                                NxButton { text: "Purge"; variant: "danger"; visible: !!(page.details && !!page.details.installed_version && !page.details.essential); onClicked: controller.plan("purge", JSON.stringify([page.details.name])) }
-                                NxButton { text: "Upgrade"; visible: !!(page.details && page.details.installed_version && page.details.candidate_version !== page.details.installed_version); onClicked: controller.plan("install", JSON.stringify([page.details.name])) }
+                                NxButton { text: "Install"; variant: "primary"; visible: App.canAdmin && !!(page.details && !page.details.installed_version); onClicked: controller.plan("install", JSON.stringify([page.details.name])) }
+                                NxButton { text: "Remove"; variant: "danger"; visible: App.canAdmin && !!(page.details && !!page.details.installed_version && !page.details.essential); onClicked: controller.plan("remove", JSON.stringify([page.details.name])) }
+                                NxButton { text: "Purge"; variant: "danger"; visible: App.canAdmin && !!(page.details && !!page.details.installed_version && !page.details.essential); onClicked: controller.plan("purge", JSON.stringify([page.details.name])) }
+                                NxButton { text: "Upgrade"; visible: App.canAdmin && !!(page.details && page.details.installed_version && page.details.candidate_version !== page.details.installed_version); onClicked: controller.plan("install", JSON.stringify([page.details.name])) }
                             }
                             Text { visible: !!(page.details && page.details.essential); text: "Essential package: removal is not offered."; color: Theme.c.warning; font.family: Theme.fontFamily }
                             Text { text: page.details ? page.details.description : ""; wrapMode: Text.WordWrap; color: Theme.c.text; font.family: Theme.fontFamily; Layout.fillWidth: true }
@@ -168,7 +168,7 @@ Item {
             ColumnLayout {
                 RowLayout {
                     Text { text: d.updates ? d.updates.changes.length + " package(s) can be upgraded (from the current indexes)" : "Checking…"; color: Theme.c.text; font.family: Theme.fontFamily; Layout.fillWidth: true }
-                    NxButton { text: "Upgrade all"; variant: "primary"; enabled: !!(d.agent && d.updates && d.updates.changes.length > 0 && !(d.op && d.op.running)); onClicked: controller.plan("upgrade", "[]") }
+                    NxButton { admin: true; text: "Upgrade all"; variant: "primary"; enabled: !!(d.agent && d.updates && d.updates.changes.length > 0 && !(d.op && d.op.running)); onClicked: controller.plan("upgrade", "[]") }
                 }
                 NxTable {
                     Layout.fillWidth: true; Layout.fillHeight: true
@@ -201,7 +201,7 @@ Item {
                     ]
                 }
                 RowLayout {
-                    NxButton { text: "Remove selected NexusOS repository"; variant: "danger"; enabled: !!(d.agent && repoTable.currentRow && repoTable.currentRow.managed_by_nexusos)
+                    NxButton { admin: true; text: "Remove selected NexusOS repository"; variant: "danger"; enabled: !!(d.agent && repoTable.currentRow && repoTable.currentRow.managed_by_nexusos)
                         onClicked: { const n = repoTable.currentRow.file.split("/").pop().replace("nexusos-", "").replace(".sources", ""); confirm.ask("Remove repository", "Remove " + repoTable.currentRow.file + "?", [], "Remove", true, () => controller.removeRepository(n)) } }
                 }
                 NxSectionTitle { text: "Add a repository (signed, https)" }
@@ -213,7 +213,7 @@ Item {
                     NxTextField { id: rSuites; placeholderText: "suites (e.g. resolute)"; Layout.fillWidth: true }
                     NxTextField { id: rComps; placeholderText: "components (e.g. main)"; Layout.fillWidth: true }
                     NxTextField { id: rKey; placeholderText: "/etc/apt/keyrings/<key>.gpg"; Layout.fillWidth: true }
-                    NxButton { text: "Add"; enabled: d.agent; onClicked: confirm.ask("Add repository", "Packages from this repository will be trusted for installation.", ["URIs: " + rUri.text, "Suites: " + rSuites.text, "Components: " + rComps.text, "Signed-By: " + rKey.text], "Add repository", true,
+                    NxButton { admin: true; text: "Add"; enabled: d.agent; onClicked: confirm.ask("Add repository", "Packages from this repository will be trusted for installation.", ["URIs: " + rUri.text, "Suites: " + rSuites.text, "Components: " + rComps.text, "Signed-By: " + rKey.text], "Add repository", true,
                                                                        () => controller.addRepository(rName.text, rUri.text, rSuites.text, rComps.text, rKey.text)) }
                 }
             }

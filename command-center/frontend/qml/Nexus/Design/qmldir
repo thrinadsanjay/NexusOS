@@ -17,3 +17,6 @@ NxSectionTitle 1.0 NxSectionTitle.qml
 NxFormRow 1.0 NxFormRow.qml
 NxLogView 1.0 NxLogView.qml
 NxProgress 1.0 NxProgress.qml
+NxPasswordPrompt 1.0 NxPasswordPrompt.qml
+NxIcon 1.0 NxIcon.qml
+NxSparkline 1.0 NxSparkline.qml

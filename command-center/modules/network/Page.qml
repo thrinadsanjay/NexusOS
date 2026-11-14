@@ -56,7 +56,8 @@ Item {
                 NxLogView { Layout.fillWidth: true; Layout.fillHeight: true; text: (d.diagnostics || []).map(r => "== " + r.tool + (r.ok ? " (ok)" : " (failed)") + "\n" + r.output).join("\n\n") }
             }
             ColumnLayout {
-                Text { text: d.firewall ? (d.firewall.installed ? "" : "ufw is not installed") : "Loading…"; color: Theme.c.textSecondary; font.family: Theme.fontFamily }
+                Text { text: d.firewall ? (d.firewall.installed ? (d.firewall.locked ? "The firewall status is readable by administrators only." : "") : "ufw is not installed") : "Loading…"; color: Theme.c.textSecondary; font.family: Theme.fontFamily }
+                NxButton { visible: !!(d.firewall && d.firewall.locked && App.access.admin !== "none"); text: "Unlock…"; onClicked: controller.unlockFirewall() }
                 NxLogView { Layout.fillWidth: true; Layout.fillHeight: true; text: d.firewall ? d.firewall.output : "" }
                 Text { text: "Firewall rules are changed through the management agent (nexus CLI) or the KDE Firewall module."; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall }
             }

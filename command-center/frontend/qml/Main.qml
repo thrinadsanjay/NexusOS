@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Nexus.Design
@@ -7,8 +8,9 @@ import Nexus.Design
 // a single lazy page Loader, toasts and the global command palette (Ctrl+K).
 ApplicationWindow {
     id: window
-    width: 1360
-    height: 860
+    // Default size follows the screen (the dashboard is designed for ≥ 1600×950; smaller windows scroll).
+    width: Math.min(1680, Math.max(1100, Screen.desktopAvailableWidth * 0.9))
+    height: Math.min(1000, Math.max(720, Screen.desktopAvailableHeight * 0.9))
     minimumWidth: 960
     minimumHeight: 600
     visible: true
@@ -74,6 +76,8 @@ ApplicationWindow {
     Connections {
         target: App
         function onToastRequested(kind, message) { toasts.show(kind, message) }
+        function onAuthRequested(request) { passwordPrompt.ask(request) }
+        function onAuthPreviewClosed() { passwordPrompt.close() }
         function onNavigateRequested(page, intent) { window.navigate(page, intent) }
     }
 
@@ -139,6 +143,41 @@ ApplicationWindow {
                             background: Rectangle { radius: Theme.radiusSmall; color: parent.highlighted ? Theme.c.backgroundSecondary : parent.hovered ? Theme.c.surfaceElevated : "transparent" }
                         }
                     }
+                    // Who is signed in and what they may do (administrative tasks use their sudo rights).
+                    Rectangle {
+                        id: userChip
+                        readonly property var acc: App.access || ({})
+                        Layout.fillWidth: true
+                        implicitHeight: 52
+                        radius: Theme.radius
+                        color: Theme.c.background
+                        border.color: Theme.c.border
+                        Accessible.name: "Signed in as " + (acc.user || "")
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: Theme.s2
+                            spacing: Theme.s2
+                            Rectangle {
+                                width: 32; height: 32; radius: 16
+                                color: userChip.acc.admin === "none" ? Theme.c.border : Theme.c.accent
+                                Text { anchors.centerIn: parent; text: (userChip.acc.user || "?").charAt(0).toUpperCase(); color: Theme.c.textOnAccent; font.family: Theme.fontFamily; font.weight: Font.Bold }
+                            }
+                            ColumnLayout {
+                                spacing: 0
+                                Layout.fillWidth: true
+                                Text { text: userChip.acc.full_name || userChip.acc.user || ""; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody; font.weight: Font.DemiBold; elide: Text.ElideRight; Layout.fillWidth: true }
+                                Text {
+                                    text: userChip.acc.admin === "root" ? "root"
+                                        : userChip.acc.admin === "sudo" ? (userChip.acc.auth === "not-required" ? "Administrator · sudo, no password" : "Administrator · sudo")
+                                        : "Standard user · no admin rights"
+                                    color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall; elide: Text.ElideRight; Layout.fillWidth: true
+                                }
+                            }
+                        }
+                        ToolTip.visible: chipHover.hovered
+                        ToolTip.text: (userChip.acc.reason || "") + (userChip.acc.admin === "none" ? "\nAdministrative actions are hidden or disabled." : "")
+                        HoverHandler { id: chipHover }
+                    }
                 }
             }
 
@@ -178,6 +217,12 @@ ApplicationWindow {
     }
 
     NxConfirmDialog { id: confirmDialog; parent: Overlay.overlay }
+    NxPasswordPrompt {
+        id: passwordPrompt
+        parent: shellBackdrop
+        onSubmitted: password => App.submitPassword(password)
+        onCancelled: App.cancelAuth()
+    }
 
     // ------------------------------------------------------------ toasts
     Column {
