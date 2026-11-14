@@ -89,6 +89,11 @@ svg { display: block; }
 .tb-body { display: grid; grid-template-rows: 18px 1fr 18px; min-width: 0; }
 .tl { display: flex; align-items: center; color: var(--text2); font-weight: 500; font-size: 12.5px; }
 .tl .go { margin-left: auto; width: 15px; height: 15px; color: var(--text3); }
+.tl .meta { margin-left: auto; color: var(--text2); font-weight: 400; font-size: 12px; white-space: nowrap; }
+.tl .i { margin-left: 8px; width: 16px; height: 16px; border-radius: 50%; border: 1.3px solid var(--text3); color: var(--text3); font: italic 600 10px/13px Georgia, serif;
+         text-align: center; flex: none; }
+.tl .i.on { border-color: var(--k); color: var(--k); background: color-mix(in srgb, var(--k) 15%, transparent); }
+.tf .hw { color: var(--text); font-weight: 500; }
 .tv { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .tv b { font-size: 26px; font-weight: 650; letter-spacing: -.01em; line-height: 1; }
 .tv b small { font-size: 15px; font-weight: 600; color: var(--text2); }
@@ -135,12 +140,25 @@ svg { display: block; }
 .sar svg { height: 30px; width: 100%; }
 
 /* hover card + detail drawer */
-.pop { position: absolute; z-index: 5; width: 330px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 14px; display: grid; gap: 10px; }
-.pop::before { content: ""; position: absolute; top: -6px; left: 30px; width: 10px; height: 10px; background: var(--panel-2); border-left: 1px solid var(--line); border-top: 1px solid var(--line); transform: rotate(45deg); }
+.pop { position: absolute; z-index: 5; width: 380px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 14px; display: grid; gap: 10px; }
+.pop::before { content: ""; position: absolute; top: -6px; left: var(--arrow, 30px); width: 10px; height: 10px; background: var(--panel-2); border-left: 1px solid var(--line); border-top: 1px solid var(--line); transform: rotate(45deg); }
 .pop h3 { font-size: 13px; display: flex; justify-content: space-between; } .pop h3 span { color: var(--text2); font-weight: 400; font-size: 12px; }
 .cores { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; align-items: end; height: 36px; }
 .cores i { display: block; background: var(--c-cpu); border-radius: 2px 2px 0 0; }
 .pkv { display: grid; grid-template-columns: 1fr auto; row-gap: 4px; font-size: 12px; } .pkv dt { color: var(--text2); } .pkv dd { text-align: right; }
+.pop .sect { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text3); margin-top: 2px; }
+.pop .live { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pop .live div { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 8px; padding: 6px 9px; }
+.pop .live span { display: block; color: var(--text2); font-size: 11px; } .pop .live b { font-size: 14px; font-weight: 600; }
+.drv { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 0; border-top: 1px solid var(--line-soft); font-size: 12px; }
+.drv:first-of-type { border-top: 0; padding-top: 0; }
+.drv b { font-weight: 600; font-size: 12.5px; } .drv .r2 { color: var(--text2); } .drv .ubar { grid-column: 1 / 3; justify-self: stretch; width: 100%; height: 4px; border-radius: 2px; background: var(--line-soft); overflow: hidden; margin-top: 3px; }
+.drv .ubar i { display: block; height: 100%; background: var(--c-disk); border-radius: 2px; }
+.tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: var(--line-soft); color: var(--text2); margin-left: 6px; }
+.memmap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.memmap div { border: 1px solid var(--line); border-radius: 6px; padding: 6px 7px; font-size: 11px; color: var(--text3); text-align: center; }
+.memmap div.full { border-color: color-mix(in srgb, var(--c-mem) 55%, var(--line)); color: var(--text); background: color-mix(in srgb, var(--c-mem) 10%, transparent); }
+.memmap b { display: block; font-size: 12px; }
 .pop .hint { color: var(--text2); font-size: 11px; border-top: 1px solid var(--line); padding-top: 8px; }
 </style>
 </head>
@@ -236,21 +254,26 @@ document.getElementById("side").innerHTML = `
 const css = getComputedStyle(document.documentElement);
 const col = (v) => css.getPropertyValue(v).trim();
 const tiles = [
-  { id: "cpu", k: "cpu", icon: "cpu", label: "CPU", value: "28<small>%</small>", spark: series(24, 28, 9, 3), foot: "4.4 GHz · 12 cores" },
-  { id: "mem", k: "mem", icon: "mem", label: "Memory", value: "62<small>%</small>", spark: series(24, 62, 5, 7), foot: "19.8 / 32 GiB" },
-  { id: "gpu", k: "gpu", icon: "gpu", label: "GPU", value: "18<small>%</small>", spark: series(24, 18, 8, 11), foot: "Radeon 610M · 41 °C" },
-  { id: "disk", k: "disk", icon: "disk", label: "Filesystem /", value: "54<small>%</small>", spark: series(24, 54, 1.5, 5), foot: "512 / 953 GB · 441 GB free" },
+  { id: "cpu", k: "cpu", icon: "cpu", label: "CPU", meta: "4.4 GHz · 58 °C", info: 1, value: "28<small>%</small>", spark: series(24, 28, 9, 3),
+    foot: `<b class="hw">Ryzen 9 9900X</b>12C / 24T` },
+  { id: "mem", k: "mem", icon: "mem", label: "Memory", meta: "19.8 / 32 GiB", info: 1, value: "62<small>%</small>", spark: series(24, 62, 5, 7),
+    foot: `<b class="hw">DDR5-6000</b>2 × 16 GB` },
+  { id: "gpu", k: "gpu", icon: "gpu", label: "GPU", meta: "2.1 / 8 GiB · 41 °C", info: 1, value: "18<small>%</small>", spark: series(24, 18, 8, 11),
+    foot: `<b class="hw">RTX 4060</b>8 GB GDDR6` },
+  { id: "disk", k: "disk", icon: "disk", label: "Storage  /", meta: "441 GB free", info: 1, value: "54<small>%</small>", spark: series(24, 54, 1.5, 5),
+    foot: `<b class="hw">3 drives</b>4 TB · 2 NVMe` },
   { id: "vuln", k: "vuln", icon: "vuln", label: "Vulnerabilities", value: "6", go: 1, foot: `<span class="neg">1 critical</span>· 2 high · 3 medium` },
   { id: "upd", k: "upd", icon: "upd", label: "Updates", value: "12", go: 1, foot: `<span class="warn">4 security</span>· 8 regular` },
   { id: "net", k: "net", icon: "net", label: "Network", value: `<span class="pos" style="font-size:20px">Online</span>`, go: 1, foot: "↓ 85.4 Mb/s · ↑ 12.7 Mb/s" },
   { id: "mnt", k: "mnt", icon: "mnt", label: "Mount points", value: "4", go: 1, foot: `<span class="warn">/mnt/data 91 % used</span>` },
 ];
 const topRow = document.getElementById("top");
+const openInfo = state.startsWith("info-") ? state.slice(5) : (state === "hover" ? "cpu" : "");
 topRow.innerHTML = tiles.slice(0, 4).map(tile).join("") + attention() + tiles.slice(4).map(tile).join("");
 function tile(t) {
-  return `<div class="tile k-${t.k}${state === "hover" && t.id === "cpu" ? " hover" : ""}" id="t-${t.id}">
+  return `<div class="tile k-${t.k}${openInfo === t.id ? " hover" : ""}" id="t-${t.id}">
     <div class="chip">${ico(t.icon)}</div>
-    <div class="tb-body"><div class="tl">${t.label}${t.go ? ico("go", "ico go") : ""}</div>
+    <div class="tb-body"><div class="tl">${t.label}${t.meta ? `<span class="meta">${t.meta}</span>` : ""}${t.info ? `<span class="i${openInfo === t.id ? " on" : ""}" title="Hardware details">i</span>` : ""}${t.go ? ico("go", "ico go") : ""}</div>
       <div class="tv"><b>${t.value}</b>${t.spark ? spark(t.spark, col("--c-" + t.k)) : ""}</div>
       <div class="tf">${t.foot}</div></div></div>`;
 }
@@ -330,15 +353,46 @@ document.getElementById("bot").innerHTML = `
 
 { const box = document.getElementById("chartbox"), r = box.getBoundingClientRect();
   box.innerHTML = bigChart(Math.floor(r.width - 24), Math.floor(r.height - 10)); }
-if (state === "hover") {
-  const t = document.getElementById("t-cpu"), c = document.getElementById("content");
+const kv = (rows) => `<dl class="pkv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+const live = (cells) => `<div class="live">${cells.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div>`;
+const cards = {
+  cpu: `<h3>AMD Ryzen 9 9900X <span>Zen 5 · AM5</span></h3>
+    ${live([["Usage", "28 %"], ["Clock", "4.4 GHz"], ["Package", "58 °C"]])}
+    <div class="cores">${[34,12,48,22,9,27,61,18,15,30,8,20].map(v => `<i style="height:${Math.max(8, v)}%"></i>`).join("")}</div>
+    <div class="sect">Specification</div>
+    ${kv([["Cores / threads", "12 / 24"], ["Base / boost clock", "4.4 / 5.6 GHz"], ["Cache", "L2 12 MB · L3 64 MB"], ["TDP", "120 W"],
+          ["Scaling driver", "amd-pstate-epp · balanced"], ["Virtualisation", "AMD-V enabled"], ["Load average", "1.84 · 1.52 · 1.20"]])}
+    <div class="hint">From /proc/cpuinfo, cpufreq and hwmon · click the tile for history</div>`,
+  mem: `<h3>32 GB DDR5 <span>31.2 GiB usable · no ECC</span></h3>
+    ${live([["Used", "19.8 GiB"], ["Cache", "8.1 GiB"], ["Swap (zram)", "0.4 / 8 GiB"]])}
+    <div class="sect">Slots · 2 of 4 used</div>
+    <div class="memmap"><div>A1<b>empty</b></div><div class="full">A2<b>16 GB</b></div><div>B1<b>empty</b></div><div class="full">B2<b>16 GB</b></div></div>
+    ${kv([["Modules", "2 × Kingston FURY Beast KF560C30-16"], ["Speed", "6000 MT/s (EXPO) · configured 6000"], ["Timings / voltage", "CL30 · 1.35 V"],
+          ["Channels", "dual channel"], ["Maximum", "192 GB"]])}
+    <div class="hint">Module details from SMBIOS (dmidecode, read through the agent)</div>`,
+  gpu: `<h3>NVIDIA GeForce RTX 4060 <span>AD107 · PCIe 4.0 ×8</span></h3>
+    ${live([["Usage", "18 %"], ["VRAM", "2.1 / 8 GiB"], ["Power", "38 / 115 W"]])}
+    ${kv([["Memory", "8 GB GDDR6 · 128-bit"], ["Driver", "nvidia 580.95 (proprietary)"], ["Temperature / fan", "41 °C · 0 % (idle stop)"],
+          ["Displays", "2560×1440 @ 165 Hz · DP-1"], ["Compute", "CUDA 12.9 · used by Ollama"]])}
+    <div class="sect">Integrated</div>
+    ${kv([["AMD Radeon Graphics", "RDNA 2 · 2 CU · amdgpu"], ["State", "idle · no display"]])}
+    <div class="hint">From DRM sysfs and nvidia-smi when the driver is present</div>`,
+  disk: `<h3>3 drives · 4 TB <span>SMART: all passed</span></h3>
+    <div>
+      <div class="drv"><div><b>WD Black SN850X</b><span class="tag">NVMe</span><div class="r2">1 TB · PCIe 4.0 ×4 · 43 °C · 3 % worn</div></div><div class="r2" style="text-align:right">/ · 54 %</div><div class="ubar"><i style="width:54%"></i></div></div>
+      <div class="drv"><div><b>Samsung 990 PRO</b><span class="tag">NVMe</span><div class="r2">2 TB · PCIe 4.0 ×4 · 39 °C · 1 % worn</div></div><div class="r2" style="text-align:right">/home · 37 %</div><div class="ubar"><i style="width:37%"></i></div></div>
+      <div class="drv"><div><b>Crucial MX500</b><span class="tag">SATA SSD</span><div class="r2">1 TB · SATA 6 Gb/s · 35 °C · 12 % worn</div></div><div class="r2 warn" style="text-align:right">/mnt/data · 91 %</div><div class="ubar"><i style="width:91%;background:var(--warn)"></i></div></div>
+    </div>
+    ${live([["Read", "212 MB/s"], ["Write", "38 MB/s"], ["Busiest", "nvme0n1"]])}
+    <div class="hint">lsblk, NVMe/SATA link speed from sysfs, SMART via the agent · click for Storage</div>`,
+};
+if (openInfo) {
+  const t = document.getElementById("t-" + openInfo), c = document.getElementById("content");
   const r = t.getBoundingClientRect(), m = c.getBoundingClientRect();
-  const loads = [34, 12, 48, 22, 9, 27, 61, 18, 15, 30, 8, 20];
-  c.insertAdjacentHTML("beforeend", `<div class="pop" style="left:${r.left - m.left}px;top:${r.bottom - m.top + 10}px">
-    <h3>CPU <span>AMD Ryzen 9 9900X · 12 C / 24 T</span></h3>
-    <div class="cores">${loads.map(v => `<i style="height:${Math.max(8, v)}%"></i>`).join("")}</div>
-    <dl class="pkv"><dt>Load average</dt><dd>1.84 · 1.52 · 1.20</dd><dt>Frequency</dt><dd>4.4 GHz</dd><dt>Package temperature</dt><dd>58 °C</dd><dt>Busiest process</dt><dd>plasmashell · 6.2 %</dd></dl>
-    <div class="hint">Click for history, per-core load and processes</div></div>`);
+  const right = openInfo === "disk";
+  const left = right ? r.right - m.left - 380 : r.left - m.left;
+  const arrow = right ? 380 - 34 : 30;
+  c.insertAdjacentHTML("beforeend", `<div class="pop" style="left:${left}px;top:${r.bottom - m.top + 10}px;--arrow:${arrow}px">${cards[openInfo]}</div>`);
 }
 </script>
 </body>
