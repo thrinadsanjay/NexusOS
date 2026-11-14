@@ -50,7 +50,7 @@ class Authorizer:
         start = peer.start_time
         subject = f"{peer.pid},{start},{peer.uid}" if start else f"{peer.pid}"
         try:
-            proc = subprocess.run(
+            proc = subprocess.run(  # noqa: S603 — pkcheck path resolved at start; action id from the op table, subject from SO_PEERCRED
                 [self.pkcheck, "--action-id", action_id, "--process", subject, "--allow-user-interaction"],
                 capture_output=True,
                 text=True,

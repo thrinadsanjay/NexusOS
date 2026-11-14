@@ -64,6 +64,8 @@ pass "installed paths present (binaries, polkit policy, socket unit, nginx inclu
 [ -d /etc/nexusos/gateway/routes ] && [ "$(stat -c %a /etc/nexusos/gateway/ca)" = 700 ] && pass "gateway layout created by postinst (ca/ is 0700)"
 
 # ------------------------------------------------------------------ agent (no systemd in containers: start it the way the socket unit would)
+# This section tests the socket transport (SO_PEERCRED + polkit); the sudo transport is tested below.
+export NEXUSOS_ADMIN_TRANSPORT=agent
 useradd -m -G sudo alice
 install -d -m 0755 /run/nexusos
 export NEXUSOS_NGINX_RELOAD="nginx -s reload"
@@ -93,9 +95,47 @@ try:
 except a.AgentError as e:
     assert e.code == "unauthorized", e.code
 PY
-su alice -c "python3 /tmp/denied.py" || fail "non-root caller must be denied without polkit"
+su alice -c "NEXUSOS_ADMIN_TRANSPORT=agent python3 /tmp/denied.py" || fail "non-root caller must be denied without polkit"
 dpkg -s hello >/dev/null 2>&1 && fail "hello installed by unauthorized user"
 pass "agent: sudo-group user denied when polkit cannot authorize (fail closed)"
+
+# ------------------------------------------------------------------ sudo transport (default): nexus-admin through the sudo rights of the user
+# Disposable test accounts: "ops" has a NOPASSWD rule, "guest" has no sudo. (Password sudo,
+# retries and sudo-rs vs sudo 1.9 are covered by scripts/validation/plasma-session-container.sh.)
+command -v sudo >/dev/null || fail "sudo missing (nexusos-management-agent depends on sudo | sudo-rs)"
+[ -x /usr/lib/nexusos/nexus-admin ] || fail "nexus-admin helper missing"
+useradd -m ops && useradd -m guest
+echo "ops ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/90-nexusos-test-ops && chmod 0440 /etc/sudoers.d/90-nexusos-test-ops
+cat > /tmp/sudo_ok.py <<"PY"
+from nexus_core import agent_client as a, privilege
+def no_prompt(req):
+    raise SystemExit("password box must not appear for NOPASSWD")
+privilege.set_password_provider(no_prompt)
+assert a.call("agent.ping")["version"] == "0.2.0"
+try:
+    a.call("service.control", {"unit": "systemd-journald.service", "action": "stop"})
+    raise SystemExit("unit outside the allow-list was accepted")
+except a.AgentError as e:
+    assert e.code == "invalid", e.code
+assert privilege.access().auth == "not-required"
+PY
+su ops -c "NEXUSOS_ADMIN_TRANSPORT=sudo python3 /tmp/sudo_ok.py" || fail "NOPASSWD sudo user could not run an admin task"
+pass "sudo: NOPASSWD user runs admin tasks without a password box; allow-list still enforced"
+cat > /tmp/sudo_denied.py <<"PY"
+from nexus_core import agent_client as a, privilege
+asked = []
+privilege.set_password_provider(lambda req: asked.append(req) or "x")
+try:
+    a.call("apt.install", {"packages": ["hello"]})
+    raise SystemExit("guest ran an admin task")
+except privilege.AccessDeniedError:
+    assert not asked, "guest was asked for a password"
+assert privilege.access().admin == "none"
+PY
+su guest -c "NEXUSOS_ADMIN_TRANSPORT=sudo python3 /tmp/sudo_denied.py" || fail "user without sudo must be denied"
+dpkg -s hello >/dev/null 2>&1 && fail "hello installed by a user without sudo"
+grep -F "\"via\": \"sudo\"" /var/log/nexusos/agent-audit.log | grep -qF "\"user\": \"ops\"" || fail "sudo tasks missing from the audit log"
+pass "sudo: user without sudo denied without a password prompt; sudo tasks audited with the invoking user"
 
 python3 - <<"PY"
 import fcntl, os

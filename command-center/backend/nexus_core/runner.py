@@ -61,7 +61,7 @@ def run(args: Sequence[str], timeout: float = DEFAULT_TIMEOUT, env: dict[str, st
         return CommandResult(argv, 127, "", f"{argv[0]}: not found", found=False)
     log.debug("run: %s", " ".join(argv))
     try:
-        proc = subprocess.run(
+        proc = subprocess.run(  # noqa: S603 — argv list, shell=False; callers pass validated arguments
             argv,
             capture_output=True,
             text=True,
@@ -84,7 +84,7 @@ def run_interactive(args: Sequence[str], cwd: Path | None = None) -> int:
     if which(argv[0]) is None:
         return 127
     log.debug("run interactive: %s (cwd=%s)", " ".join(argv), cwd)
-    return subprocess.call(argv, cwd=cwd)
+    return subprocess.call(argv, cwd=cwd)  # noqa: S603 — CLI-only interactive runner, argv list
 
 
 def first_line(text: str) -> str:

@@ -118,7 +118,7 @@ def run_apt(command: list[str], ctx: Context) -> dict[str, Any]:
     """Run apt-get with machine-readable progress on a status fd; cancellable during download only."""
     read_fd, write_fd = os.pipe()
     argv = [*command[:1], "-o", f"APT::Status-Fd={write_fd}", *DPKG_SAFE_OPTS, *command[1:]]
-    proc = subprocess.Popen(
+    proc = subprocess.Popen(  # noqa: S603 — apt-get argv built from validated package names after "--", never a shell
         argv,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
