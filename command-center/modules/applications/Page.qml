@@ -19,6 +19,7 @@ Item {
         spacing: Theme.s4
         ColumnLayout {
             Layout.preferredWidth: 380
+            Layout.maximumWidth: 380
             Layout.fillHeight: true
             NxPageHeader { title: "Nexus Applications"; subtitle: "Optional, independently deployed apps. Nothing is installed automatically." }
             NxErrorState { message: controller ? controller.error : ""; onRetry: controller.refresh() }

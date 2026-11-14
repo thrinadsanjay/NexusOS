@@ -59,7 +59,7 @@ Item {
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    NxEmptyState { visible: !d.conversation; Layout.alignment: Qt.AlignCenter; title: page.online ? ((d.models || []).length ? "Start a conversation" : "No models installed") : "Ollama is not running"; message: page.online && !(d.models || []).length ? "Download a model in the Models tab, e.g. llama3.2:3b (≈2 GB)." : "" }
+                    NxEmptyState { visible: !d.conversation; Layout.alignment: Qt.AlignCenter; title: page.online ? ((d.models || []).length ? "Start a conversation" : "No models installed") : "Ollama is not running"; message: page.online && !(d.models || []).length ? "Download a model in the Models tab, e.g. llama3.2:3b (≈2 GB)." : (page.online ? "" : "Start ollama.service, or install Ollama as described above. Nothing runs until you do.") }
                     RowLayout {
                         visible: !!d.conversation
                         Text { text: d.conversation ? d.conversation.model : ""; color: Theme.c.textSecondary; font.family: Theme.monoFamily; Layout.fillWidth: true }
@@ -111,9 +111,9 @@ Item {
                     RowLayout {
                         NxTextField { id: sys; Layout.fillWidth: true; placeholderText: "System prompt for new conversations"; text: d.systemPrompt || ""; onEditingFinished: controller.setSystemPrompt(text) }
                         Text { text: "Temperature"; color: Theme.c.textSecondary; font.family: Theme.fontFamily }
-                        SpinBox { id: temp; from: 0; to: 20; value: Math.round(((d.options || {}).temperature || 0.7) * 10); onValueModified: controller.setOptions(value / 10, ctx.value) }
+                        SpinBox { id: temp; from: 0; to: 20; textFromValue: (v, l) => (v / 10).toFixed(1); valueFromText: (t, l) => Math.round(parseFloat(t) * 10); value: Math.round(((d.options || {}).temperature || 0.7) * 10); onValueModified: controller.setOptions(value / 10, ctx.value) }
                         Text { text: "Context"; color: Theme.c.textSecondary; font.family: Theme.fontFamily }
-                        SpinBox { id: ctx; from: 0; to: 131072; stepSize: 2048; editable: true; value: (d.options || {}).num_ctx || 0; onValueModified: controller.setOptions(temp.value / 10, value) }
+                        SpinBox { id: ctx; from: 0; to: 131072; stepSize: 2048; editable: true; Layout.preferredWidth: 210; textFromValue: (v, l) => v === 0 ? "model default" : String(v); valueFromText: (t, l) => /^[0-9]+$/.test(t.trim()) ? parseInt(t) : 0; value: (d.options || {}).num_ctx || 0; onValueModified: controller.setOptions(temp.value / 10, value) }
                     }
                 }
             }

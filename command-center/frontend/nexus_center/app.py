@@ -13,6 +13,7 @@ import json
 import os
 import sys
 import time
+from collections.abc import MutableMapping
 from pathlib import Path
 from typing import Any
 
@@ -250,6 +251,20 @@ def resource_usage() -> dict[str, float]:
     return {"rss_mib": round(rss / 1024, 1), "cpu_seconds": round(cpu, 3), "threads": threads}
 
 
+def configure_platform_theme(env: MutableMapping[str, str]) -> None:
+    """Use Qt's generic platform theme unless the user opts in to the desktop's one.
+
+    The Command Center draws every control with Nexus.Design, so the KDE platform theme
+    (plasma-integration) only adds file dialogs and palette hints: measured on Plasma 6.6
+    Wayland it costs ~93 MiB RSS and 9 threads (see docs/performance.md).
+    ``NEXUS_CENTER_PLATFORMTHEME=kde`` (any Qt platform theme name, or ``desktop`` for the
+    session default) restores native file dialogs.
+    """
+    choice = env.get("NEXUS_CENTER_PLATFORMTHEME", "").strip() or "generic"
+    if choice != "desktop":  # "desktop": keep whatever the session exported
+        env["QT_QPA_PLATFORMTHEME"] = choice
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="nexus-center", description="Nexus Command Center")
     parser.add_argument("--page", default="overview", help="module to open first")
@@ -270,6 +285,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Basic")
+    configure_platform_theme(os.environ)
     app = QGuiApplication(sys.argv[:1])
     app.setApplicationName("Nexus Command Center")
     app.setOrganizationName("NexusOS")

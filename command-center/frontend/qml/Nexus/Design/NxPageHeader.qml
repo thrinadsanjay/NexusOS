@@ -9,6 +9,8 @@ Item {
     property var breadcrumb: []
     default property alias actions: actionRow.data
     implicitHeight: col.implicitHeight + Theme.s3
+    // Long subtitles wrap; they must not widen the surrounding layout.
+    implicitWidth: actionRow.implicitWidth + 240
     Layout.fillWidth: true
     ColumnLayout {
         id: col

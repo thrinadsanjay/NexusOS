@@ -17,13 +17,12 @@ Item {
         anchors.fill: parent
         contentWidth: availableWidth
         ColumnLayout {
-            width: parent.width
-            anchors.margins: Theme.s5
+            width: parent.width - Theme.s5 * 2  // nested layouts fill this width: keep the margins inside
             x: Theme.s5
             spacing: Theme.s4
             Item { Layout.preferredHeight: Theme.s3 }
             NxPageHeader {
-                Layout.preferredWidth: page.width - Theme.s5 * 2
+                Layout.fillWidth: true
                 title: "Overview"
                 subtitle: (d.system ? d.system.os + "  ·  kernel " + d.system.kernel : "") + "  ·  refreshes every " + Math.round(App.monitoringInterval / 1000) + " s while visible"
                 NxButton { text: "Customize"; onClicked: widgetMenu.open() }
@@ -36,10 +35,10 @@ Item {
                     MenuItem { required property string modelData; text: modelData; checkable: true; checked: page.shown(modelData); onToggled: controller.setWidgetVisible(modelData, checked) }
                 }
             }
-            NxErrorState { message: controller ? controller.error : ""; onRetry: controller.refresh(); Layout.preferredWidth: page.width - Theme.s5 * 2 }
+            NxErrorState { message: controller ? controller.error : ""; onRetry: controller.refresh(); Layout.fillWidth: true }
 
             GridLayout {
-                Layout.preferredWidth: page.width - Theme.s5 * 2
+                Layout.fillWidth: true
                 columns: Math.max(2, Math.floor((page.width - 48) / 260))
                 columnSpacing: Theme.s3
                 rowSpacing: Theme.s3
@@ -85,7 +84,7 @@ Item {
             }
 
             RowLayout {
-                Layout.preferredWidth: page.width - Theme.s5 * 2
+                Layout.fillWidth: true
                 spacing: Theme.s3
                 NxCard {
                     visible: page.shown("services")
@@ -155,7 +154,7 @@ Item {
             NxSectionTitle { visible: page.shown("processes"); text: "Top processes (memory)" }
             NxTable {
                 visible: page.shown("processes")
-                Layout.preferredWidth: page.width - Theme.s5 * 2
+                Layout.fillWidth: true
                 Layout.preferredHeight: 330
                 rows: d.processes || []
                 columns: [

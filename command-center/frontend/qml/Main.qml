@@ -15,13 +15,41 @@ ApplicationWindow {
     title: "Nexus Command Center"
     color: Theme.c.background
 
+    // Full palette from the design tokens: Basic-style controls, dialogs and popups must not
+    // inherit the desktop's (KDE/Breeze or light Fusion) palette, or text becomes unreadable.
+    palette {
+        window: Theme.c.background
+        windowText: Theme.c.text
+        base: Theme.c.surface
+        alternateBase: Theme.c.surfaceElevated
+        text: Theme.c.text
+        placeholderText: Theme.c.textSecondary
+        button: Theme.c.surfaceElevated
+        buttonText: Theme.c.text
+        brightText: Theme.c.textOnAccent
+        highlight: Theme.c.accent
+        highlightedText: Theme.c.textOnAccent
+        light: Theme.c.surfaceElevated
+        midlight: Theme.c.surfaceElevated
+        mid: Theme.c.border
+        dark: Theme.c.border
+        shadow: Theme.c.background
+        toolTipBase: Theme.c.surfaceElevated
+        toolTipText: Theme.c.text
+        link: Theme.c.accent
+        linkVisited: Theme.c.accentSecondary
+        disabled.text: Theme.c.textSecondary
+        disabled.windowText: Theme.c.textSecondary
+        disabled.buttonText: Theme.c.textSecondary
+    }
+
     property string currentPage: InitialPage
     property string pendingIntent: ""
     property var currentMeta: App.modules.find(m => m.id === currentPage) || App.modules[0]
     property var currentController: null
 
     // Used by `nexus-center --smoke --screenshots DIR` (review and documentation captures).
-    function capture(path) { shell.grabToImage(result => result.saveToFile(path)) }
+    function capture(path) { shellBackdrop.grabToImage(result => result.saveToFile(path)) }
 
     function navigate(pageId, intent) {
         pendingIntent = intent || ""
@@ -40,7 +68,7 @@ ApplicationWindow {
         pageLoader.setSource(meta.pageUrl, { controller: currentController, confirm: confirmDialog, intent: pendingIntent })
     }
 
-    Shortcut { sequences: ["Ctrl+K", "Ctrl+Shift+P"]; onActivated: palette.openPalette() }
+    Shortcut { sequences: ["Ctrl+K", "Ctrl+Shift+P"]; onActivated: commandPalette.openPalette() }
     Shortcut { sequence: "Ctrl+Q"; onActivated: Qt.quit() }
 
     Connections {
@@ -49,94 +77,101 @@ ApplicationWindow {
         function onNavigateRequested(page, intent) { window.navigate(page, intent) }
     }
 
-    RowLayout {
-        id: shell
+    // Opaque backdrop so grabToImage captures (--screenshots) match what is on screen.
+    Rectangle {
+        id: shellBackdrop
         anchors.fill: parent
-        spacing: 0
+        color: Theme.c.background
 
-        // ------------------------------------------------------------ sidebar
-        Rectangle {
-            Layout.fillHeight: true
-            Layout.preferredWidth: Theme.sidebarWidth
-            color: Theme.c.surface
-            Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: Theme.c.border }
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Theme.s3
-                spacing: Theme.s1
-                RowLayout {
-                    Layout.bottomMargin: Theme.s3
-                    spacing: Theme.s2
-                    Image {
-                        source: AppIconUrl
-                        sourceSize.width: 28; sourceSize.height: 28
-                    }
-                    ColumnLayout {
-                        spacing: 0
-                        Text { text: "Command Center"; color: Theme.c.text; font.pixelSize: Theme.fontTitle; font.weight: Font.DemiBold; font.family: Theme.fontFamily }
-                        Text { text: "NexusOS " + App.version; color: Theme.c.textSecondary; font.pixelSize: Theme.fontSmall; font.family: Theme.fontFamily }
-                    }
-                }
-                ListView {
-                    id: nav
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    model: App.modules
-                    spacing: 2
-                    clip: true
-                    keyNavigationEnabled: true
-                    delegate: ItemDelegate {
-                        required property var modelData
-                        width: nav.width
-                        height: 34
-                        highlighted: modelData.id === window.currentPage
-                        Accessible.name: modelData.title
-                        onClicked: window.navigate(modelData.id)
-                        contentItem: RowLayout {
-                            spacing: Theme.s2
-                            Rectangle { Layout.preferredWidth: 3; Layout.preferredHeight: 18; radius: 1.5; color: parent.parent.highlighted ? Theme.c.accent : "transparent" }
-                            Text { text: parent.parent.modelData.title; color: parent.parent.highlighted ? Theme.c.text : Theme.c.textSecondary; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.fillWidth: true; elide: Text.ElideRight }
-                            Rectangle {
-                                visible: !!(parent.parent.modelData.id === "notifications" && App.unread > 0)
-                                Layout.preferredHeight: 18; Layout.preferredWidth: Math.max(18, badge.implicitWidth + 8); radius: 9; color: Theme.c.accentSecondary
-                                Text { id: badge; anchors.centerIn: parent; text: App.unread; color: Theme.c.textOnAccent; font.pixelSize: Theme.fontSmall }
-                            }
-                        }
-                        background: Rectangle { radius: Theme.radiusSmall; color: parent.highlighted ? Theme.c.backgroundSecondary : parent.hovered ? Theme.c.surfaceElevated : "transparent" }
-                    }
-                }
-            }
-        }
-
-        // ------------------------------------------------------------ main area
-        ColumnLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+        RowLayout {
+            id: shell
+            anchors.fill: parent
             spacing: 0
+
+            // ------------------------------------------------------------ sidebar
             Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 52
-                color: Theme.c.background
-                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.c.border }
-                RowLayout {
+                Layout.fillHeight: true
+                Layout.preferredWidth: Theme.sidebarWidth
+                color: Theme.c.surface
+                Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: Theme.c.border }
+                ColumnLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: Theme.s5
-                    anchors.rightMargin: Theme.s4
-                    Text { text: "NexusOS  ›  " + (window.currentMeta ? window.currentMeta.title : ""); color: Theme.c.textSecondary; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.fillWidth: true }
-                    NxButton { text: "Search…   Ctrl+K"; Layout.preferredWidth: 220; onClicked: palette.openPalette() }
-                    NxButton { text: App.unread > 0 ? "Notifications (" + App.unread + ")" : "Notifications"; variant: "ghost"; onClicked: window.navigate("notifications") }
-                    NxButton { text: Theme.dark ? "Light theme" : "Dark theme"; variant: "ghost"; onClicked: App.dark = !App.dark }
+                    anchors.margins: Theme.s3
+                    spacing: Theme.s1
+                    RowLayout {
+                        Layout.bottomMargin: Theme.s3
+                        spacing: Theme.s2
+                        Image {
+                            source: AppIconUrl
+                            sourceSize.width: 28; sourceSize.height: 28
+                        }
+                        ColumnLayout {
+                            spacing: 0
+                            Text { text: "Command Center"; color: Theme.c.text; font.pixelSize: Theme.fontTitle; font.weight: Font.DemiBold; font.family: Theme.fontFamily }
+                            Text { text: "NexusOS " + App.version; color: Theme.c.textSecondary; font.pixelSize: Theme.fontSmall; font.family: Theme.fontFamily }
+                        }
+                    }
+                    ListView {
+                        id: nav
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        model: App.modules
+                        spacing: 2
+                        clip: true
+                        keyNavigationEnabled: true
+                        delegate: ItemDelegate {
+                            required property var modelData
+                            width: nav.width
+                            height: 34
+                            highlighted: modelData.id === window.currentPage
+                            Accessible.name: modelData.title
+                            onClicked: window.navigate(modelData.id)
+                            contentItem: RowLayout {
+                                spacing: Theme.s2
+                                Rectangle { Layout.preferredWidth: 3; Layout.preferredHeight: 18; radius: 1.5; color: parent.parent.highlighted ? Theme.c.accent : "transparent" }
+                                Text { text: parent.parent.modelData.title; color: parent.parent.highlighted ? Theme.c.text : Theme.c.textSecondary; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.fillWidth: true; elide: Text.ElideRight }
+                                Rectangle {
+                                    visible: !!(parent.parent.modelData.id === "notifications" && App.unread > 0)
+                                    Layout.preferredHeight: 18; Layout.preferredWidth: Math.max(18, badge.implicitWidth + 8); radius: 9; color: Theme.c.accentSecondary
+                                    Text { id: badge; anchors.centerIn: parent; text: App.unread; color: Theme.c.textOnAccent; font.pixelSize: Theme.fontSmall }
+                                }
+                            }
+                            background: Rectangle { radius: Theme.radiusSmall; color: parent.highlighted ? Theme.c.backgroundSecondary : parent.hovered ? Theme.c.surfaceElevated : "transparent" }
+                        }
+                    }
                 }
             }
-            Loader {
-                id: pageLoader
-                property double startedAt: 0
+
+            // ------------------------------------------------------------ main area
+            ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                asynchronous: false
-                onLoaded: {
-                    App.recordPageLoad(window.currentPage, Date.now() - startedAt)
-                    if (window.currentController) window.currentController.activate()
+                spacing: 0
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 52
+                    color: Theme.c.background
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.c.border }
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Theme.s5
+                        anchors.rightMargin: Theme.s4
+                        Text { text: "NexusOS  ›  " + (window.currentMeta ? window.currentMeta.title : ""); color: Theme.c.textSecondary; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.fillWidth: true }
+                        NxButton { text: "Search…   Ctrl+K"; Layout.preferredWidth: 220; onClicked: commandPalette.openPalette() }
+                        NxButton { text: App.unread > 0 ? "Notifications (" + App.unread + ")" : "Notifications"; variant: "ghost"; onClicked: window.navigate("notifications") }
+                        NxButton { text: Theme.dark ? "Light theme" : "Dark theme"; variant: "ghost"; onClicked: App.dark = !App.dark }
+                    }
+                }
+                Loader {
+                    id: pageLoader
+                    property double startedAt: 0
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    asynchronous: false
+                    onLoaded: {
+                        App.recordPageLoad(window.currentPage, Date.now() - startedAt)
+                        if (window.currentController) window.currentController.activate()
+                    }
                 }
             }
         }
@@ -173,7 +208,7 @@ ApplicationWindow {
 
     // ------------------------------------------------------------ command palette
     Popup {
-        id: palette
+        id: commandPalette
         modal: true
         x: (window.width - width) / 2
         y: 80
@@ -208,8 +243,8 @@ ApplicationWindow {
                 onTextChanged: { App.search(text); results.currentIndex = 0 }
                 Keys.onDownPressed: results.incrementCurrentIndex()
                 Keys.onUpPressed: results.decrementCurrentIndex()
-                Keys.onReturnPressed: palette.choose(App.searchResults[results.currentIndex])
-                Keys.onEscapePressed: palette.close()
+                Keys.onReturnPressed: commandPalette.choose(App.searchResults[results.currentIndex])
+                Keys.onEscapePressed: commandPalette.close()
             }
             ListView {
                 id: results
@@ -222,7 +257,7 @@ ApplicationWindow {
                     required property int index
                     width: results.width
                     highlighted: index === results.currentIndex
-                    onClicked: palette.choose(modelData)
+                    onClicked: commandPalette.choose(modelData)
                     contentItem: RowLayout {
                         Text { text: parent.parent.modelData.kind; color: Theme.c.accent; font.pixelSize: Theme.fontSmall; font.family: Theme.monoFamily; Layout.preferredWidth: 70 }
                         Text { text: parent.parent.modelData.title; color: Theme.c.text; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.preferredWidth: 240; elide: Text.ElideRight }

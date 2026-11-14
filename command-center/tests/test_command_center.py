@@ -217,3 +217,17 @@ def test_cli_and_center_share_one_backend():
         assert "nexus_center" not in text
     assert not list(cli.glob("services/*.py")), "CLI services moved to nexus_core"
     assert importlib.util.find_spec("nexus_core") is not None
+
+
+def test_platform_theme_defaults_to_generic():
+    from nexus_center.app import configure_platform_theme
+
+    env = {"QT_QPA_PLATFORMTHEME": "kde"}
+    configure_platform_theme(env)
+    assert env["QT_QPA_PLATFORMTHEME"] == "generic"  # ~93 MiB less than plasma-integration
+    env = {"QT_QPA_PLATFORMTHEME": "kde", "NEXUS_CENTER_PLATFORMTHEME": "desktop"}
+    configure_platform_theme(env)
+    assert env["QT_QPA_PLATFORMTHEME"] == "kde"
+    env = {"NEXUS_CENTER_PLATFORMTHEME": "xdgdesktopportal"}
+    configure_platform_theme(env)
+    assert env["QT_QPA_PLATFORMTHEME"] == "xdgdesktopportal"

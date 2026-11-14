@@ -21,6 +21,15 @@ Open every module once, print timings and QML warnings as JSON, exit (non-zero o
 .TP
 .B \-\-benchmark \fISECONDS\fR
 Like \-\-smoke, then measure idle CPU and memory for SECONDS.
+.SH ENVIRONMENT
+.TP
+.B NEXUS_CENTER_PLATFORMTHEME
+Qt platform theme to use. Default \fBgeneric\fR (lighter; Qt Quick file dialogs).
+\fBkde\fR gives native KDE file dialogs at about 90 MiB more memory;
+\fBdesktop\fR keeps the session's \fBQT_QPA_PLATFORMTHEME\fR.
+.TP
+.B NEXUS_CENTER_DEBUG
+Print Qt and QML messages to standard error.
 .SH FILES
 .I ~/.local/share/nexusos/command-center.db
 (settings, SSH profiles, notifications, activity; mode 0600)
