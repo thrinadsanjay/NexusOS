@@ -41,7 +41,7 @@ def _execute(plan: pk.OperationPlan, yes: bool) -> None:
         if result.get("cancelled"):
             raise AbortedError("cancelled before any package was changed")
     else:
-        console.print("[warn]Management agent not installed; falling back to sudo.[/warn]")
+        console.print("[warn]Admin helper (nexusos-management-agent) not installed; running apt-get with sudo.[/warn]")
         if runner.run_interactive(["sudo", *plan.command]) != 0:
             raise NexusError(f"apt-get {plan.operation} failed")
     activity.record(f"packages.{plan.operation}", " ".join(plan.requested) or plan.operation, "ok")

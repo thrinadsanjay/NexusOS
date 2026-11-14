@@ -212,16 +212,6 @@ def _learn(mode: Literal["required", "not-required"], admin: Literal["sudo"] | N
             callback()
 
 
-def require_admin(action: str = "this task") -> AccessProfile:
-    profile = access()
-    if not profile.can_admin:
-        raise AccessDeniedError(
-            f"Access denied: {profile.user} cannot perform {action}",
-            hint=f"administrative tasks need sudo rights ({profile.reason})",
-        )
-    return profile
-
-
 # ------------------------------------------------------------------ sudo session
 def _matches(text: str, needles: tuple[str, ...]) -> bool:
     low = text.lower()

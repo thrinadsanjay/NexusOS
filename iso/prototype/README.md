@@ -18,7 +18,7 @@ Kubuntu already provides Plasma 6, SDDM and the Calamares installer
 ```bash
 # In a disposable Ubuntu 26.04 VM (≥ 4 CPUs, 8 GB RAM, 60 GB disk)
 git clone https://github.com/thrinadsanjay/NexusOS.git && cd NexusOS
-git checkout feature/nexusos-foundation-v0.1
+git checkout <release tag or branch under test>
 scripts/package/build-in-container.sh          # or scripts/package/build-deb.sh
 scripts/build/checksums.sh generate build/debs
 

@@ -59,16 +59,6 @@ def test_private_backends_allowed(dest):
     assert validation.backend_destination(dest)
 
 
-def test_path_within(tmp_path):
-    (tmp_path / "a").mkdir()
-    assert validation.path_within(tmp_path / "a", tmp_path)
-    with pytest.raises(ValidationError):
-        validation.path_within(tmp_path / ".." / "etc", tmp_path)
-    (tmp_path / "link").symlink_to("/etc")
-    with pytest.raises(ValidationError):
-        validation.path_within(tmp_path / "link" / "passwd", tmp_path)
-
-
 def test_unit_and_name_validation():
     assert validation.unit_name("nginx.service")
     for bad in ("nginx", "../x.service", "a;b.service"):

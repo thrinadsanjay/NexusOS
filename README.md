@@ -43,7 +43,7 @@ real Plasma session/hardware · **Planned** · **Unsupported**.
 | Branding, theme, defaults, os-release (v0.1) | Tested (install/upgrade/remove) |
 | Command Center shell, design system (dark + light), 14 lazy modules, Ctrl+K palette | Tested headless on 26.04 (no QML warnings); **Experimental** on Plasma |
 | Software Center (APT/dpkg via agent, plans, progress, locks, cancel, repos, history) | **Tested** |
-| Management agent (socket activation, polkit fail-closed, allow-list, audit) | **Tested** (polkit prompts need the VM) |
+| Administrative access (user's sudo rights via `nexus-admin`, allow-list, audit; socket agent with polkit) | **Tested** (sudo-rs and sudo 1.9; polkit prompts need the VM) |
 | Gateway (native NGINX, routes, internal CA, HTTPS, redirect, SSRF guard, rollback) | **Tested** with real NGINX |
 | Terminal & SSH (profiles, OpenSSH config, Secret Service credentials, askpass, host keys, SFTP) | Implemented; Konsole/KWallet **Experimental** |
 | Containers (Docker Engine API, images, volumes, networks, Compose) | Implemented |

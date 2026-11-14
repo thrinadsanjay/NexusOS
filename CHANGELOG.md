@@ -78,7 +78,6 @@ All notable changes to NexusOS are documented here. The format follows
   (embedding planned). Interactive polkit prompts, KDE Wallet, NetworkManager checkpoints and
   UDisks2 formatting still need the VM workflow; the Plasma container verifies polkit
   decisions, Konsole, KCMs, theme and layout without a GPU or an authentication agent.
-- Discover is not removed yet (Flatpak/firmware not replaced).
 
 ## 0.1.0-dev "Foundation"
 

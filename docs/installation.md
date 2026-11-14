@@ -22,7 +22,7 @@ Boots systemd in a disposable **privileged** container (nothing is installed on 
 no host device is used), starts KWin Wayland with a virtual output and plasmashell as a
 test user, and checks the agent and polkit decisions, the theme and panel layout, the
 Command Center on Wayland (all modules, memory budgets), KCMs and Konsole. It cannot show
-interactive polkit prompts or use a GPU, so the VM checklist below is still required.
+interactive polkit prompts (UDisks2, NetworkManager) or use a GPU, so the VM checklist below is still required.
 
 ## Option B — NexusOS packages in an Ubuntu/Kubuntu 26.04 VM
 
@@ -59,7 +59,7 @@ scripts/development/vm/install-packages.sh build/debs     # scp + apt install in
 In the VM window: log in to **Plasma (Wayland)** as `nexus` (set a password first with
 `ssh -p 2222 nexus@127.0.0.1 sudo passwd nexus`), start **Nexus Command Center**, then:
 
-- [ ] Software Center: search, install `hello` → polkit prompt → progress → history; remove; cancel during download
+- [ ] Software Center: search, install `hello` → sudo password box → progress → history; remove; cancel during download
 - [ ] System Settings: open Display/Users KCMs; change time zone (polkit); start/stop `nginx.service`
 - [ ] Terminal & SSH: new local terminal (Konsole tab, split panes); add a profile; save a password in KDE Wallet; verify host key; connect; SFTP upload/download
 - [ ] Containers: list/start/stop/logs/inspect; pull an image; deploy a compose file (user in `docker` group *in the VM only*)

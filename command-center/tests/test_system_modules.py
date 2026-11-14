@@ -331,7 +331,6 @@ def test_metrics_from_fake_proc_and_sys(tmp_path, monkeypatch):
     second = s.snapshot()
     assert second.cpu_percent == 66.7 and second.temperatures[0].celsius == 55.125
     assert second.net[0].rx_bytes_per_s > 0 and second.memory_total == 1024000
-    assert metrics.top_processes()[0].name == "init"
 
 
 def test_metrics_without_sensors(tmp_path, monkeypatch):

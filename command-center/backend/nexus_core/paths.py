@@ -23,12 +23,6 @@ def data_dir() -> Path:
     return path
 
 
-def config_dir() -> Path:
-    path = Path(os.environ.get("NEXUSOS_CONFIG_DIR") or _xdg("XDG_CONFIG_HOME", ".config") / "nexusos")
-    path.mkdir(mode=0o700, parents=True, exist_ok=True)
-    return path
-
-
 def runtime_dir() -> Path:
     base = os.environ.get("XDG_RUNTIME_DIR") or f"/tmp/nexusos-{os.getuid()}"  # noqa: S108 - per-uid fallback
     path = Path(base) / "nexusos"

@@ -48,19 +48,18 @@ packages:
     - plasma-systemmonitor
     - partitionmanager
     - filelight
+    - falkon             # default browser: a deb from the archive (Firefox is a snap on Ubuntu, see notes)
     # Fonts (design tokens: Inter UI, JetBrains Mono)
     - fonts-inter
     - fonts-jetbrains-mono
     - fonts-noto-core
     - fonts-noto-color-emoji
   recommended:
-    - plasma-discover
-    - flatpak
-    - plasma-discover-backend-flatpak
     - cups
     - print-manager
   notes:
-    - "firefox exists in the archive as a transitional package that installs the Firefox snap; the ISO build must seed the snap explicitly or ship another browser."
+    - "Discover and Flatpak are not installed: the Command Center Software Center manages APT packages; Flatpak stays an opt-in (sudo apt install flatpak plasma-discover-backend-flatpak)."
+    - "firefox in the archive is a transitional package for the Firefox snap; seeding snaps into the image is planned (snap prepare-image). Until then the image ships Falkon."
 nexusos_packages:
   - nexusos-theme
   - nexusos-desktop

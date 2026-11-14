@@ -3,7 +3,6 @@ output export are Konsole features). NexusOS never implements a terminal emulato
 
 from __future__ import annotations
 
-import json
 import os
 import shutil
 import subprocess
@@ -75,17 +74,6 @@ def open_terminal(tab: TerminalTab) -> int:
     return launch(konsole_argv(tab))
 
 
-def save_layout(layout: SessionLayout, store: Store | None = None) -> None:
-    store = store or default_store()
-    layouts = store.get_setting("terminal.layouts", {}) or {}
-    layouts[validation.display_name(layout.name)] = layout.model_dump()
-    store.set_setting("terminal.layouts", layouts)
-
-
 def layouts(store: Store | None = None) -> list[SessionLayout]:
     store = store or default_store()
     return [SessionLayout(**v) for v in (store.get_setting("terminal.layouts", {}) or {}).values()]
-
-
-def export_note() -> str:
-    return json.dumps({"hint": "Use Konsole: File > Save Output As… to export terminal output."})

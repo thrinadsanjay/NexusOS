@@ -1,0 +1,3 @@
+# The Nexus Dev/Infra/AI launchers open Konsole profiles; konsole is a Depends of this
+# metapackage, so the command is always installed (it is not shipped in this package).
+nexusos-desktop: desktop-command-not-in-package konsole [usr/share/applications/org.nexusos.*.desktop]

@@ -271,20 +271,3 @@ def firewall_status(prompt: bool = False) -> dict:
         return {"installed": runner.which("ufw") is not None, "locked": True, "output": ""}
     except (privilege.AccessDeniedError, privilege.AuthCancelledError) as exc:
         return {"installed": runner.which("ufw") is not None, "denied": True, "output": exc.message}
-
-
-def proxy_settings() -> dict:
-    """KDE proxy configuration (read-only; edited in the KDE proxy settings module)."""
-    from pathlib import Path
-
-    cfg = Path.home() / ".config" / "kioslaverc"
-    out: dict[str, str] = {}
-    if cfg.exists():
-        section = ""
-        for line in cfg.read_text().splitlines():
-            if line.startswith("["):
-                section = line
-            elif section == "[Proxy Settings]" and "=" in line:
-                k, v = line.split("=", 1)
-                out[k] = v
-    return out

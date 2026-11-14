@@ -36,16 +36,17 @@ are front-ends over one backend (`nexus_core.packages`); the terminal (`apt`, `a
 | Repository listing (deb822 and one-line) | Implemented |
 | Add/remove NexusOS-managed repositories (https, `Signed-By` keyring required) | Implemented; add tested by unit tests |
 | Lock detection (`/proc/locks`) and agent lock refusal | **Tested** |
-| polkit authorization (`org.nexusos.agent.packages.manage`, `auth_admin_keep`) | Fail-closed **tested**; interactive prompt needs a Plasma session (VM) |
-| Snap / Flatpak management | Unsupported (Discover remains available) |
-| Firmware updates (fwupd) | Unsupported in the Command Center (Discover / `fwupdmgr`) |
+| Authorization: the user's sudo rights (`nexus-admin`; NOPASSWD, password box or denied) | **Tested** with sudo-rs and sudo 1.9 (real installs) |
+| Socket transport with polkit (`org.nexusos.agent.packages.manage`) | Fail-closed **tested** (`NEXUSOS_ADMIN_TRANSPORT=agent`) |
+| Snap / Flatpak management | Unsupported; Flatpak is opt-in (`sudo apt install flatpak plasma-discover-backend-flatpak`) |
+| Firmware updates (fwupd) | `fwupd` installed; managed with `fwupdmgr` (Command Center support planned) |
 
 ## Discover and other graphical tools
 
-Ubuntu Software is not part of Kubuntu/NexusOS. **Plasma Discover is not removed in 0.2**:
-the Software Center does not yet manage Flatpaks or firmware, and its polkit flow has not
-been verified in a real Plasma session. Removal will be reconsidered once both are tested
-in the VM (spec §8.4). `packagekit` stays because Plasma components depend on it.
+Ubuntu Software is not part of Kubuntu/NexusOS, and **the NexusOS image does not install
+Plasma Discover or Flatpak**: the Command Center Software Center manages APT packages through
+the user's sudo rights, firmware updates use `fwupd`, and Flatpak (with Discover's Flatpak
+backend) stays an explicit opt-in. `packagekit` stays because Plasma components depend on it.
 
 ## CLI
 
@@ -53,7 +54,7 @@ in the VM (spec §8.4). `packagekit` stays because Plasma components depend on i
 nexus packages search nginx
 nexus packages show nginx
 nexus packages install nginx --dry-run      # plan only
-nexus packages install nginx                # plan, confirm, agent (or sudo fallback)
+nexus packages install nginx                # plan, confirm, then sudo (password asked in the terminal if needed)
 nexus packages remove vim [--purge]
 nexus packages update [--upgrade]
 nexus packages list [--apps|--upgradable]

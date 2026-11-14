@@ -14,8 +14,6 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from nexus_core import runner
-
 PROC = Path(os.environ.get("NEXUSOS_PROC", "/proc"))
 SYS = Path(os.environ.get("NEXUSOS_SYS", "/sys"))
 
@@ -23,15 +21,6 @@ SYS = Path(os.environ.get("NEXUSOS_SYS", "/sys"))
 class Temperature(BaseModel):
     label: str
     celsius: float
-
-
-class GpuInfo(BaseModel):
-    name: str
-    vendor: str
-    driver: str | None = None
-    busy_percent: float | None = None
-    vram_used_bytes: int | None = None
-    vram_total_bytes: int | None = None
 
 
 class NetRate(BaseModel):
@@ -129,56 +118,6 @@ def temperatures() -> tuple[list[Temperature], str | None]:
     return temps, note
 
 
-def gpus() -> list[GpuInfo]:
-    """GPUs from DRM sysfs (AMD busy %/VRAM where exposed) plus nvidia-smi when present."""
-    vendors = {"0x1002": "AMD", "0x10de": "NVIDIA", "0x8086": "Intel"}
-    found: list[GpuInfo] = []
-    for card in sorted((SYS / "class" / "drm").glob("card[0-9]")):
-        device = card / "device"
-        vendor_id = (_read(device / "vendor") or "").strip()
-        if not vendor_id:
-            continue
-        driver = os.path.basename(os.readlink(device / "driver")) if (device / "driver").exists() else None
-
-        def _int(name: str) -> int | None:
-            raw = (_read(device / name) or "").strip()  # noqa: B023 - evaluated immediately
-            return int(raw) if raw.isdigit() else None
-
-        found.append(
-            GpuInfo(
-                name=f"{vendors.get(vendor_id, vendor_id)} GPU ({card.name})",
-                vendor=vendors.get(vendor_id, vendor_id),
-                driver=driver,
-                busy_percent=_int("gpu_busy_percent"),
-                vram_used_bytes=_int("mem_info_vram_used"),
-                vram_total_bytes=_int("mem_info_vram_total"),
-            )
-        )
-    smi = runner.run(
-        [
-            "nvidia-smi",
-            "--query-gpu=name,utilization.gpu,memory.used,memory.total,driver_version",
-            "--format=csv,noheader,nounits",
-        ],
-        timeout=5,
-    )
-    if smi.ok:
-        found = [g for g in found if g.vendor != "NVIDIA"]
-        for line in smi.stdout.strip().splitlines():
-            name, util, used, total, drv = [p.strip() for p in line.split(",")]
-            found.append(
-                GpuInfo(
-                    name=name,
-                    vendor="NVIDIA",
-                    driver=f"nvidia {drv}",
-                    busy_percent=float(util),
-                    vram_used_bytes=int(used) * 2**20,
-                    vram_total_bytes=int(total) * 2**20,
-                )
-            )
-    return found
-
-
 def process_count() -> int:
     return sum(1 for p in PROC.iterdir() if p.name.isdigit()) if PROC.exists() else 0
 
@@ -233,34 +172,3 @@ class Sampler:
             uptime_seconds=float(uptime_raw[0]) if uptime_raw else None,
             load=load,
         )
-
-
-class ProcessInfo(BaseModel):
-    pid: int
-    name: str
-    user_id: int
-    rss_bytes: int
-    state: str
-
-
-def top_processes(limit: int = 15) -> list[ProcessInfo]:
-    """Processes sorted by resident memory (read from /proc/<pid>/status)."""
-    procs: list[ProcessInfo] = []
-    for entry in PROC.iterdir() if PROC.exists() else []:
-        if not entry.name.isdigit():
-            continue
-        status = _read(entry / "status")
-        if not status:
-            continue
-        fields = dict(line.split(":", 1) for line in status.splitlines() if ":" in line)
-        rss = fields.get("VmRSS", "0 kB").split()[0]
-        procs.append(
-            ProcessInfo(
-                pid=int(entry.name),
-                name=fields.get("Name", "?").strip(),
-                user_id=int(fields.get("Uid", "0").split()[0]),
-                rss_bytes=int(rss) * 1024 if rss.isdigit() else 0,
-                state=fields.get("State", "?").strip(),
-            )
-        )
-    return sorted(procs, key=lambda p: p.rss_bytes, reverse=True)[:limit]

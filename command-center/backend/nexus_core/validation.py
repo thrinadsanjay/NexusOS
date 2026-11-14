@@ -9,7 +9,6 @@ from __future__ import annotations
 import ipaddress
 import re
 import socket
-from pathlib import Path
 
 from nexus_core.errors import ValidationError
 
@@ -117,15 +116,6 @@ def docker_id(value: str) -> str:
     if not DOCKER_ID_RE.match(value or ""):
         raise ValidationError(f"invalid container/volume/network name: {value!r}")
     return value
-
-
-def path_within(path: str | Path, base: str | Path) -> Path:
-    """Resolve *path* and ensure it stays inside *base* (no traversal, no symlink escape)."""
-    resolved = Path(path).expanduser().resolve()
-    root = Path(base).expanduser().resolve()
-    if resolved != root and root not in resolved.parents:
-        raise ValidationError(f"path escapes {root}: {path}")
-    return resolved
 
 
 def resolve_addresses(host: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
