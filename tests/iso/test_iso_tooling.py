@@ -129,5 +129,7 @@ def test_iso_build_script_policy():
     assert "boot_hybrid.img" in script and "i386-pc-eltorito" in script  # BIOS boot
     assert "nexusos-image.pref" in script and "plasma-discover*" in script  # exclusions during the build
     assert "/dev/sd" not in script and "losetup" not in script and "dd if=" not in script  # never touches disks
+    # mount points must stay in the squashfs as empty directories (casper mounts onto them)
+    assert "-e proc " not in script and "'proc/*'" in script and "'dev/*'" in script
     wrapper = (root / "iso/production/build.sh").read_text()
     assert "--privileged" in wrapper and '"$REPO_ROOT:/repo:ro"' in wrapper

@@ -137,8 +137,10 @@ mkdir -p "$ISO/pool/main" "$ISO/dists/$SUITE/main/binary-amd64"
        release "dists/$SUITE" > "dists/$SUITE/Release.tmp" && mv "dists/$SUITE/Release.tmp" "dists/$SUITE/Release")
 
 log "squashfs (zstd)"
+# Keep /proc, /sys, /dev and /run as EMPTY directories: casper mounts onto them at boot
+# (excluding the directories themselves makes init fail: "mounting /dev on /root/dev failed").
 mksquashfs "$ROOTFS" "$ISO/casper/filesystem.squashfs" -comp zstd -Xcompression-level 15 -b 1M -noappend -quiet \
-    -e boot/efi -e proc -e sys -e dev -e run
+    -wildcards -e 'proc/*' 'sys/*' 'dev/*' 'run/*' 'boot/efi/*'
 echo "   $(du -h "$ISO/casper/filesystem.squashfs" | cut -f1) filesystem.squashfs"
 
 # ---------------------------------------------------------------------------- boot loaders

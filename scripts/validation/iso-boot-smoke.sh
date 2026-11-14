@@ -49,7 +49,8 @@ dark_teal() {  # the NexusOS GRUB menu highlight (black on cyan) is present in t
 import sys
 from PIL import Image
 img = Image.open(sys.argv[1]).convert("RGB")
-cyan = sum(1 for p in img.getdata() if p[2] > 150 and p[1] > 150 and p[0] < 80)
+pixels = img.get_flattened_data() if hasattr(img, "get_flattened_data") else img.getdata()
+cyan = sum(1 for p in pixels if p[2] > 150 and p[1] > 150 and p[0] < 80)
 sys.exit(0 if cyan > 500 else 1)
 PY
 }
@@ -88,10 +89,12 @@ deadline=$(( $(date +%s) + LIVE_MIN * 60 ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
     sleep 20
     grep -qE "Started (sddm|SDDM).*|Reached target .*[Gg]raphical" /out/live-serial.log 2>/dev/null && break
+    grep -q "Kernel panic" /out/live-serial.log 2>/dev/null && break
 done
 sleep 60   # let SDDM autologin start Plasma
 shot /tmp/live.qmp live-desktop
 kill $pid 2>/dev/null; wait $pid 2>/dev/null || true
+grep -q "Kernel panic" /out/live-serial.log && fail "kernel panic during live boot (see live-serial.log)"
 grep -q "squashfs" /out/live-serial.log && pass "live: casper found the medium and mounted filesystem.squashfs" || fail "casper medium/squashfs (see live-serial.log)"
 grep -qE "Reached target .*[Gg]raphical" /out/live-serial.log && pass "live: systemd reached the graphical target" || fail "graphical target not reached in ${LIVE_MIN} min"
 grep -qiE "Started.*(sddm|Simple Desktop Display Manager)" /out/live-serial.log && pass "live: SDDM started" || fail "SDDM not started"
