@@ -10,6 +10,7 @@ override_dh_auto_install:
 	dh_auto_install
 	install -D -m 0644 polkit/org.nexusos.agent.policy \
 	  debian/nexusos-management-agent/usr/share/polkit-1/actions/org.nexusos.agent.policy
+	install -D -m 0755 bin/nexus-admin debian/nexusos-management-agent/usr/lib/nexusos/nexus-admin
 
 override_dh_installsystemd:
 	dh_installsystemd --name=nexusos-agent nexusos-agent.socket

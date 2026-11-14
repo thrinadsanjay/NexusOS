@@ -20,6 +20,7 @@ Depends: ${misc:Depends},
          ${python3:Depends},
          python3-nexus-core (= ${source:Version}),
          polkitd,
+         sudo | sudo-rs,
          apt,
          openssl
 Recommends: smartmontools, ufw
@@ -31,5 +32,10 @@ Description: NexusOS management agent (privileged helper)
  cancellation, repository management, gateway activation with nginx -t and
  rollback, certificate issuance, SMART and firewall status), audits each
  request and exits after two idle minutes.
+ .
+ It also ships /usr/lib/nexusos/nexus-admin, which the Command Center runs
+ through sudo for administrative tasks: sudo decides (passwordless rule,
+ password or refusal) and the helper runs only the same allow-listed
+ operations, audited with the invoking user.
  .
  The Command Center itself always runs as the logged-in user.

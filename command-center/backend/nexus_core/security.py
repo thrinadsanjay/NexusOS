@@ -55,17 +55,22 @@ def secret_service_available() -> bool:
 
 def overview() -> list[Check]:
     checks = []
-    agent = agent_client.available()
-    checks.append(
-        Check(
-            id="agent",
-            title="Management agent",
-            status="ok" if agent else "warn",
-            detail="socket-activated, polkit-authorized"
-            if agent
-            else "not installed: package and gateway operations are unavailable",
+    from nexus_core import privilege
+
+    profile = privilege.access()
+    helper = agent_client.available()
+    if profile.admin == "none":
+        status, detail = (
+            "info",
+            f"{profile.user} is a standard user: administrative actions are hidden ({profile.reason})",
         )
-    )
+    elif not helper:
+        status, detail = "warn", "admin helper not installed: package, service and gateway changes are unavailable"
+    else:
+        how = {"not-required": "no password (NOPASSWD)", "required": "password", "unknown": "password if sudo asks"}
+        status = "warn" if profile.auth == "not-required" and profile.admin != "root" else "ok"
+        detail = f"{profile.user} via sudo · {how[profile.auth]} · audited by nexus-admin"
+    checks.append(Check(id="agent", title="Administrative access", status=status, detail=detail))
     checks.append(
         Check(
             id="polkit",

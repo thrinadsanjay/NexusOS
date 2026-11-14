@@ -12,10 +12,7 @@ import threading
 import time
 from typing import Any
 
-from nexus_core.errors import NexusError, ValidationError
-from pydantic import ValidationError as PydanticValidationError
-
-from nexus_agent import audit, ops
+from nexus_agent import execute
 from nexus_agent.auth import Authorizer, peer_of
 
 log = logging.getLogger("nexus.agent")
@@ -73,32 +70,10 @@ class Agent:
                 send({"type": "error", "code": "bad-request", "message": "empty or oversized request"})
                 return
             try:
-                request = json.loads(raw)
-                name = request["op"]
-                params = request.get("params") or {}
-                if request.get("v") != 1 or not isinstance(params, dict):
-                    raise ValueError
-            except (ValueError, KeyError, TypeError):
+                name, params = execute.parse_request(json.loads(raw))
+            except ValueError:
                 send({"type": "error", "code": "bad-request", "message": "malformed request"})
                 return
-            operation = ops.REGISTRY.get(name)
-            if operation is None:
-                audit.record(peer.uid, peer.pid, str(name)[:64], {}, "rejected", "unknown op")
-                send({"type": "error", "code": "unknown-op", "message": f"unsupported operation {name!r}"})
-                return
-            try:
-                parsed = operation.model(**params)
-            except (PydanticValidationError, TypeError, NexusError) as exc:
-                message = exc.message if isinstance(exc, NexusError) else str(exc)
-                audit.record(peer.uid, peer.pid, name, params, "rejected", "invalid parameters")
-                send({"type": "error", "code": "invalid", "message": f"invalid parameters: {message}"[:500]})
-                return
-            if operation.action:
-                allowed, how = self.authorizer.authorize(peer, operation.action)
-                if not allowed:
-                    audit.record(peer.uid, peer.pid, name, params, "denied", how)
-                    send({"type": "error", "code": "unauthorized", "message": f"not authorized: {how}"})
-                    return
             cancelled = threading.Event()
 
             def watch_cancel() -> None:
@@ -111,19 +86,16 @@ class Agent:
                 cancelled.set()  # client went away: treat as cancel request
 
             threading.Thread(target=watch_cancel, daemon=True).start()
-            ctx = ops.Context(emit=send, cancelled=cancelled, uid=peer.uid)
-            try:
-                data = operation.handler(parsed, ctx)
-                audit.record(peer.uid, peer.pid, name, params, "ok")
-                send({"type": "result", "ok": True, "data": data})
-            except NexusError as exc:
-                code = "invalid" if isinstance(exc, ValidationError) else getattr(exc, "code", "failed")
-                message = exc.message + (f" ({exc.hint})" if exc.hint else "")
-                audit.record(peer.uid, peer.pid, name, params, "failed", message)
-                send({"type": "error", "code": code if isinstance(code, str) else "failed", "message": message})
-            except (ValueError, OSError) as exc:
-                audit.record(peer.uid, peer.pid, name, params, "failed", str(exc))
-                send({"type": "error", "code": "failed", "message": f"{exc.__class__.__name__}: {exc}"[:500]})
+            execute.execute(
+                name,
+                params,
+                send=send,
+                cancelled=cancelled,
+                uid=peer.uid,
+                pid=peer.pid,
+                authorize=lambda action: self.authorizer.authorize(peer, action),
+                via="agent",
+            )
         except Exception:  # never leave a client waiting without an answer
             log.exception("internal error")
             send({"type": "error", "code": "internal", "message": "internal agent error (see journal)"})

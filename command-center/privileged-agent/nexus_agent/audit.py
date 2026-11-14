@@ -32,14 +32,14 @@ def _get() -> logging.Logger:
             handler: logging.Handler = RotatingFileHandler(path, maxBytes=1_000_000, backupCount=5)
             os.chmod(path, 0o640)
         except OSError:
-            handler = logging.StreamHandler()
+            handler = logging.StreamHandler()  # stderr: never mixed into the event stream
         handler.setFormatter(logging.Formatter("%(message)s"))
         _logger.addHandler(handler)
         _logger.setLevel(logging.INFO)
     return _logger
 
 
-def record(uid: int, pid: int, op: str, params: dict, outcome: str, detail: str = "") -> None:
+def record(uid: int, pid: int, op: str, params: dict, outcome: str, detail: str = "", via: str = "agent") -> None:
     try:
         user = pwd.getpwuid(uid).pw_name
     except KeyError:
@@ -54,6 +54,7 @@ def record(uid: int, pid: int, op: str, params: dict, outcome: str, detail: str 
                 "op": op,
                 "params": redact(params),
                 "outcome": outcome,
+                "via": via,  # agent (socket + polkit) or sudo (nexus-admin)
                 "detail": detail[:500],
             }
         )

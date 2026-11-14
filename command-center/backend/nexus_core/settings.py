@@ -3,7 +3,8 @@ and KDE System Settings modules (KCMs) for mature desktop functionality.
 
 NexusOS does not reimplement display, audio, input, Bluetooth, printing or user
 management: the Command Center opens the corresponding KCM via ``kcmshell6``.
-Hostname, time zone, NTP and locale use hostnamed/timedated/localed, which ask polkit.
+Hostname, time zone and NTP changes are administrative and run through the user's sudo
+rights (nexus-admin); reading them is unprivileged.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from nexus_core import runner, validation
-from nexus_core.errors import DependencyMissingError, NexusError, ValidationError
+from nexus_core.errors import DependencyMissingError, ValidationError
 
 
 class SettingsEntry(BaseModel):
@@ -256,9 +257,9 @@ def set_hostname(name: str) -> None:
     name = validation.hostname(name)
     if "." in name and len(name.split(".")[0]) > 63:
         raise ValidationError("hostname label too long")
-    result = runner.run(["hostnamectl", "set-hostname", name], timeout=120)
-    if not result.ok:
-        raise NexusError("could not change the hostname", hint=runner.first_line(result.stderr) or "polkit denied?")
+    from nexus_core import agent_client
+
+    agent_client.call("system.hostname", {"name": name}, label=f"Change the hostname to {name}")
 
 
 def time_status() -> TimeStatus:
@@ -282,15 +283,15 @@ def timezones() -> list[str]:
 def set_timezone(tz: str) -> None:
     if tz not in set(timezones()):
         raise ValidationError(f"unknown time zone {tz!r}")
-    result = runner.run(["timedatectl", "set-timezone", tz], timeout=120)
-    if not result.ok:
-        raise NexusError("could not set the time zone", hint=runner.first_line(result.stderr))
+    from nexus_core import agent_client
+
+    agent_client.call("system.timezone", {"timezone": tz}, label=f"Set the time zone to {tz}")
 
 
 def set_ntp(enabled: bool) -> None:
-    result = runner.run(["timedatectl", "set-ntp", "true" if enabled else "false"], timeout=120)
-    if not result.ok:
-        raise NexusError("could not change NTP", hint=runner.first_line(result.stderr))
+    from nexus_core import agent_client
+
+    agent_client.call("system.ntp", {"enabled": enabled}, label=("Enable" if enabled else "Disable") + " network time")
 
 
 def locale_status() -> dict[str, str]:

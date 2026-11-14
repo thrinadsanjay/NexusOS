@@ -185,10 +185,15 @@ def smart(device: str) -> SmartSummary:
     """SMART health via the management agent (smartctl needs root)."""
     if not DEVICE_RE.match(device):
         raise ValidationError(f"invalid device {device!r}")
+    from nexus_core import privilege
+
     try:
-        data = agent_client.call("storage.smart", {"device": device}).get("smart") or {}
-    except agent_client.AgentUnavailableError:
-        return SmartSummary(device=device, available=False, message="management agent not installed")
+        data = agent_client.call("storage.smart", {"device": device}, label=f"Read SMART health of {device}")
+        data = data.get("smart") or {}
+    except DependencyMissingError as exc:
+        return SmartSummary(device=device, available=False, message=exc.message)
+    except (privilege.AccessDeniedError, privilege.AuthCancelledError) as exc:
+        return SmartSummary(device=device, available=False, message=exc.message)
     if not data:
         return SmartSummary(device=device, available=False, message="SMART not supported by this device")
     nvme = data.get("nvme_smart_health_information_log") or {}

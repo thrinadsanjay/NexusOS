@@ -1,4 +1,4 @@
-"""Gateway: native NGINX routes and certificates. Reads unprivileged; writes via the agent."""
+"""Gateway: native NGINX routes and certificates. Reads unprivileged; writes use the user's sudo rights."""
 
 from __future__ import annotations
 
@@ -9,6 +9,18 @@ from nexus_core import agent_client, notifications, paths
 from nexus_core.gateway import certs, status
 from nexus_core.gateway.model import Route
 from PySide6.QtCore import Slot
+
+OP_LABELS = {
+    "gateway.route.save": "Save gateway route",
+    "gateway.route.delete": "Delete gateway route",
+    "gateway.apply": "Apply gateway configuration",
+    "gateway.rollback": "Roll back gateway configuration",
+    "gateway.nginx.test": "Test NGINX configuration",
+    "gateway.nginx.reload": "Reload NGINX",
+    "gateway.cert.issue": "Issue a certificate",
+    "gateway.cert.import": "Import a certificate",
+    "gateway.cert.renew": "Renew certificates",
+}
 
 
 class Controller(ModuleController):
@@ -55,7 +67,7 @@ class Controller(ModuleController):
                 after()
 
         self.run(
-            lambda: agent_client.call(op, params),
+            lambda: agent_client.call(op, params, label=OP_LABELS.get(op, op)),
             done,
             record=(f"gateway.{label}", json.dumps(params)[:200]),
             notify_category="gateway",
@@ -120,6 +132,6 @@ class Controller(ModuleController):
     @Slot(str)
     def loadLogs(self, kind: str) -> None:
         self.run(
-            lambda: agent_client.call("gateway.logs", {"kind": kind, "lines": 300}),
+            lambda: agent_client.call("gateway.logs", {"kind": kind, "lines": 300}, label="Read gateway logs"),
             lambda r: self.set(logs="\n".join(r.get("lines", []))),
         )

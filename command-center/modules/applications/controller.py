@@ -80,7 +80,7 @@ class Controller(ModuleController):
         route = lifecycle.suggested_route(registry.get(app_id))
         if route:
             self.run(
-                lambda: agent_client.call("gateway.route.save", {"route": route}),
+                lambda: agent_client.call("gateway.route.save", {"route": route}, label="Save gateway route"),
                 lambda _: self.toast.emit("success", f"route {route['hostname']} proposed; approve it in Gateway"),
                 record=("gateway.route.propose", route["hostname"]),
             )

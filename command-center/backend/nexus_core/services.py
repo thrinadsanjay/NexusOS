@@ -1,9 +1,8 @@
 """systemd service inspection and control.
 
-Read operations run unprivileged. Start/stop/restart/enable/disable go through
-``systemctl`` as the calling user: systemd asks polkit
-(``org.freedesktop.systemd1.manage-units``), so administrators authenticate via the
-desktop's polkit agent and nothing in NexusOS needs root for this.
+Read operations run unprivileged as the logged-in user. Start/stop/restart/
+enable/disable are administrative: they run through the user's sudo rights
+(``nexus-admin`` operation ``service.control``, see nexus_core.privilege).
 Only units on the approved list can be controlled from NexusOS frontends.
 """
 
@@ -85,17 +84,15 @@ def is_active(unit: str) -> str:
     return props.get("ActiveState") or "unknown"
 
 
-def control(unit: str, action: Action) -> runner.CommandResult:
+def control(unit: str, action: Action) -> dict:
     validation.unit_name(unit)
     if unit not in APPROVED_UNITS:
         raise ValidationError(f"{unit} is not on the list of services NexusOS may control")
     if action not in ("start", "stop", "restart", "enable", "disable"):
         raise ValidationError(f"unsupported action {action!r}")
-    # polkit prompts through the session agent; give the user time to authenticate.
-    result = runner.run(["systemctl", action, unit], timeout=120)
-    if not result.ok:
-        raise NexusError(f"systemctl {action} {unit} failed", hint=runner.first_line(result.stderr) or None)
-    return result
+    from nexus_core import agent_client
+
+    return agent_client.call("service.control", {"unit": unit, "action": action}, label=f"{action.title()} {unit}")
 
 
 def logs(unit: str, lines: int = 200) -> str:
@@ -106,4 +103,12 @@ def logs(unit: str, lines: int = 200) -> str:
     if not result.found:
         raise NexusError("journalctl not available")
     text = result.stdout or result.stderr
+    if not text.strip() or "No journal files were found" in text or "-- No entries --" in text:
+        from nexus_core import privilege
+
+        if not privilege.access().journal:
+            return (
+                f"No log lines visible to {privilege.access().user}.\n"
+                "System service logs are readable by members of the 'adm' or 'systemd-journal' group."
+            )
     return redact_text(text)

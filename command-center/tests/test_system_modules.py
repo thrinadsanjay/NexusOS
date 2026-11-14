@@ -152,7 +152,7 @@ def test_unmount_refuses_system_mounts(fake_lsblk):
 
 def test_smart_without_agent():
     s = storage.smart("/dev/sda")
-    assert not s.available and "agent" in s.message
+    assert not s.available and "not installed" in s.message
 
 
 def test_nmcli_parsing_and_static_ip(monkeypatch):

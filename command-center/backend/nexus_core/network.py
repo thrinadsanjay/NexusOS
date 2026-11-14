@@ -259,11 +259,18 @@ def diagnose(target: str) -> list[DiagnosticResult]:
     return out
 
 
-def firewall_status() -> dict:
+def firewall_status(prompt: bool = False) -> dict:
+    """ufw status (root only). Without ``prompt`` a password-protected sudo reports ``locked``."""
+    from nexus_core import privilege
+
     try:
-        return agent_client.call("firewall.status")
-    except agent_client.AgentUnavailableError:
-        return {"installed": runner.which("ufw") is not None, "output": "management agent not installed"}
+        return agent_client.call("firewall.status", label="Read firewall status", prompt=prompt)
+    except DependencyMissingError as exc:
+        return {"installed": runner.which("ufw") is not None, "output": exc.message}
+    except privilege.AuthRequiredError:
+        return {"installed": runner.which("ufw") is not None, "locked": True, "output": ""}
+    except (privilege.AccessDeniedError, privilege.AuthCancelledError) as exc:
+        return {"installed": runner.which("ufw") is not None, "denied": True, "output": exc.message}
 
 
 def proxy_settings() -> dict:

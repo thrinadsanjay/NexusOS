@@ -12,7 +12,7 @@ from PySide6.QtCore import Slot
 class Controller(ModuleController):
     def __init__(self, tasks, app=None) -> None:
         super().__init__(tasks, app)
-        self._session: agent_client.AgentSession | None = None
+        self._session = None  # AgentSession or privilege.SudoSession while an operation runs
         self.set(
             results=[],
             details=None,
@@ -88,8 +88,11 @@ class Controller(ModuleController):
         lines: list[str] = []
 
         def work(emit, cancel) -> dict:
-            session = agent_client.AgentSession(
-                f"apt.{op}", {"packages": names, "expected": expected} if op != "update" else {"packages": []}
+            label = f"{op.title()} {' '.join(names)}".strip() if names else "Refresh package lists"
+            session = agent_client.open_session(
+                f"apt.{op}",
+                {"packages": names, "expected": expected} if op != "update" else {"packages": []},
+                label=label,
             )
             self._session = session
             for event in session.events():
@@ -166,7 +169,7 @@ class Controller(ModuleController):
             "signed_by": signed_by,
         }
         self.run(
-            lambda: agent_client.call("apt.repo.add", params),
+            lambda: agent_client.call("apt.repo.add", params, label=f"Add repository {name}"),
             lambda r: (self.toast.emit("success", f"repository added: {r.get('file')}"), self.loadRepos()),
             record=("packages.repo.add", name),
         )
@@ -174,7 +177,7 @@ class Controller(ModuleController):
     @Slot(str)
     def removeRepository(self, name: str) -> None:
         self.run(
-            lambda: agent_client.call("apt.repo.remove", {"name": name}),
+            lambda: agent_client.call("apt.repo.remove", {"name": name}, label=f"Remove repository {name}"),
             lambda r: (self.toast.emit("success", "repository removed"), self.loadRepos()),
             record=("packages.repo.remove", name),
         )

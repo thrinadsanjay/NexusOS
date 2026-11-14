@@ -2,3 +2,4 @@ command-center/privileged-agent/pyproject.toml   pyproject.toml
 command-center/privileged-agent/nexus_agent      nexus_agent
 command-center/privileged-agent/systemd          systemd
 command-center/privileged-agent/polkit           polkit
+command-center/privileged-agent/bin              bin

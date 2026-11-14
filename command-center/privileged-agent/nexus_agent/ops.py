@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from nexus_core import packages, paths, runner, validation
+from nexus_core import packages, paths, runner, services, validation
 from nexus_core.errors import NexusError, ValidationError
 from nexus_core.gateway import apply as gw_apply
 from nexus_core.gateway import certs as gw_certs
@@ -34,6 +34,7 @@ ACTION_GATEWAY_LOGS = "org.nexusos.agent.gateway.logs"
 ACTION_STORAGE_READ = "org.nexusos.agent.storage.read"
 ACTION_FIREWALL_READ = "org.nexusos.agent.firewall.read"
 ACTION_FIREWALL = "org.nexusos.agent.firewall.manage"
+ACTION_SYSTEM = "org.nexusos.agent.system.manage"
 
 APT_ENV = {
     "PATH": "/usr/sbin:/usr/bin:/sbin:/bin",
@@ -463,3 +464,73 @@ def _fw_set(p: FirewallParams, ctx: Context) -> dict[str, Any]:
     if not result.ok:
         raise NexusError("ufw failed", hint=runner.first_line(result.stderr or result.stdout))
     return {"output": result.stdout.strip()}
+
+
+# ===================================================================== system
+class ServiceParams(BaseModel):
+    model_config = {"extra": "forbid"}
+    unit: str
+    action: Literal["start", "stop", "restart", "enable", "disable"]
+
+    @field_validator("unit")
+    @classmethod
+    def _approved(cls, v: str) -> str:
+        validation.unit_name(v)
+        if v not in services.APPROVED_UNITS:
+            raise ValueError(f"{v} is not on the list of services NexusOS may control")
+        return v
+
+
+@op("service.control", ACTION_SYSTEM, ServiceParams)
+def _service_control(p: ServiceParams, ctx: Context) -> dict[str, Any]:
+    result = runner.run(["systemctl", p.action, p.unit], timeout=120)
+    if not result.ok:
+        raise NexusError(f"systemctl {p.action} {p.unit} failed", hint=runner.first_line(result.stderr) or None)
+    return {"unit": p.unit, "action": p.action, "state": services.is_active(p.unit)}
+
+
+class HostnameParams(BaseModel):
+    model_config = {"extra": "forbid"}
+    name: str
+
+    @field_validator("name")
+    @classmethod
+    def _valid(cls, v: str) -> str:
+        return validation.hostname(v)
+
+
+@op("system.hostname", ACTION_SYSTEM, HostnameParams)
+def _hostname(p: HostnameParams, ctx: Context) -> dict[str, Any]:
+    result = runner.run(["hostnamectl", "set-hostname", p.name], timeout=60)
+    if not result.ok:
+        raise NexusError("could not change the hostname", hint=runner.first_line(result.stderr) or None)
+    return {"hostname": p.name}
+
+
+class TimezoneParams(BaseModel):
+    model_config = {"extra": "forbid"}
+    timezone: str = Field(pattern=r"^[A-Za-z0-9_+\-]+(/[A-Za-z0-9_+\-]+){0,2}$", max_length=64)
+
+
+@op("system.timezone", ACTION_SYSTEM, TimezoneParams)
+def _timezone(p: TimezoneParams, ctx: Context) -> dict[str, Any]:
+    known = runner.run(["timedatectl", "list-timezones"], timeout=15).stdout.split()
+    if p.timezone not in known:
+        raise ValidationError(f"unknown time zone {p.timezone!r}")
+    result = runner.run(["timedatectl", "set-timezone", p.timezone], timeout=60)
+    if not result.ok:
+        raise NexusError("could not set the time zone", hint=runner.first_line(result.stderr) or None)
+    return {"timezone": p.timezone}
+
+
+class NtpParams(BaseModel):
+    model_config = {"extra": "forbid"}
+    enabled: bool
+
+
+@op("system.ntp", ACTION_SYSTEM, NtpParams)
+def _ntp(p: NtpParams, ctx: Context) -> dict[str, Any]:
+    result = runner.run(["timedatectl", "set-ntp", "true" if p.enabled else "false"], timeout=60)
+    if not result.ok:
+        raise NexusError("could not change NTP", hint=runner.first_line(result.stderr) or None)
+    return {"ntp": p.enabled}

@@ -60,6 +60,10 @@ class Controller(ModuleController):
     def loadFirewall(self) -> None:
         self.run(network.firewall_status, lambda f: self.set(firewall=f))
 
+    @Slot()
+    def unlockFirewall(self) -> None:
+        self.run(lambda: network.firewall_status(prompt=True), lambda f: self.set(firewall=f))
+
     @Slot(str, str, str, str)
     def applyStatic(self, conn: str, address: str, gateway: str, dns: str) -> None:
         cfg = network.StaticIPv4(connection=conn, address=address, gateway=gateway or None, dns=dns.split())

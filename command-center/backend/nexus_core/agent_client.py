@@ -10,14 +10,22 @@ Protocol (version 1): newline-delimited JSON over the Unix socket
                     {"type": "error", "code": "unauthorized", "message": "..."}
   client -> agent   {"type": "cancel"}          (optional, while an operation runs)
 
-The agent authenticates the caller with SO_PEERCRED and authorizes every
-operation with polkit. The frontends never receive root privileges.
+Two transports carry the same protocol and the same allow-listed operations:
+
+* ``sudo`` (default): :class:`nexus_core.privilege.SudoSession` starts
+  ``sudo /usr/lib/nexusos/nexus-admin run`` with the logged-in user's own sudo
+  rights (no password, a password box, or access denied);
+* ``agent``: the socket-activated agent, which authorizes with SO_PEERCRED and
+  polkit (``NEXUSOS_ADMIN_TRANSPORT=agent``).
+
+The frontends never run as root.
 """
 
 from __future__ import annotations
 
 import contextlib
 import json
+import os
 import socket
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -41,7 +49,7 @@ class AgentUnavailableError(DependencyMissingError):
 class AgentError(NexusError):
     def __init__(self, code: str, message: str) -> None:
         hints = {
-            "unauthorized": "authorization was denied or cancelled (polkit)",
+            "unauthorized": "authorization was denied or cancelled",
             "busy": "another package operation is running; wait for it to finish",
             "locked": "the package manager is locked by another program",
         }
@@ -103,14 +111,33 @@ class AgentSession:
             self._sock.close()
 
 
+def transport() -> str:
+    return "agent" if os.environ.get("NEXUSOS_ADMIN_TRANSPORT") == "agent" else "sudo"
+
+
+def open_session(op: str, params: dict[str, Any] | None = None, label: str | None = None, prompt: bool = True):
+    """Start an administrative operation with the configured transport.
+
+    ``prompt=False`` is for reads the user did not explicitly ask for: instead of a
+    password box they raise ``privilege.AuthRequiredError``.
+    """
+    if transport() == "agent":
+        return AgentSession(op, params)
+    from nexus_core import privilege
+
+    return privilege.SudoSession(op, params, label=label, prompt=prompt)
+
+
 def call(
     op: str,
     params: dict[str, Any] | None = None,
     on_event: Callable[[dict[str, Any]], None] | None = None,
     socket_path: Path | None = None,
+    label: str | None = None,
+    prompt: bool = True,
 ) -> dict[str, Any]:
     """Run an operation to completion and return the result's ``data``."""
-    session = AgentSession(op, params, socket_path)
+    session = AgentSession(op, params, socket_path) if socket_path else open_session(op, params, label, prompt)
     for event in session.events():
         if event.get("type") == "result":
             return event.get("data") or {}
@@ -120,4 +147,8 @@ def call(
 
 
 def available(socket_path: Path | None = None) -> bool:
+    if socket_path is None and transport() == "sudo":
+        from nexus_core import privilege
+
+        return privilege.helper_path().exists()
     return (socket_path or paths.agent_socket()).exists()

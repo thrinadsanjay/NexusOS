@@ -1,0 +1,8 @@
+#!/usr/bin/python3 -I
+"""NexusOS admin helper: one allow-listed operation as root, started by the Command Center through sudo."""
+
+import sys
+
+from nexus_agent.admin import main
+
+sys.exit(main())
