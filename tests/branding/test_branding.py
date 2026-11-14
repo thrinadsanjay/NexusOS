@@ -115,3 +115,19 @@ def test_panel_layout_uses_only_upstream_widgets():
     for launcher in ("org.nexusos.dev.desktop", "org.nexusos.infra.desktop", "org.nexusos.ai.desktop"):
         assert launcher in layout
         assert (REPO_ROOT / "packages/nexusos-desktop/applications" / launcher).is_file()
+
+
+def test_creator_credit_is_consistent():
+    """One credit, everywhere it is shown: "Crafted by Sanjay"."""
+    release = (REPO_ROOT / "configs/os-release/nexusos-release").read_text()
+    assert 'NEXUSOS_CREATOR="Sanjay"' in release
+    banner = (REPO_ROOT / "configs/shell/nexusos-banner.sh").read_text()
+    assert "NEXUSOS_CREATOR" in banner and "Crafted by" in banner
+    assert "Crafted by" in (REPO_ROOT / "configs/shell/fastfetch/config.jsonc").read_text()
+    assert "crafted by Sanjay" in (REPO_ROOT / "configs/kde/xdg/kcm-about-distrorc").read_text()
+    assert "Sanjay" in (REPO_ROOT / "installer/calamares/branding/nexusos/show.qml").read_text()
+    for page in ("packages/nexus-cli/debian/nexus.1", "command-center/frontend/nexus-center.1"):
+        assert "crafted by Sanjay" in (REPO_ROOT / page).read_text()
+    from nexus_core import release
+
+    assert release.DEFAULT_CREATOR == "Sanjay"

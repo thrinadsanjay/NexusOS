@@ -54,7 +54,7 @@ Presentation {
     NexusSlide {
         kicker: "Welcome to NexusOS"
         heading: "An engineering workstation built on Ubuntu 26.04 LTS"
-        points: ["KDE Plasma 6 on Wayland with the Nexus theme", "Ubuntu's packages, kernel and security updates, unchanged", "Everything here is open source"]
+        points: ["KDE Plasma 6 on Wayland with the Nexus theme", "Ubuntu's packages, kernel and security updates, unchanged", "Everything here is open source — crafted by Sanjay"]
     }
     NexusSlide {
         kicker: "Command Center"
@@ -74,7 +74,7 @@ Presentation {
     NexusSlide {
         kicker: "Almost there"
         heading: "After the restart"
-        points: ["Sign in, then open the Command Center from the dock", "Check Overview → System attention for updates", "Documentation: github.com/thrinadsanjay/NexusOS"]
+        points: ["Sign in, then open the Command Center from the dock", "Check Overview → System attention for updates", "Documentation: github.com/thrinadsanjay/NexusOS", "Thank you for trying NexusOS — Sanjay"]
     }
 
     function onActivate() { presentation.currentSlide = 0 }

@@ -9,7 +9,7 @@ from pathlib import Path
 import typer
 from nexus_core.errors import ValidationError
 from nexus_core.models import VersionInfo
-from nexus_core.release import read_nexusos_release, read_os_release
+from nexus_core.release import creator, read_nexusos_release, read_os_release
 
 from nexus_cli import __version__
 from nexus_cli.commands import (
@@ -67,11 +67,13 @@ def main(
 def version(json_output: bool = typer.Option(False, "--json", help="Emit JSON.")) -> None:
     """Show the NexusOS CLI version and platform details."""
     os_release = read_os_release()
+    release = read_nexusos_release()
     info = VersionInfo(
         cli_version=__version__,
         python_version=platform.python_version(),
         os=os_release,
-        nexusos_build=read_nexusos_release().get("NEXUSOS_BUILD"),
+        nexusos_build=release.get("NEXUSOS_BUILD"),
+        creator=creator(),
     )
     if json_output:
         print_json(info)
@@ -82,6 +84,8 @@ def version(json_output: bool = typer.Option(False, "--json", help="Emit JSON.")
         + (f" [muted](build {info.nexusos_build})[/muted]" if info.nexusos_build else "")
     )
     console.print(f"[muted]Python:[/muted] {info.python_version}")
+    if info.creator:
+        console.print(f"[muted]Crafted by[/muted] [accent]{info.creator}[/accent]")
 
 
 @app.command("help")

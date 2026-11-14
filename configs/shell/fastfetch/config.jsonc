@@ -16,6 +16,7 @@
   "modules": [
     "title",
     { "type": "custom", "format": "\u001b[38;2;196;119;80mBUILD. AUTOMATE. DEPLOY.\u001b[0m" },
+    { "type": "custom", "format": "\u001b[38;2;158;179;183mCrafted by \u001b[38;2;196;119;80mSanjay\u001b[0m" },
     "separator",
     { "type": "os", "key": "OS" },
     { "type": "kernel", "key": "Kernel" },

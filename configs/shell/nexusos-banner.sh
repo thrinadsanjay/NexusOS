@@ -28,15 +28,19 @@ nexusos_banner() {
 
     _nx_edition="Engineering Edition"
     _nx_build=""
+    _nx_creator=""
     if [ -r "$_nx_release" ]; then
         # Parse only the keys we need; never source the file into the login shell.
         _nx_edition=$(sed -n 's/^NEXUSOS_EDITION="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$_nx_release")
         _nx_build=$(sed -n 's/^NEXUSOS_BUILD="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$_nx_release")
+        _nx_creator=$(sed -n 's/^NEXUSOS_CREATOR="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$_nx_release")
     fi
     printf '  %sNexusOS%s %s %s%s%s\n' "$_nx_teal" "$_nx_reset" "$_nx_edition" "$_nx_dim" "$_nx_build" "$_nx_reset"
-    printf '  %sBUILD. AUTOMATE. DEPLOY.%s  %s·  type%s nexus help\n\n' "$_nx_copper" "$_nx_reset" "$_nx_dim" "$_nx_reset"
+    printf '  %sBUILD. AUTOMATE. DEPLOY.%s  %s·  type%s nexus help\n' "$_nx_copper" "$_nx_reset" "$_nx_dim" "$_nx_reset"
+    [ -n "$_nx_creator" ] && printf '  %sCrafted by%s %s%s%s\n' "$_nx_dim" "$_nx_reset" "$_nx_copper" "$_nx_creator" "$_nx_reset"
+    printf '\n'
 
-    unset _nx_logo _nx_release _nx_teal _nx_copper _nx_dim _nx_reset _nx_edition _nx_build
+    unset _nx_logo _nx_release _nx_teal _nx_copper _nx_dim _nx_reset _nx_edition _nx_build _nx_creator
 }
 
 nexusos_banner

@@ -31,6 +31,7 @@ class VersionInfo(BaseModel):
     python_version: str
     os: OSRelease
     nexusos_build: str | None = None
+    creator: str | None = None
 
 
 class MemoryInfo(BaseModel):

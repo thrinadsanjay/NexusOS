@@ -1,6 +1,6 @@
 # NexusOS Engineering Edition
 
-**BUILD. AUTOMATE. DEPLOY.**
+**BUILD. AUTOMATE. DEPLOY.** — crafted by **Sanjay** ([@thrinadsanjay](https://github.com/thrinadsanjay))
 
 NexusOS is an Ubuntu-based engineering workstation: KDE Plasma 6 on Wayland plus the
 **Nexus Command Center**, a native application that manages software, settings,

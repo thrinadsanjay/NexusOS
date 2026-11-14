@@ -5,11 +5,14 @@ import Nexus.Design
 
 Item {
     id: page
+    objectName: "settingsPage"
+    readonly property var smokeStates: ["about"]   // `nexus-center --smoke --screenshots` captures the About card
+    function applySmokeState(name) { tabs.currentIndex = name === "about" ? 4 : 0 }
     property var controller
     property var confirm
     property string intent: ""
     readonly property var d: controller ? controller.data : ({})
-    Component.onCompleted: { if (intent === "native:services") tabs.currentIndex = 2; else if (intent === "native:datetime" || intent === "native:hostname") tabs.currentIndex = 1 }
+    Component.onCompleted: { if (intent === "native:services") tabs.currentIndex = 2; else if (intent === "native:datetime" || intent === "native:hostname") tabs.currentIndex = 1; else if (intent === "about") tabs.currentIndex = 4 }
 
     ColumnLayout {
         anchors.fill: parent
@@ -98,6 +101,24 @@ Item {
             ColumnLayout {
                 NxFormRow { label: "Dark theme"; Switch { checked: App.dark; onToggled: App.dark = checked } }
                 NxFormRow { label: "Monitoring interval"; RowLayout { SpinBox { from: 1; to: 60; value: Math.round(App.monitoringInterval / 1000); onValueModified: App.monitoringInterval = value * 1000 } Text { text: "seconds (only while a monitoring page is visible)"; color: Theme.c.textSecondary; font.family: Theme.fontFamily } } }
+                // About
+                NxCard {
+                    Layout.fillWidth: true
+                    Layout.topMargin: Theme.s4
+                    RowLayout {
+                        width: parent.width
+                        spacing: Theme.s4
+                        Image { source: AppIconUrl; sourceSize.width: 56; sourceSize.height: 56 }
+                        ColumnLayout {
+                            spacing: 2
+                            Layout.fillWidth: true
+                            Text { text: "Nexus Command Center " + App.version; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: Theme.fontTitle; font.weight: Font.DemiBold }
+                            Text { text: "NexusOS Engineering Edition  ·  BUILD. AUTOMATE. DEPLOY."; color: Theme.c.textSecondary; font.family: Theme.fontFamily }
+                            Text { textFormat: Text.StyledText; text: "Crafted by <b><font color='" + Theme.c.accentSecondary + "'>" + App.creator + "</font></b>"; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody + 1; Layout.topMargin: Theme.s1 }
+                            Text { text: "Built on Ubuntu 26.04 LTS and KDE Plasma 6 · open source (GPL-2.0-or-later) · not an official Ubuntu product"; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        }
+                    }
+                }
                 Item { Layout.fillHeight: true }
             }
         }

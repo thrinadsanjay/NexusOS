@@ -215,6 +215,12 @@ class AppController(QObject):
     def version(self) -> str:
         return __version__
 
+    @Property(str, constant=True)
+    def creator(self) -> str:
+        from nexus_core.release import creator
+
+        return creator()
+
     @Property("QVariantList", constant=True)
     def modules(self) -> list:
         return [{k: v for k, v in m.items() if k != "dir"} for m in self._modules]

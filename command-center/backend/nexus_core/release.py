@@ -55,3 +55,11 @@ def read_nexusos_release(path: Path = NEXUSOS_RELEASE_PATH) -> dict[str, str]:
         return parse_key_value_file(path.read_text(encoding="utf-8"))
     except OSError:
         return {}
+
+
+DEFAULT_CREATOR = "Sanjay"
+
+
+def creator() -> str:
+    """Who crafted NexusOS (NEXUSOS_CREATOR in /usr/lib/nexusos/release; a checkout has no file)."""
+    return read_nexusos_release().get("NEXUSOS_CREATOR") or DEFAULT_CREATOR

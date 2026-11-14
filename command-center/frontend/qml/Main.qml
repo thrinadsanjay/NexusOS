@@ -113,6 +113,7 @@ ApplicationWindow {
                             spacing: 0
                             Text { text: "Command Center"; color: Theme.c.text; font.pixelSize: Theme.fontTitle; font.weight: Font.DemiBold; font.family: Theme.fontFamily }
                             Text { text: "NexusOS " + App.version; color: Theme.c.textSecondary; font.pixelSize: Theme.fontSmall; font.family: Theme.fontFamily }
+                            Text { text: "crafted by " + App.creator; color: Theme.c.accentSecondary; font.pixelSize: Theme.fontSmall; font.family: Theme.fontFamily; elide: Text.ElideRight; Layout.maximumWidth: Theme.sidebarWidth - 80 }
                         }
                     }
                     ListView {
