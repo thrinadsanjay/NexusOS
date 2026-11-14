@@ -53,11 +53,13 @@ def run(cmd: str, timeout: float = 300) -> str:
     """Run a shell command; return its output (between our markers)."""
     global buf
     buf = b""
-    s.sendall(f"echo @@B; {cmd}; echo @@E\r".encode())
-    read_until(rb"@@E\r?\n", timeout)
+    # The terminal echoes the typed line, so the markers are split by quotes there ("@@""B")
+    # and only appear joined in the command's output.
+    s.sendall(f'echo "@@""B"; {cmd}; echo "@@""E"\r'.encode())
+    read_until(rb"\n@@E\r?\n", timeout)
     text = ANSI.sub(b"", buf).decode(errors="replace")
-    m = re.search(r"@@B\r?\n(.*?)@@E", text, re.S)
-    return (m.group(1) if m else text).strip()
+    m = re.search(r"\n@@B\r?\n(.*?)\r?\n?@@E", text, re.S)
+    return m.group(1).strip() if m else ""
 
 
 def check(ok: bool, message: str) -> None:
