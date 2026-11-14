@@ -38,6 +38,7 @@ def parse_simulation(output: str) -> list[UpgradablePackage]:
                     candidate_version=match["new"],
                     # Simulation lists every suite carrying the version; the first is enough.
                     origin=(match["origin"] or "").split(",")[0].strip() or None,
+                    security="-security" in (match["origin"] or ""),
                 )
             )
     return packages

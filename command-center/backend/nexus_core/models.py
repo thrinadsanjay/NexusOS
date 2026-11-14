@@ -137,6 +137,7 @@ class UpgradablePackage(BaseModel):
     current_version: str | None
     candidate_version: str
     origin: str | None = None
+    security: bool = False  # the candidate is published in a -security pocket
 
 
 class CleanupItem(BaseModel):
