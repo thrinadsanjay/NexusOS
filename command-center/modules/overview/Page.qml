@@ -883,7 +883,7 @@ Item {
             onPaint: {
                 const ctx = getContext("2d")
                 ctx.reset()
-                ctx.font = "11px " + Theme.fontFamily
+                ctx.font = "11px " + Theme.canvasFontFamily
                 ctx.fillStyle = Theme.c.textSecondary
                 ctx.strokeStyle = Theme.c.border
                 ctx.lineWidth = 1

@@ -59,6 +59,9 @@ QtObject {
     // Typography (Inter UI, JetBrains Mono code; fallbacks resolved by fontconfig)
     readonly property string fontFamily: "Inter"
     readonly property string monoFamily: "JetBrains Mono"
+    // Canvas (Context2D) warns about families that are not installed and does not fall back:
+    // use Inter when present, otherwise the generic family (e.g. CI runners without fonts-inter).
+    readonly property string canvasFontFamily: Qt.fontFamilies().indexOf(fontFamily) >= 0 ? fontFamily : "sans-serif"
     readonly property int fontSmall: 11
     readonly property int fontBody: 13
     readonly property int fontTitle: 16
