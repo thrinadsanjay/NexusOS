@@ -55,3 +55,6 @@ packages/*/.pybuild/
 .idea/
 .vscode/
 *.swp
+
+# Local hand-off artefacts (git bundles of this branch)
+/deliverables/
