@@ -83,6 +83,7 @@ scripts/development/validate.sh                           # lint, validators, al
 scripts/development/test-command-center.sh --benchmark    # Command Center tests + resource report
 scripts/development/build-packages.sh                     # .debs built in ubuntu:26.04
 scripts/validation/integration-container.sh               # end-to-end tests in a throwaway container
+scripts/validation/plasma-session-container.sh            # systemd + polkit + Plasma 6 Wayland session checks
 QT_QPA_PLATFORM=offscreen nexus-center --smoke            # or just: nexus-center (with a display)
 ```
 

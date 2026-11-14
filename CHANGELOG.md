@@ -33,15 +33,37 @@ All notable changes to NexusOS are documented here. The format follows
 - Tests: ~250 new unit tests, container integration suite (real APT, real NGINX), headless UI
   smoke test, benchmarks; CI for Command Center/QML, security and integration.
 
+- `scripts/validation/plasma-session-container.sh`: boots systemd in a disposable privileged
+  container and verifies the packages in a real Plasma 6.6 Wayland session — agent socket,
+  polkit actions and authorization (denied without an agent, granted by a test rule, audited),
+  theme/layout/wallpaper as applied by plasmashell, the Command Center on KWin Wayland with
+  memory budgets, KCM catalogue vs `kcmshell6`, Konsole tabs and systemd service control.
+- System Settings marks KDE modules that are not installed and names the package to install.
+
 ### Changed
+- `nexus-center` uses Qt's `generic` platform theme by default (−93 MiB RSS under Plasma);
+  `NEXUS_CENTER_PLATFORMTHEME=kde` restores native KDE file dialogs.
+- `nexusos-desktop` recommends the packages that provide the catalogued KCMs (kscreen,
+  powerdevil, bluedevil, print-manager, kinfocenter, kde-config-screenlocker).
+- Dock: Dolphin and the Command Center are pinned explicitly (Plasma 6.6 dropped the
+  `preferred://filemanager` launcher).
 - CLI services moved into `nexus_core`; `nexus-cli` depends on `python3-nexus-core`.
 - `nexusos-desktop` depends on the Command Center and the management agent.
 - Gateway renders IPv6 listeners only when the host has IPv6.
 
+### Fixed
+- Command Center under Plasma: full Qt palette from the design tokens (light or unreadable
+  controls), Overview header and cards clipped at the right edge, Nexus Applications detail
+  pane squeezed by the header, the `palette` id shadowing the window palette, screenshots
+  with a transparent content area, Local AI spin boxes (temperature shown as 7, context 0).
+- Service states read `loaded` instead of `active` (systemd prints properties in its own order).
+- Disk usage listed bind-mounted files such as `/etc/hosts`; Files listed Home twice.
+
 ### Known limitations
 - Terminals open as Konsole tabs, Files uses Dolphin windows, app UIs open in the browser
-  (embedding planned). Plasma-session features (polkit prompts, KDE Wallet, Konsole, KCMs,
-  NetworkManager checkpoints, UDisks2 format) are verified only in the VM workflow.
+  (embedding planned). Interactive polkit prompts, KDE Wallet, NetworkManager checkpoints and
+  UDisks2 formatting still need the VM workflow; the Plasma container verifies polkit
+  decisions, Konsole, KCMs, theme and layout without a GPU or an authentication agent.
 - Discover is not removed yet (Flatpak/firmware not replaced).
 
 ## 0.1.0-dev "Foundation"

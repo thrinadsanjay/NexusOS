@@ -45,6 +45,7 @@ Reference build (matches the target release exactly):
 scripts/development/build-packages.sh            # ubuntu:26.04 build of all 9 packages, lintian, checksums
 scripts/validation/test-packages-container.sh    # branding install / reinstall / remove / purge test
 scripts/validation/integration-container.sh      # agent + real APT, real NGINX gateway, CLI, Command Center
+scripts/validation/plasma-session-container.sh   # systemd + polkit + Plasma 6 Wayland session (privileged container)
 python3 scripts/validation/validate_debian.py --debs build/debs
 scripts/build/checksums.sh generate build/debs
 ```

@@ -12,6 +12,18 @@ scripts/package/build-in-container.sh
 scripts/validation/test-packages-container.sh   # installs, verifies, removes in ubuntu:26.04
 ```
 
+## Option A2 — a Plasma 6 Wayland session in a container
+
+```bash
+scripts/validation/plasma-session-container.sh --screenshots build/plasma-shots
+```
+
+Boots systemd in a disposable **privileged** container (nothing is installed on the host,
+no host device is used), starts KWin Wayland with a virtual output and plasmashell as a
+test user, and checks the agent and polkit decisions, the theme and panel layout, the
+Command Center on Wayland (all modules, memory budgets), KCMs and Konsole. It cannot show
+interactive polkit prompts or use a GPU, so the VM checklist below is still required.
+
 ## Option B — NexusOS packages in an Ubuntu/Kubuntu 26.04 VM
 
 1. Create a VM (QEMU/KVM, virt-manager, GNOME Boxes) from the Kubuntu 26.04 ISO,
@@ -73,7 +85,7 @@ then boot it in QEMU with OVMF. Only install onto a virtual disk.
 - [ ] SDDM appears on Wayland; Plasma session starts
 - [ ] `echo $XDG_CONFIG_DIRS` starts with `/usr/share/nexusos/xdg`
 - [ ] Top panel: launcher with N icon, CPU/memory/network monitors, clock, tray
-- [ ] Bottom dock: file manager, browser, Konsole, Kate, Nexus Dev, Nexus Infra, System Monitor, Nexus AI, Settings
+- [ ] Bottom dock: Dolphin, browser, Konsole, Kate, Nexus Dev, Nexus Infra, System Monitor, Nexus AI, Command Center, Settings
 - [ ] Konsole opens with the Nexus profile (JetBrains Mono, Nexus palette); banner shows once
 - [ ] `nexus system health`, `nexus infra status`, `nexus ai status` behave as documented
 - [ ] Removing the packages restores Ubuntu identity and Breeze defaults

@@ -7,8 +7,10 @@ needs no browser, no web server, no Electron and no Node.js.
 
 Status legend: **Implemented** = code exists and is exercised by automated tests ·
 **Tested** = additionally verified end-to-end in a disposable Ubuntu 26.04 container
-(`scripts/validation/integration-container.sh`) · **Experimental** = implemented but not
-yet verified on a real Plasma session or real hardware · **Planned** · **Unsupported**.
+(`scripts/validation/integration-container.sh`) or in a real Plasma 6.6 Wayland session
+with systemd and polkit (`scripts/validation/plasma-session-container.sh`) ·
+**Experimental** = implemented but not yet verified on a real Plasma session or real
+hardware · **Planned** · **Unsupported**.
 
 ## Architecture
 
@@ -40,10 +42,10 @@ QML pages (modules/<id>/Page.qml)  ──slots/props──►  module controller
 
 | # | Module | Backend | Status |
 |---|--------|---------|--------|
-| 1 | Overview | `metrics`, `services`, `storage`, `ollama`, `apps` | Implemented, customisable widgets; real data only, missing sensors labelled |
+| 1 | Overview | `metrics`, `services`, `storage`, `ollama`, `apps` | **Tested** on Plasma Wayland (real systemd states); customisable widgets, missing sensors labelled |
 | 2 | Software Center | `packages` + agent `apt.*` | **Tested** (search 88k packages, plans, real install/remove via agent, progress, lock, cancel before dpkg) |
-| 3 | System Settings | `settings`, `services` + KDE KCMs | Implemented; KCM launching **Experimental** (needs Plasma) |
-| 4 | Terminal & SSH | `terminal`, `ssh.*` | Implemented; Konsole launch **Experimental** (needs Plasma); profile/config/credential logic tested |
+| 3 | System Settings | `settings`, `services` + KDE KCMs | **Tested** on Plasma 6.6: catalogue checked against `kcmshell6 --list`, KCMs open, missing ones name their package; service control refused without polkit authentication |
+| 4 | Terminal & SSH | `terminal`, `ssh.*` | **Tested**: local and SSH sessions open as Konsole tabs with the Nexus profile on Plasma; KDE Wallet storage and SFTP against a real server **Experimental** |
 | 5 | Containers | `docker`, `compose` | Implemented (Engine API mocked in tests; CLI against a live daemon) |
 | 6 | Nexus Applications | `apps.registry`, `apps.lifecycle` | Implemented; lifecycle tested with mocked Compose; real app installs **Experimental** |
 | 7 | Gateway | `gateway.*` + agent `gateway.*` | **Tested** with real NGINX (HTTPS, redirect, SSRF, rollback) |
@@ -67,7 +69,16 @@ secondary, danger, ghost), `NxTextField`, `NxTable`, `NxCard`, `NxPageHeader`
 (breadcrumb/title/actions), `NxStatusBadge` (colour + label), `NxBanner`, `NxEmptyState`,
 `NxErrorState`, `NxLoading`, `NxConfirmDialog` (shows exact command/plan; optional typed
 confirmation token), `NxTabBar`, `NxMetric`, `NxProgress`, `NxLogView`, `NxFormRow`.
-Toasts and the palette live in `Main.qml`.
+Toasts and the palette live in `Main.qml`, which also sets a complete Qt palette from the
+tokens so Basic-style controls (combo boxes, spin boxes, check boxes, menus, dialogs) never
+pick up the desktop's palette.
+
+### Platform theme
+
+`nexus-center` runs with Qt's `generic` platform theme by default: under Plasma the KDE
+platform theme costs ~93 MiB RSS (measured, see `docs/performance.md`) and the UI draws its
+own controls anyway. File pickers are then Qt Quick dialogs. For native KDE dialogs start it
+with `NEXUS_CENTER_PLATFORMTHEME=kde`, or `desktop` to keep the session's setting.
 
 ## Running
 
@@ -88,4 +99,5 @@ PYTHONPATH=command-center/backend:command-center/frontend python3 -m nexus_cente
 * Application web UIs open in the default browser (`embed: window`); embedded
   QtWebEngine views are planned and will load only on demand.
 * KCM pages open in `kcmshell6` windows rather than inside the Command Center.
+* File dialogs are not KDE dialogs by default (see *Platform theme*).
 * `qmllint` reports ~800 style warnings (mostly unqualified access in delegates); no errors.

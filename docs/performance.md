@@ -61,9 +61,32 @@ APT, `offscreen`, Docker and Ollama **not installed**, all 14 modules visited, 1
 | Threads | 4 |
 | Page loads | 7 – 68 ms |
 
+### Plasma 6.6 Wayland session in a container (2026-11-14)
+
+Same host. `scripts/validation/plasma-session-container.sh`: Ubuntu 26.04, systemd, Plasma 6.6,
+KWin Wayland (virtual output, **software** rendering, no GPU), packages installed with APT,
+`nexus-center` started from the session as user `nexus`. Single runs.
+
+| Metric | KDE platform theme | Nexus default (`generic`) | Budget |
+|--------|--------------------|---------------------------|--------|
+| Startup to window, plain launch | 494 ms | **412 – 438 ms** | ≤ 1.0 s ✔ |
+| Idle RSS, plain launch | 242.4 MiB ✘ | **149 – 155 MiB** | ≤ 180 MiB ✔ |
+| Idle CPU, plain launch (8 s) | 0.25 % | **0.12 %** | ≤ 0.5 % ✔ |
+| Threads, plain launch | 19 | 10 | — |
+| Idle RSS after all 14 modules | 255.9 MiB ✘ | **200 – 203 MiB** | ≤ 250 MiB ✔ |
+| QML warnings | 0 | 0 | 0 ✔ |
+
+The KDE platform theme plugin (`plasma-integration`) loads KF6 configuration, KIO and the
+Breeze style machinery into the process: about **93 MiB RSS and 9 threads** for a UI that
+draws every control itself. `xdgdesktopportal` measured the same as `kde` (it wraps it).
+`nexus-center` therefore sets `QT_QPA_PLATFORMTHEME=generic` by default. The trade-off is
+that file pickers (gateway certificate import, compose files, SFTP) are Qt Quick dialogs
+instead of KDE ones. Native dialogs: `NEXUS_CENTER_PLATFORMTHEME=kde nexus-center`
+(or `desktop` to keep whatever the session exports).
+
 ### Not yet measured
 
-* A real Plasma 6 Wayland session (GPU-accelerated Qt Quick) — run the benchmark in the VM.
+* GPU-accelerated Qt Quick on real hardware — run the benchmark in the VM or on a workstation.
 * The target Ryzen 9 9900X workstation.
 * Long-running sessions (memory growth over hours).
 
