@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operations Dashboard</title>
+<style>
+:root {
+  --bg: #0A1519; --bg-raise: #0E1C21; --panel: #12232A; --panel-2: #172C33; --line: #23404A; --line-soft: #1B333B;
+  --text: #E8F1F2; --text2: #9EB3B7; --text3: #6F878C;
+  --accent: #31C6BD; --copper: #C47750; --pos: #3DBE7A; --warn: #E0AE4A; --neg: #E0625A;
+  --c-cpu: #31C6BD; --c-mem: #3DBE7A; --c-gpu: #A38BF5; --c-disk: #E0AE4A; --c-vuln: #E0625A; --c-upd: #5AA9E6; --c-net: #3DBE7A; --c-mnt: #4FC3E0;
+  --chip-a: 0.16; --shadow: 0 14px 36px rgba(0,0,0,.5); --sel: #163E45;
+}
+:root[data-theme="light"] {
+  --bg: #EEF4F5; --bg-raise: #FFFFFF; --panel: #FFFFFF; --panel-2: #F5F9FA; --line: #D3E0E3; --line-soft: #E4EDEF;
+  --text: #0B171B; --text2: #4A6066; --text3: #7A8F94;
+  --accent: #1E8F88; --copper: #A85F3C; --pos: #25864F; --warn: #A87308; --neg: #B9423A;
+  --c-cpu: #1E8F88; --c-mem: #25864F; --c-gpu: #6E55D6; --c-disk: #A87308; --c-vuln: #B9423A; --c-upd: #2B7BC0; --c-net: #25864F; --c-mnt: #1B8FB0;
+  --chip-a: 0.12; --shadow: 0 14px 36px rgba(11,23,27,.16); --sel: #DDF0EE;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font: 13px/1.35 Inter, "Noto Sans", sans-serif; font-feature-settings: "tnum" 1;
+       overflow: hidden; -webkit-font-smoothing: antialiased; }
+svg { display: block; }
+.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ------------------------------------------------------------- title bar */
+.bar { height: 64px; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: var(--bg-raise); border-bottom: 1px solid var(--line); }
+.logo { display: flex; align-items: center; gap: 10px; width: 202px; }
+.logo b { font-size: 17px; font-weight: 700; letter-spacing: .02em; display: block; line-height: 1.1; }
+.logo small { color: var(--text2); font-size: 11px; }
+.vsep { width: 1px; height: 36px; background: var(--line); }
+.app-title b { font-size: 16px; font-weight: 600; display: block; }
+.app-title small { color: var(--text2); font-size: 12px; }
+.health { margin: 0 auto; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 8px; font-weight: 600;
+          color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); }
+.health i { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 22%, transparent); }
+.health span { color: var(--text2); font-weight: 500; }
+.tb { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: var(--text2); position: relative; }
+.badge { position: absolute; top: 3px; right: 2px; min-width: 16px; height: 16px; border-radius: 8px; background: var(--copper); color: #fff;
+         font-size: 10px; font-weight: 700; display: grid; place-items: center; padding: 0 4px; }
+.clock { text-align: right; color: var(--text2); font-size: 12px; line-height: 1.3; } .clock b { color: var(--text); font-weight: 600; display: block; font-size: 13px; }
+
+/* ------------------------------------------------------------- sidebar */
+.app { display: grid; grid-template-columns: 236px 1fr; height: calc(100vh - 64px); }
+.side { background: var(--bg-raise); border-right: 1px solid var(--line); padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+.nav { display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: 8px; color: var(--text2); font-weight: 500; }
+.nav .chev { margin-left: auto; width: 14px; height: 14px; color: var(--text3); }
+.nav.on { background: var(--sel); color: var(--text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent); }
+.nav.on .ico { color: var(--accent); }
+.sub { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px 0 22px; margin-left: 10px; border-left: 1px solid var(--line); color: var(--text2); font-size: 12.5px; }
+.sub .ico { width: 16px; height: 16px; }
+.sub.on { color: var(--accent); font-weight: 600; border-left: 2px solid var(--accent); padding-left: 21px; }
+.cnt { margin-left: auto; min-width: 20px; height: 20px; border-radius: 10px; background: var(--neg); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.cnt + .chev { margin-left: 8px; }
+.user { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: var(--bg); background: var(--accent); }
+.user b { display: block; font-size: 13px; } .user small { color: var(--text2); font-size: 11px; }
+
+/* ------------------------------------------------------------- content */
+.content { padding: 20px 24px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; min-width: 0; overflow: hidden; position: relative; }
+.ph { display: flex; align-items: center; gap: 10px; }
+.ph h1 { font-size: 24px; font-weight: 650; letter-spacing: -.01em; line-height: 1.15; }
+.ph p { color: var(--text2); margin-top: 3px; }
+.ph .grow { flex: 1; }
+.ctl { height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font: inherit; font-weight: 500;
+       display: inline-flex; align-items: center; gap: 8px; }
+.ctl .ico { width: 16px; height: 16px; color: var(--text2); }
+.ctl.sq { width: 34px; padding: 0; justify-content: center; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-width: 0; display: flex; flex-direction: column; }
+.chart { display: grid !important; }
+.ph2 { display: flex; align-items: center; gap: 9px; padding: 12px 14px 8px; font-weight: 600; font-size: 14px; }
+.ph2 .ico { color: var(--text2); }
+.ph2 .muted { color: var(--text2); font-weight: 400; }
+.ph2 .go { margin-left: auto; color: var(--text3); width: 16px; height: 16px; }
+.ph2 a { margin-left: auto; color: var(--accent); font-weight: 500; font-size: 12px; }
+
+/* KPI tiles */
+.top { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 1.2fr; grid-template-rows: 112px 112px; gap: 12px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid;
+        grid-template-columns: 44px 1fr; column-gap: 12px; position: relative; cursor: pointer; min-width: 0; }
+.tile.hover { border-color: color-mix(in srgb, var(--k) 70%, var(--line)); background: var(--panel-2); }
+.chip { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; color: var(--k);
+        background: color-mix(in srgb, var(--k) calc(var(--chip-a) * 100%), transparent); border: 1px solid color-mix(in srgb, var(--k) 30%, transparent); }
+.chip .ico { width: 22px; height: 22px; }
+.tb-body { display: grid; grid-template-rows: 18px 1fr 18px; min-width: 0; }
+.tl { display: flex; align-items: center; color: var(--text2); font-weight: 500; font-size: 12.5px; }
+.tl .go { margin-left: auto; width: 15px; height: 15px; color: var(--text3); }
+.tv { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tv b { font-size: 26px; font-weight: 650; letter-spacing: -.01em; line-height: 1; }
+.tv b small { font-size: 15px; font-weight: 600; color: var(--text2); }
+.tv .spark { flex: 1; height: 26px; min-width: 40px; }
+.tf { color: var(--text2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 6px; align-items: center; }
+.k-cpu { --k: var(--c-cpu); } .k-mem { --k: var(--c-mem); } .k-gpu { --k: var(--c-gpu); } .k-disk { --k: var(--c-disk); }
+.k-vuln { --k: var(--c-vuln); } .k-upd { --k: var(--c-upd); } .k-net { --k: var(--c-net); } .k-mnt { --k: var(--c-mnt); }
+.pos { color: var(--pos); } .warn { color: var(--warn); } .neg { color: var(--neg); } .acc { color: var(--accent); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.d-pos { background: var(--pos); } .d-warn { background: var(--warn); } .d-neg { background: var(--neg); } .d-info { background: var(--c-upd); }
+
+/* attention */
+.att { grid-row: span 2; display: flex; flex-direction: column; }
+.att-h { margin: 0 12px; padding: 10px 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 14px;
+         background: color-mix(in srgb, var(--neg) 16%, transparent); border: 1px solid color-mix(in srgb, var(--neg) 35%, transparent); }
+.att-h .ico { color: var(--warn); width: 20px; height: 20px; }
+.att-row { display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 18px; font-size: 13px; }
+.att-row .go { margin-left: auto; width: 15px; height: 15px; color: var(--text3); }
+.att-row small { color: var(--text2); margin-left: 4px; }
+.btn-wide { margin: auto 12px 12px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600;
+            background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+
+/* middle + bottom rows */
+.mid { display: grid; grid-template-columns: 1.55fr 1fr 1fr; gap: 12px; min-height: 0; }
+.stack { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; min-height: 0; }
+.bot { display: grid; grid-template-columns: 1.55fr 1fr 1fr; gap: 12px; }
+.chart { display: grid; grid-template-rows: auto 1fr; }
+.tabs { margin-left: auto; display: flex; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+.tabs span { padding: 4px 12px; border-radius: 6px; color: var(--text2); font-weight: 500; font-size: 12px; }
+.tabs span.on { background: var(--sel); color: var(--text); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+.kv { padding: 2px 14px 12px; display: flex; flex-direction: column; justify-content: space-evenly; flex: 1; }
+.kv .r { display: flex; align-items: center; gap: 9px; height: 26px; }
+.kv .r .v { margin-left: auto; font-weight: 600; }
+.kv .r .ico { width: 16px; height: 16px; color: var(--text2); }
+.st { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.ok { width: 15px; height: 15px; }
+.act { padding: 0 14px 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.act .r { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; height: 37px; border-top: 1px solid var(--line-soft); }
+.act .r:first-child { border-top: 0; }
+.act .r small { color: var(--text2); font-size: 11.5px; }
+.sar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 2px 14px 14px; }
+.sar div { border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px 4px; background: var(--panel-2); }
+.sar span { color: var(--text2); font-size: 12px; } .sar b { display: block; font-size: 18px; font-weight: 650; margin: 1px 0 2px; }
+.sar svg { height: 30px; width: 100%; }
+
+/* hover card + detail drawer */
+.pop { position: absolute; z-index: 5; width: 330px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 14px; display: grid; gap: 10px; }
+.pop::before { content: ""; position: absolute; top: -6px; left: 30px; width: 10px; height: 10px; background: var(--panel-2); border-left: 1px solid var(--line); border-top: 1px solid var(--line); transform: rotate(45deg); }
+.pop h3 { font-size: 13px; display: flex; justify-content: space-between; } .pop h3 span { color: var(--text2); font-weight: 400; font-size: 12px; }
+.cores { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; align-items: end; height: 36px; }
+.cores i { display: block; background: var(--c-cpu); border-radius: 2px 2px 0 0; }
+.pkv { display: grid; grid-template-columns: 1fr auto; row-gap: 4px; font-size: 12px; } .pkv dt { color: var(--text2); } .pkv dd { text-align: right; }
+.pop .hint { color: var(--text2); font-size: 11px; border-top: 1px solid var(--line); padding-top: 8px; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="logo">
+    <svg width="34" height="34" viewBox="0 0 64 64"><path d="M32 4 56 18v28L32 60 8 46V18z" fill="none" stroke="var(--accent)" stroke-width="4"/><path d="M21 44V20h5l12 15V20h5v24h-5L26 29v15z" fill="var(--accent)"/><circle cx="52" cy="12" r="4.5" fill="var(--copper)"/></svg>
+    <div><b>NexusOS</b><small>Engineering Edition</small></div>
+  </div>
+  <div class="vsep"></div>
+  <div class="app-title"><b>Command Center</b><small>System management · Infrastructure · Personal cloud</small></div>
+  <div class="health"><i></i>Operational<span>· 3 issues</span></div>
+  <div class="tb"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
+  <div class="tb"><svg class="ico" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="badge">3</span></div>
+  <div class="tb"><svg class="ico" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></div>
+  <div class="clock"><b>14:28</b>Sat 14 Nov 2026</div>
+</header>
+
+<div class="app">
+  <aside class="side" id="side"></aside>
+  <main class="content" id="content">
+    <div class="ph">
+      <div class="grow"><h1>Operations Dashboard</h1><p>nexus-ws · NexusOS Engineering Edition 1.0 · up 3 d 4 h</p></div>
+      <button class="ctl"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Live · 5 s<svg class="ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button class="ctl sq" title="Refresh"><svg class="ico" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+      <button class="ctl"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Customize</button>
+    </div>
+
+    <section class="top" id="top"></section>
+    <section class="mid" id="mid"></section>
+    <section class="bot" id="bot"></section>
+  </main>
+</div>
+
+<script>
+const P = new URLSearchParams(location.search);
+if (P.get("theme") === "light") document.documentElement.dataset.theme = "light";
+const state = P.get("state") || "default";
+
+const I = {
+  home: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>', grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  bars: '<path d="M4 20V10M9 20V4M14 20v-7M19 20v-11"/>', alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.5"/>',
+  sys: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/>', pkg: '<path d="M12 3 3 7.5v9L12 21l9-4.5v-9z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/>',
+  shield: '<path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/>', disk: '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  net: '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
+  infra: '<path d="M12 3 3 7.5v9L12 21l9-4.5v-9z"/><path d="M12 12 3 7.5M12 12l9-4.5M12 12v9"/>', term: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/>',
+  ai: '<rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 7V4M9 12h.01M15 12h.01M9 16h6"/>', hist: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 3"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  chev: '<path d="m6 9 6 6 6-6"/>', up: '<path d="m6 15 6-6 6 6"/>', go: '<path d="m9 6 6 6-6 6"/>',
+  cpu: '<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>',
+  mem: '<rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 7v10M11 7v10M15 7v10M5 20v-3M19 20v-3"/>',
+  gpu: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="15" cy="12" r="3"/><path d="M6 10h4M6 14h4M5 18v2M10 18v2"/>',
+  upd: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/>', vuln: '<path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="M12 8v5M12 16v.5"/>',
+  mnt: '<path d="M4 6h16v5H4zM4 13h16v5H4z"/><path d="M7 8.5h.01M7 15.5h.01"/>', svc: '<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/>',
+  docker: '<path d="M3 12h16c1 0 2-.5 2.5-1.5M5 12c0 4 3 7 8 7 4 0 7-2.5 8-6"/><path d="M6 9h3v3H6zM9 9h3v3H9zM12 9h3v3h-3zM9 6h3v3H9z"/>',
+  vm: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4M7 8h6"/>', apps: '<path d="M12 3 2 8l10 5 10-5z"/><path d="m2 13 10 5 10-5"/>',
+  doc: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h5"/>', backup: '<path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>', cert: '<circle cx="12" cy="9" r="5"/><path d="m9 13.5-2 7.5 5-3 5 3-2-7.5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', check: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  x: '<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>', warnc: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  folder: '<path d="M3 6h7l2 2h9v11H3z"/>', gw: '<path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="9"/>',
+};
+const ico = (k, cls = "ico", style = "") => `<svg class="${cls}" viewBox="0 0 24 24" style="${style}">${I[k]}</svg>`;
+
+// deterministic series (sample data)
+function series(n, base, amp, seed) { let s = seed, out = []; for (let i = 0; i < n; i++) { s = (s * 9301 + 49297) % 233280; out.push(Math.max(1, base + amp * Math.sin(i / 2.3 + seed) + amp * ((s / 233280) - .5) * 1.4)); } return out; }
+function spark(vals, color, h = 26, w = 120, fill = true) {
+  const max = Math.max(...vals) * 1.12, min = Math.min(...vals) * 0.8, st = w / (vals.length - 1);
+  const pts = vals.map((v, i) => `${(i * st).toFixed(1)},${(h - ((v - min) / (max - min)) * h).toFixed(1)}`).join(" ");
+  const id = "g" + Math.random().toString(36).slice(2, 8);
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".35"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>${fill ? `<polygon points="0,${h} ${pts} ${w},${h}" fill="url(#${id})"/>` : ""}<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+}
+
+/* ---------------- sidebar: groups map onto the 14 existing modules */
+document.getElementById("side").innerHTML = `
+  <div class="nav on">${ico("home")}Overview${ico("up", "ico chev")}</div>
+  <div class="sub on">${ico("grid")}Dashboard</div>
+  <div class="sub">${ico("bars")}Historical health</div>
+  <div class="sub">${ico("alert")}Attention</div>
+  <div class="nav">${ico("pkg")}Software${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("sys")}System${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("shield")}Security<span class="cnt">2</span>${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("disk")}Storage &amp; Files${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("net")}Network &amp; Gateway${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("infra")}Infrastructure${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("term")}Terminal &amp; SSH${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("ai")}Local AI${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("hist")}Activity${ico("chev", "ico chev")}</div>
+  <div class="nav">${ico("gear")}Settings${ico("chev", "ico chev")}</div>
+  <div class="user"><div class="avatar">N</div><div><b>nexus</b><small>Administrator (sudo)</small></div>${ico("chev", "ico chev", "margin-left:auto;width:14px;height:14px;color:var(--text3)")}</div>`;
+
+/* ---------------- KPI tiles */
+const css = getComputedStyle(document.documentElement);
+const col = (v) => css.getPropertyValue(v).trim();
+const tiles = [
+  { id: "cpu", k: "cpu", icon: "cpu", label: "CPU", value: "28<small>%</small>", spark: series(24, 28, 9, 3), foot: "4.4 GHz · 12 cores" },
+  { id: "mem", k: "mem", icon: "mem", label: "Memory", value: "62<small>%</small>", spark: series(24, 62, 5, 7), foot: "19.8 / 32 GiB" },
+  { id: "gpu", k: "gpu", icon: "gpu", label: "GPU", value: "18<small>%</small>", spark: series(24, 18, 8, 11), foot: "Radeon 610M · 41 °C" },
+  { id: "disk", k: "disk", icon: "disk", label: "Filesystem /", value: "54<small>%</small>", spark: series(24, 54, 1.5, 5), foot: "512 / 953 GB · 441 GB free" },
+  { id: "vuln", k: "vuln", icon: "vuln", label: "Vulnerabilities", value: "6", go: 1, foot: `<span class="neg">1 critical</span>· 2 high · 3 medium` },
+  { id: "upd", k: "upd", icon: "upd", label: "Updates", value: "12", go: 1, foot: `<span class="warn">4 security</span>· 8 regular` },
+  { id: "net", k: "net", icon: "net", label: "Network", value: `<span class="pos" style="font-size:20px">Online</span>`, go: 1, foot: "↓ 85.4 Mb/s · ↑ 12.7 Mb/s" },
+  { id: "mnt", k: "mnt", icon: "mnt", label: "Mount points", value: "4", go: 1, foot: `<span class="warn">/mnt/data 91 % used</span>` },
+];
+const topRow = document.getElementById("top");
+topRow.innerHTML = tiles.slice(0, 4).map(tile).join("") + attention() + tiles.slice(4).map(tile).join("");
+function tile(t) {
+  return `<div class="tile k-${t.k}${state === "hover" && t.id === "cpu" ? " hover" : ""}" id="t-${t.id}">
+    <div class="chip">${ico(t.icon)}</div>
+    <div class="tb-body"><div class="tl">${t.label}${t.go ? ico("go", "ico go") : ""}</div>
+      <div class="tv"><b>${t.value}</b>${t.spark ? spark(t.spark, col("--c-" + t.k)) : ""}</div>
+      <div class="tf">${t.foot}</div></div></div>`;
+}
+function attention() {
+  return `<div class="panel att">
+    <div class="ph2">System attention${ico("up", "ico go")}</div>
+    <div class="att-h">${ico("alert")}3 issues need attention</div>
+    <div style="padding-top:6px">
+      <div class="att-row"><span class="dot d-neg"></span>1 critical vulnerability<small>openssl</small>${ico("go", "ico go")}</div>
+      <div class="att-row"><span class="dot d-warn"></span>/mnt/data 91 % used<small>84 GB free</small>${ico("go", "ico go")}</div>
+      <div class="att-row"><span class="dot d-warn"></span>Backup overdue<small>2 days</small>${ico("go", "ico go")}</div>
+    </div>
+    <div class="btn-wide">View all issues ${ico("go", "ico", "width:14px;height:14px")}</div></div>`;
+}
+
+/* ---------------- resource chart (24 h, sar data) */
+function bigChart(W, H) {
+  const L = 40, B = 22, T = 10, vals = series(31, 24, 9, 2); vals[6] = 54; vals[5] = 41; vals[7] = 38;
+  const x = (i) => L + (i * (W - L - 8)) / (vals.length - 1), y = (v) => T + (H - T - B) * (1 - v / 100);
+  const pts = vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const c = col("--c-cpu"), grid = [0, 20, 40, 60, 80, 100].map(v => `<line x1="${L}" x2="${W - 8}" y1="${y(v)}" y2="${y(v)}" stroke="${col("--line-soft")}"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" fill="${col("--text3")}" font-size="11">${v}%</text>`).join("");
+  const xl = ["15:00", "18:00", "21:00", "00:00", "03:00", "06:00", "09:00", "12:00", "14:28"].map((t, i, a) => `<text x="${L + i * (W - L - 8) / (a.length - 1)}" y="${H - 4}" text-anchor="${i === a.length - 1 ? "end" : i === 0 ? "start" : "middle"}" fill="${col("--text3")}" font-size="11">${t}</text>`).join("");
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="bg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".38"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>${grid}
+    <polygon points="${x(0)},${y(0)} ${pts} ${x(vals.length - 1)},${y(0)}" fill="url(#bg1)"/>
+    <polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/>
+    ${vals.map((v, i) => i % 2 === 0 ? `<circle cx="${x(i)}" cy="${y(v)}" r="2.6" fill="${col("--panel")}" stroke="${c}" stroke-width="1.6"/>` : "").join("")}
+    <line x1="${x(6)}" x2="${x(6)}" y1="${T}" y2="${y(0)}" stroke="${c}" stroke-dasharray="3 3" opacity=".6"/>
+    <g transform="translate(${x(6) + 8},${y(54) - 6})"><rect width="118" height="38" rx="6" fill="${col("--panel-2")}" stroke="${col("--line")}"/><text x="10" y="16" fill="${col("--text2")}" font-size="11">Yesterday 18:45</text><text x="10" y="31" fill="${col("--text")}" font-size="12" font-weight="600">CPU 54 % · peak</text></g>
+    ${xl}</svg>`;
+}
+const S = (k, cls) => ico(k, "ico ok", `color:var(--${cls})`);
+document.getElementById("mid").innerHTML = `
+  <div class="panel chart">
+    <div class="ph2">${ico("bars")}Resource usage <span class="muted">last 24 hours</span>
+      <div class="tabs"><span class="on">CPU</span><span>Memory</span><span>Disk I/O</span><span>Network</span></div></div>
+    <div id="chartbox" style="padding:0 12px 10px;min-height:0"></div>
+  </div>
+  <div class="stack">
+    <div class="panel"><div class="ph2">${ico("svc")}System services${ico("go", "ico go")}</div>
+      <div class="kv"><div class="r">${S("check", "pos")}Running<span class="v">148</span></div>
+        <div class="r">${S("x", "neg")}Failed<span class="v neg">1 · nginx</span></div>
+        <div class="r">${S("warnc", "warn")}Degraded<span class="v warn">2</span></div></div></div>
+    <div class="panel"><div class="ph2">${ico("infra")}Infrastructure${ico("go", "ico go")}</div>
+      <div class="kv"><div class="r">${ico("docker")}Containers<span class="v st">${S("check", "pos")}8 / 8 running</span></div>
+        <div class="r">${ico("vm")}Virtual machines<span class="v st">${S("check", "pos")}3 running</span></div>
+        <div class="r">${ico("apps")}Nexus apps<span class="v st">${S("check", "pos")}2 healthy</span></div></div></div>
+  </div>
+  <div class="panel"><div class="ph2">${ico("doc")}Recent activity<a>View all</a></div>
+    <div class="act">
+      <div class="r">${S("check", "pos")}<span>Packages updated (4)</span><small>10 min ago</small></div>
+      <div class="r">${S("info", "c-upd")}<span>VM “dev-box” started</span><small>25 min ago</small></div>
+      <div class="r">${ico("alert", "ico ok", "color:var(--warn)")}<span>High disk usage on /mnt/data</span><small>1 h ago</small></div>
+      <div class="r">${S("info", "c-upd")}<span>Route app.lab applied (gateway)</span><small>2 h ago</small></div>
+      <div class="r">${S("backup", "accent")}<span>Vulnerability scan completed</span><small>3 h ago</small></div>
+      <div class="r">${S("check", "pos")}<span>SSH session to pve-01 closed</span><small>4 h ago</small></div>
+      <div class="r">${S("info", "c-upd")}<span>Model llama3.2:3b downloaded</span><small>5 h ago</small></div>
+      <div class="r">${S("check", "pos")}<span>Certificate app.lab renewed</span><small>6 h ago</small></div>
+    </div></div>`;
+
+document.getElementById("bot").innerHTML = `
+  <div class="panel"><div class="ph2">${ico("bars")}Historical health <span class="muted">sar</span>
+      <div class="ctl" style="margin-left:auto;height:28px;font-size:12px">Last 7 days${ico("chev")}</div></div>
+    <div class="sar">
+      <div><span>CPU avg</span><b>32 %</b>${spark(series(20, 32, 8, 4), col("--c-cpu"), 30, 140)}</div>
+      <div><span>Memory avg</span><b>58 %</b>${spark(series(20, 58, 5, 8), col("--c-upd"), 30, 140)}</div>
+      <div><span>Disk I/O</span><b>48 MB/s</b>${spark(series(20, 48, 14, 6), col("--c-gpu"), 30, 140)}</div>
+      <div><span>Network</span><b>120 Mb/s</b>${spark(series(20, 120, 40, 9), col("--c-disk"), 30, 140)}</div>
+    </div></div>
+  <div class="panel"><div class="ph2">${ico("backup")}Backups &amp; protection${ico("go", "ico go")}</div>
+    <div class="kv"><div class="r">${S("warnc", "warn")}Last backup<span class="v">12 Nov 03:00</span></div>
+      <div class="r">${ico("cal")}Next backup<span class="v">15 Nov 03:00</span></div>
+      <div class="r">${ico("shield")}Status<span class="v warn">Overdue · 2 days</span></div></div></div>
+  <div class="panel"><div class="ph2">${ico("cert")}Certificates <span class="muted">gateway</span>${ico("go", "ico go")}</div>
+    <div class="kv"><div class="r">${S("check", "pos")}Valid<span class="v">4</span></div>
+      <div class="r">${ico("alert", "ico ok", "color:var(--warn)")}Expiring (≤ 30 days)<span class="v warn">1</span></div>
+      <div class="r">${S("x", "text3")}Expired<span class="v">0</span></div></div></div>`;
+
+{ const box = document.getElementById("chartbox"), r = box.getBoundingClientRect();
+  box.innerHTML = bigChart(Math.floor(r.width - 24), Math.floor(r.height - 10)); }
+if (state === "hover") {
+  const t = document.getElementById("t-cpu"), c = document.getElementById("content");
+  const r = t.getBoundingClientRect(), m = c.getBoundingClientRect();
+  const loads = [34, 12, 48, 22, 9, 27, 61, 18, 15, 30, 8, 20];
+  c.insertAdjacentHTML("beforeend", `<div class="pop" style="left:${r.left - m.left}px;top:${r.bottom - m.top + 10}px">
+    <h3>CPU <span>AMD Ryzen 9 9900X · 12 C / 24 T</span></h3>
+    <div class="cores">${loads.map(v => `<i style="height:${Math.max(8, v)}%"></i>`).join("")}</div>
+    <dl class="pkv"><dt>Load average</dt><dd>1.84 · 1.52 · 1.20</dd><dt>Frequency</dt><dd>4.4 GHz</dd><dt>Package temperature</dt><dd>58 °C</dd><dt>Busiest process</dt><dd>plasmashell · 6.2 %</dd></dl>
+    <div class="hint">Click for history, per-core load and processes</div></div>`);
+}
+</script>
+</body>
+</html>
