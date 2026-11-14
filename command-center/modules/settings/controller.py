@@ -11,7 +11,7 @@ class Controller(ModuleController):
     def __init__(self, tasks, app=None) -> None:
         super().__init__(tasks, app)
         categories: dict[str, list] = {}
-        for entry in settings.CATALOG:
+        for entry in settings.catalog():
             categories.setdefault(entry.category, []).append(entry)
         self.set(categories=[{"name": k, "entries": v} for k, v in categories.items()], units=[], logs="", timezones=[])
 

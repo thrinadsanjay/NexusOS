@@ -44,8 +44,9 @@ Item {
                                     model: modelData.entries
                                     RowLayout {
                                         required property var modelData
-                                        Text { text: modelData.title; color: Theme.c.text; font.family: Theme.fontFamily; Layout.fillWidth: true }
-                                        NxButton { text: modelData.kcm ? "Open" : "Show"; variant: "ghost"
+                                        Text { text: modelData.title; color: modelData.available ? Theme.c.text : Theme.c.textSecondary; font.family: Theme.fontFamily; Layout.fillWidth: true; elide: Text.ElideRight }
+                                        Text { visible: !modelData.available; text: "needs " + (modelData.package || ""); color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall }
+                                        NxButton { text: modelData.kcm ? "Open" : "Show"; variant: "ghost"; enabled: !!modelData.available
                                             onClicked: modelData.kcm ? controller.openKcm(modelData.kcm) : (tabs.currentIndex = modelData.native === "services" ? 2 : 1) }
                                     }
                                 }

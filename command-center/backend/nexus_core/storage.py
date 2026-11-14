@@ -10,6 +10,7 @@ UDisks2/polkit administrator authorization.
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Literal
@@ -159,10 +160,13 @@ def usage() -> list[Usage]:
         ],
         timeout=15,
     )
-    out = []
+    out: list[Usage] = []
+    seen: set[str] = set()
     for line in result.stdout.splitlines()[1:]:
         p = line.split()
-        if len(p) == 6 and p[3].isdigit():
+        # Skip bind-mounted files (/etc/hosts in containers) and repeated mount points.
+        if len(p) == 6 and p[3].isdigit() and p[0] not in seen and os.path.isdir(p[0]):
+            seen.add(p[0])
             out.append(Usage(mount=p[0], source=p[1], fstype=p[2], size=int(p[3]), used=int(p[4]), available=int(p[5])))
     return out
 

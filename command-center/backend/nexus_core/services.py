@@ -75,13 +75,14 @@ def list_units(kind: str = "service") -> list[Unit]:
 def is_active(unit: str) -> str:
     """Return systemd's ActiveState (``active``, ``inactive``, ``failed``…) or ``not-found``/``unknown``."""
     validation.unit_name(unit)
-    result = runner.run(["systemctl", "show", unit, "--property=ActiveState,LoadState", "--value"], timeout=5)
+    result = runner.run(["systemctl", "show", unit, "--property=ActiveState,LoadState"], timeout=5)
     if not result.found:
         return "unknown"
-    lines = result.stdout.strip().splitlines()
-    if len(lines) == 2 and lines[1] == "not-found":
+    # Parse key=value: systemctl prints properties in its own order, not the order requested.
+    props = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
+    if props.get("LoadState") == "not-found":
         return "not-found"
-    return lines[0] if lines else "unknown"
+    return props.get("ActiveState") or "unknown"
 
 
 def control(unit: str, action: Action) -> runner.CommandResult:

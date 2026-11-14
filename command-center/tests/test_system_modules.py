@@ -338,3 +338,63 @@ def test_metrics_without_sensors(tmp_path, monkeypatch):
     monkeypatch.setattr(metrics, "SYS", tmp_path)
     temps, note = metrics.temperatures()
     assert temps == [] and "no temperature sensors" in note
+
+
+# ---- regressions found on a real Plasma 6.6 / systemd 259 session -----------------------------
+
+
+@pytest.mark.parametrize(
+    ("stdout", "expected"),
+    [
+        ("LoadState=loaded\nActiveState=active\n", "active"),  # systemd's own order
+        ("ActiveState=failed\nLoadState=loaded\n", "failed"),
+        ("LoadState=not-found\nActiveState=inactive\n", "not-found"),
+        ("", "unknown"),
+    ],
+)
+def test_service_state_parsing_is_order_independent(monkeypatch, stdout, expected):
+    monkeypatch.setattr(
+        runner, "run", lambda argv, timeout=0, env=None: runner.CommandResult(tuple(argv), 0, stdout, "")
+    )
+    assert services.is_active("nginx.service") == expected
+
+
+def test_disk_usage_skips_file_bind_mounts_and_duplicates(monkeypatch, tmp_path):
+    out = (
+        "Mounted on Filesystem Type 1B-blocks Used Avail\n"
+        f"{tmp_path} /dev/sda1 ext4 100 40 60\n"
+        "/etc/hosts /dev/sda1 ext4 100 40 60\n"
+        f"{tmp_path} /dev/sda1 ext4 100 40 60\n"
+    )
+    monkeypatch.setattr(runner, "run", lambda argv, timeout=0, env=None: runner.CommandResult(tuple(argv), 0, out, ""))
+    assert [u.mount for u in storage.usage()] == [str(tmp_path)]
+
+
+def test_places_do_not_repeat_home(monkeypatch, tmp_path):
+    from nexus_core import files
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    xbel = tmp_path / ".local" / "share" / "user-places.xbel"
+    xbel.parent.mkdir(parents=True)
+    xbel.write_text(
+        '<?xml version="1.0"?><xbel>'
+        f'<bookmark href="file://{tmp_path}/"><title>Home</title></bookmark>'
+        f'<bookmark href="file://{tmp_path}/Projects"><title>Projects</title></bookmark>'
+        "</xbel>"
+    )
+    assert [p.title for p in files.places()] == ["Home", "Projects"]
+
+
+def test_settings_catalog_marks_missing_kcms(monkeypatch):
+    monkeypatch.setattr(settings, "installed_kcms", lambda: {"kcm_colors", "kcm_users"})
+    entries = {e.kcm: e for e in settings.catalog() if e.kcm}
+    assert entries["kcm_colors"].available
+    assert not entries["kcm_kscreen"].available and entries["kcm_kscreen"].package == "kscreen"
+    from nexus_core.errors import DependencyMissingError
+
+    with pytest.raises(DependencyMissingError) as exc:
+        settings.open_kcm("kcm_bluetooth")
+    assert "bluedevil" in (exc.value.hint or "")
+    # Without any Plasma installed (CI) nothing is marked missing.
+    monkeypatch.setattr(settings, "installed_kcms", set)
+    assert all(e.available for e in settings.catalog())

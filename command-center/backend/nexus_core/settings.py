@@ -9,6 +9,7 @@ Hostname, time zone, NTP and locale use hostnamed/timedated/localed, which ask p
 from __future__ import annotations
 
 import grp
+import os
 import pwd
 import subprocess
 from pathlib import Path
@@ -26,9 +27,12 @@ class SettingsEntry(BaseModel):
     keywords: list[str]
     kcm: str | None = None  # KDE module to open
     native: str | None = None  # Command Center native page/section
+    package: str | None = None  # Ubuntu package that ships the KCM when not in the base desktop
+    available: bool = True  # set by catalog(): the KCM is installed on this system
 
 
-# Every KCM listed here was verified to exist in Ubuntu 26.04 Plasma 6.6 packages.
+# Every KCM listed here was verified to exist in Ubuntu 26.04 Plasma 6.6 packages; entries with
+# ``package`` are not pulled in by kde-plasma-desktop alone (nexusos-desktop recommends them).
 CATALOG: list[SettingsEntry] = [
     SettingsEntry(
         id="theme",
@@ -67,6 +71,7 @@ CATALOG: list[SettingsEntry] = [
         title="Display, resolution and scaling",
         keywords=["display", "monitor", "resolution", "scale"],
         kcm="kcm_kscreen",
+        package="kscreen",
     ),
     SettingsEntry(
         id="nightlight",
@@ -88,6 +93,7 @@ CATALOG: list[SettingsEntry] = [
         title="Screen lock",
         keywords=["lock", "screen saver"],
         kcm="kcm_screenlocker",
+        package="kde-config-screenlocker",
     ),
     SettingsEntry(
         id="login",
@@ -95,6 +101,7 @@ CATALOG: list[SettingsEntry] = [
         title="Login screen (SDDM)",
         keywords=["login", "sddm", "autologin"],
         kcm="kcm_sddm",
+        package="kde-config-sddm",
     ),
     SettingsEntry(
         id="hostname", category="System", title="Hostname", keywords=["hostname", "computer name"], native="hostname"
@@ -129,6 +136,7 @@ CATALOG: list[SettingsEntry] = [
         title="Power management",
         keywords=["power", "battery", "suspend"],
         kcm="kcm_powerdevilprofilesconfig",
+        package="powerdevil",
     ),
     SettingsEntry(
         id="about",
@@ -136,6 +144,7 @@ CATALOG: list[SettingsEntry] = [
         title="System information",
         keywords=["about", "version", "hardware"],
         kcm="kcm_about-distro",
+        package="kinfocenter",
     ),
     SettingsEntry(
         id="audio",
@@ -149,9 +158,21 @@ CATALOG: list[SettingsEntry] = [
     ),
     SettingsEntry(id="mouse", category="Hardware", title="Mouse", keywords=["mouse", "pointer"], kcm="kcm_mouse"),
     SettingsEntry(id="touchpad", category="Hardware", title="Touchpad", keywords=["touchpad"], kcm="kcm_touchpad"),
-    SettingsEntry(id="bluetooth", category="Hardware", title="Bluetooth", keywords=["bluetooth"], kcm="kcm_bluetooth"),
     SettingsEntry(
-        id="printers", category="Hardware", title="Printers", keywords=["printer", "print"], kcm="kcm_printer_manager"
+        id="bluetooth",
+        category="Hardware",
+        title="Bluetooth",
+        keywords=["bluetooth"],
+        kcm="kcm_bluetooth",
+        package="bluedevil",
+    ),
+    SettingsEntry(
+        id="printers",
+        category="Hardware",
+        title="Printers",
+        keywords=["printer", "print"],
+        kcm="kcm_printer_manager",
+        package="print-manager",
     ),
     SettingsEntry(
         id="notifications-kde",
@@ -163,9 +184,47 @@ CATALOG: list[SettingsEntry] = [
 ]
 
 
+KCM_PLUGIN_DIRS = ("plasma/kcms/systemsettings", "plasma/kcms/systemsettings_qwidgets", "plasma/kcms")
+
+
+def _qt_plugin_roots() -> list[Path]:
+    roots = [Path(p) for p in os.environ.get("QT_PLUGIN_PATH", "").split(":") if p]
+    roots += [*sorted(Path("/usr/lib").glob("*-linux-gnu*/qt6/plugins")), Path("/usr/lib/qt6/plugins")]
+    return roots
+
+
+def installed_kcms() -> set[str]:
+    """Names of the KCM plugins installed on this system (plugin files, not a kcmshell6 call)."""
+    found: set[str] = set()
+    for root in _qt_plugin_roots():
+        for sub in KCM_PLUGIN_DIRS:
+            d = root / sub
+            if d.is_dir():
+                found.update(f.stem for f in d.glob("kcm_*.so"))
+    apps = Path("/usr/share/applications")
+    if apps.is_dir():
+        found.update(f.stem for f in apps.glob("kcm_*.desktop"))
+    return found
+
+
+def catalog() -> list[SettingsEntry]:
+    """The catalogue with ``available`` resolved against the installed KCMs."""
+    installed = installed_kcms()
+    if not installed:  # no Plasma (CI, containers): report entries as listed, open_kcm will explain
+        return [e.model_copy() for e in CATALOG]
+    return [e.model_copy(update={"available": e.kcm is None or e.kcm in installed}) for e in CATALOG]
+
+
 def open_kcm(kcm: str) -> None:
-    if not any(e.kcm == kcm for e in CATALOG):
+    entry = next((e for e in CATALOG if e.kcm == kcm), None)
+    if entry is None:
         raise ValidationError(f"unknown settings module {kcm!r}")
+    installed = installed_kcms()
+    if installed and kcm not in installed:
+        pkg = entry.package or "systemsettings"
+        raise DependencyMissingError(
+            f"{entry.title} settings are not installed", hint=f"Install '{pkg}' from the Software Center"
+        )
     for launcher in (["kcmshell6", kcm], ["systemsettings", kcm]):
         if runner.which(launcher[0]):
             subprocess.Popen(

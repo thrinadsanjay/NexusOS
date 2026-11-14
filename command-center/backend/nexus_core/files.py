@@ -12,6 +12,7 @@ import stat
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from urllib.parse import unquote
 
 from pydantic import BaseModel
 
@@ -67,14 +68,25 @@ def places() -> list[Place]:
     """Bookmarks shared with Dolphin (~/.local/share/user-places.xbel)."""
     xbel = Path.home() / ".local" / "share" / "user-places.xbel"
     out = [Place(title="Home", url=str(Path.home()))]
+    seen = {_place_key(str(Path.home()))}
     if xbel.exists():
         try:
             for bm in ET.parse(xbel).getroot().iter("bookmark"):  # noqa: S314
-                title = bm.findtext("title") or bm.get("href", "")
-                out.append(Place(title=title, url=bm.get("href", "")))
+                href = bm.get("href", "")
+                key = _place_key(href)
+                if not href or key in seen:  # Dolphin's own places include Home again
+                    continue
+                seen.add(key)
+                out.append(Place(title=bm.findtext("title") or href, url=href))
         except ET.ParseError:
             pass
     return out
+
+
+def _place_key(url: str) -> str:
+    """Normalise ``file:///home/a/`` and ``/home/a`` to the same key."""
+    path = unquote(url[7:]) if url.startswith("file://") else url
+    return (path.rstrip("/") or "/") if path.startswith("/") else url
 
 
 def _detached(argv: list[str]) -> None:
