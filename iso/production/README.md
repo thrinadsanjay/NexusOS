@@ -1,61 +1,58 @@
-# Production ISO pipeline (planned)
+# NexusOS ISO build
 
-Status: **design only — no production ISO has been built.** Nothing in this
-directory produces an image yet. The prototype (`iso/prototype/`) must pass
-VM testing and the branding/theme/CLI review first.
+Status: **test images only — no production ISO has been built.** `build.sh` produces a bootable live/installer ISO for VM
+testing. It is not a release: there is no signed NexusOS archive yet, the on-disc package
+pool is unsigned, and the image has not been boot- and install-tested on hardware.
 
-## Goals
+## Build a test image
 
-* Reproducible: the same commit and archive snapshot produce the same package set.
-* Built from manifests: `manifests/*.yaml` are the only package source of truth.
-* Unprivileged on the host: everything runs in a disposable container or VM.
-* Verifiable: every image ships `SHA256SUMS`, a package manifest and an SBOM.
-
-## Planned pipeline
-
-```
-manifests/*.yaml ──► resolve package set (snapshot.ubuntu.com @ timestamp)
-packages/*       ──► build .debs in ubuntu:26.04 container ──► local APT repo (reprepro, signed)
-                                    │
-                                    ▼
-              mmdebstrap --variant=minbase resolute rootfs  (unshare mode, no host root)
-                                    │  + base/desktop/development/infrastructure packages
-                                    │  + nexusos-* packages from local repo
-                                    │  + casper, calamares, calamares-settings (NexusOS branding)
-                                    ▼
-              mksquashfs (zstd) ─► casper/filesystem.squashfs + filesystem.manifest
-                                    │
-                                    ▼
-              GRUB EFI + shim (signed, from the archive) ─► xorriso hybrid ISO (UEFI + BIOS)
-                                    │
-                                    ▼
-              QEMU/OVMF smoke tests (boot to SDDM, Calamares to completion on a qcow2 disk)
-                                    │
-                                    ▼
-              SHA256SUMS + SHA512SUMS + SBOM (syft/spdx) ─► draft GitHub release (manual approval)
+```bash
+scripts/package/build-in-container.sh          # build/debs: the 11 NexusOS packages
+iso/production/build.sh                        # build/iso: nexusos-1.0-dev-<date>-amd64.iso (+ .sha256, .manifest)
 ```
 
-### Tool choice
+Needs Docker with `--privileged` (the build chroots into the new root filesystem and mounts
+`/proc`, `/sys`, `/dev` inside the container), about 30 GB of free disk and access to the
+Ubuntu archive. Nothing on the host is modified: no host disk, loop device or bootloader is
+touched. Takes 20–40 minutes depending on bandwidth and CPU.
 
-| Option | Notes |
-|--------|-------|
-| **mmdebstrap + custom assembly** (preferred) | Small, scriptable, runs without host root in unshare mode, fully driven by our manifests. |
-| `livecd-rootfs` + `live-build` | What Launchpad uses for official Ubuntu images; heavier and tied to Launchpad conventions, but closest to upstream behaviour. Evaluate if Calamares/casper integration proves fragile. |
-| Cubic | Manual remastering; stays the prototype tool only. |
+## What is in the image
 
-All of `mmdebstrap`, `squashfs-tools`, `xorriso`, `grub-efi-amd64-signed`,
-`shim-signed`, `casper`, `calamares` and `livecd-rootfs` are in the resolute archive.
+| Part | Source |
+|------|--------|
+| Root filesystem | `mmdebstrap` (Ubuntu 26.04 "resolute", main/restricted/universe/multiverse, with recommends) from `manifests/base.yaml` + `manifests/desktop.yaml`; NexusOS packages from a local repository built from `build/debs` |
+| Excluded | Plasma Discover, Flatpak, snapd, Kubuntu/ubiquity installer packages (apt pin during the build) |
+| Live session | casper; live account `nexus-live` (passwordless sudo, live only); "Install NexusOS" on the desktop |
+| Installer | Calamares with `calamares-settings-nexusos` (see `installer/`) |
+| Boot splash | `plymouth-theme-nexusos` in the initrd |
+| BIOS boot | GRUB El Torito image + `boot_hybrid.img` MBR (CD and USB) |
+| UEFI boot | Canonical-signed `shim` + `gcdx64.efi.signed` in an appended EFI partition (Secure Boot capable) |
+| Menu | `iso/production/grub.cfg`: Try or Install, safe graphics, verbose/serial troubleshooting |
+| On-disc pool | `shim-signed`, `grub-efi-amd64-signed`, `grub-efi-amd64-bin` for the installer's EFI step (`/etc/apt/sources.list.d/cdrom.sources`, `Trusted: yes` until a NexusOS archive key exists) |
+| Installed system | `ubuntu.sources` pointing at the Ubuntu archive; installer, casper and the cdrom source removed |
 
-### Secure Boot
+Layout follows Ubuntu desktop images (`casper/vmlinuz`, `casper/initrd`,
+`casper/filesystem.squashfs` (zstd), `.disk/info`, `md5sum.txt`), so Calamares' shared Ubuntu
+modules work unchanged.
 
-Use Canonical-signed `shim-signed` and `grub-efi-amd64-signed` with the
-Ubuntu-signed kernel unchanged. NexusOS does not ship its own kernel or
-bootloader signing keys.
+## Test it (VM only)
 
-## Remaining work
+```bash
+# UEFI (OVMF), 8 GB RAM, KVM:
+qemu-system-x86_64 -enable-kvm -m 8192 -smp 4 -machine q35 \
+  -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd \
+  -drive if=pflash,format=raw,file=ovmf-vars.fd \
+  -cdrom build/iso/nexusos-1.0-dev-*.iso -drive file=nexusos-test.qcow2,if=virtio \
+  -vga virtio -display gtk
+# create the virtual disk first: qemu-img create -f qcow2 nexusos-test.qcow2 60G
+# copy the vars template: cp /usr/share/OVMF/OVMF_VARS_4M.fd ovmf-vars.fd
+```
 
-1. `iso/production/build.sh` implementing the pipeline above in a container.
-2. NexusOS Calamares branding (`/usr/share/calamares/branding/nexusos/`).
-3. Finished Plymouth and SDDM themes.
-4. QEMU smoke-test harness and CI job (manual trigger, protected branch only).
-5. Release signing key management (see `docs/release-process.md`).
+Then follow the checklist in [`docs/installation.md`](../../docs/installation.md#option-c--nexusos-test-iso-in-a-vm).
+
+## Before a release
+
+1. Signed NexusOS APT archive and `nexusos-archive-keyring` (also signs the on-disc pool).
+2. Reproducible builds from a snapshot (`snapshot.ubuntu.com`), SBOM, signed `SHA256SUMS`.
+3. CI job (manual trigger, protected branch) with QEMU/OVMF boot and unattended install tests.
+4. Firefox (snap seeding) or another default browser decision; SDDM theme.

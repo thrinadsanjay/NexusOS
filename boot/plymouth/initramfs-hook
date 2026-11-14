@@ -1,0 +1,22 @@
+#!/bin/sh
+# initramfs-tools hook (plymouth-theme-nexusos): when NexusOS is the default splash, put the
+# Inter fonts it uses into the initrd so prompts (e.g. the disk-encryption password) render
+# with the right font. Plymouth's own hook already copies the theme and fontconfig.
+PREREQ="plymouth"
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+    prereqs) prereqs; exit 0 ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+theme="$(update-alternatives --query default.plymouth 2>/dev/null | sed -n 's/^Value: //p')"
+[ "$(basename "${theme:-none}" .plymouth)" = nexusos ] || exit 0
+
+fonts=/usr/share/fonts/opentype/inter
+mkdir -p "${DESTDIR}${fonts}"
+for f in Inter-Regular.otf Inter-Light.otf; do
+    [ -e "$fonts/$f" ] && cp -a "$fonts/$f" "${DESTDIR}${fonts}/"
+done
+fc-cache -s -y "${DESTDIR}" >/dev/null 2>&1 || true
+exit 0

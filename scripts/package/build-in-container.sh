@@ -45,7 +45,7 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" \
         command -v update-ca-certificates >/dev/null && update-ca-certificates >/dev/null 2>&1 || true
         apt-get update -qq
         apt-get install -y -qq --no-install-recommends \
-            ca-certificates build-essential dpkg-dev debhelper lintian librsvg2-bin optipng fonts-inter fonts-jetbrains-mono \
+            ca-certificates build-essential dpkg-dev debhelper lintian librsvg2-bin optipng plymouth-theme-spinner fonts-inter fonts-jetbrains-mono \
             dh-python python3-all python3-setuptools pybuild-plugin-pyproject >/dev/null
         useradd --create-home builder
         cp -a /src /home/builder/nexusos

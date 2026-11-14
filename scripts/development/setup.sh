@@ -31,6 +31,6 @@ if [ ${#missing[@]} -gt 0 ]; then
     echo "Optional system tools not found: ${missing[*]}"
     echo "Install them yourself if you need packaging/branding/ISO checks:"
     echo "  sudo apt install dpkg-dev debhelper dh-python pybuild-plugin-pyproject python3-all \\"
-    echo "       lintian librsvg2-bin optipng fonts-inter fonts-jetbrains-mono shellcheck xorriso desktop-file-utils \\"
+    echo "       lintian librsvg2-bin optipng plymouth-theme-spinner fonts-inter fonts-jetbrains-mono shellcheck xorriso desktop-file-utils \\"
     echo "       openssl openssh-client libegl1 libgl1 docker.io"
 fi

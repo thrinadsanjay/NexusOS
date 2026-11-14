@@ -58,7 +58,8 @@ packages:
     - cups
     - print-manager
   notes:
-    - "Discover and Flatpak are not installed: the Command Center Software Center manages APT packages; Flatpak stays an opt-in (sudo apt install flatpak plasma-discover-backend-flatpak)."
+    - "Discover and Flatpak are not installed: the Command Center Software Center manages APT packages."
+    - "Flatpak stays an opt-in: sudo apt install flatpak plasma-discover-backend-flatpak"
     - "firefox in the archive is a transitional package for the Firefox snap; seeding snaps into the image is planned (snap prepare-image). Until then the image ships Falkon."
 nexusos_packages:
   - nexusos-theme

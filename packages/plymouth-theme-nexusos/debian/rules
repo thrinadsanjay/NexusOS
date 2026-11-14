@@ -20,10 +20,13 @@ override_dh_auto_install:
 	install -D -m 0644 plymouth/nexusos.plymouth $(THEME)/nexusos.plymouth
 	install -m 0644 debian/rendered/watermark.png $(THEME)/watermark.png
 	install -m 0644 debian/rendered/frames/*.png $(THEME)/
-	# Password/keyboard dialog images: the spinner theme's, shared rather than copied.
+	# Password/keyboard dialog images from the spinner theme. Copied, not linked: Plymouth's
+	# initramfs hook copies only this theme's directory into the initrd.
 	set -e; for img in bullet capslock entry keyboard keymap-render lock; do \
-	  ln -s ../spinner/$$img.png $(THEME)/$$img.png; \
+	  install -m 0644 /usr/share/plymouth/themes/spinner/$$img.png $(THEME)/$$img.png; \
 	done
+	install -D -m 0755 plymouth/initramfs-hook \
+	  debian/plymouth-theme-nexusos/usr/share/initramfs-tools/hooks/plymouth-theme-nexusos
 
 override_dh_clean:
 	dh_clean debian/rendered/

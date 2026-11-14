@@ -8,6 +8,16 @@ All notable changes to NexusOS are documented here. The format follows
 ## [Unreleased] — 0.2.0-dev "Command Center"
 
 ### Added
+- **Installer and boot branding**: `calamares-settings-nexusos` (NexusOS Calamares branding and
+  slides, erase-disk with optional LUKS2, first account in `sudo`/`adm`, Plasma Wayland/SDDM,
+  Ubuntu's signed boot chain, installer and live tooling removed from the installed system,
+  "Install NexusOS" in the live session) and `plymouth-theme-nexusos` (two-step splash with the
+  NexusOS mark; dialog images and Inter fonts in the initrd for encryption prompts).
+- **Test ISO build** (`iso/production/build.sh`): mmdebstrap root filesystem from the base and
+  desktop manifests plus the NexusOS packages, casper live session, Calamares, zstd squashfs,
+  hybrid BIOS/UEFI ISO with Canonical-signed shim and GRUB, on-disc pool for the installer's EFI
+  step, checksums and package manifest. Test images only, not a release.
+  `scripts/validation/iso-boot-smoke.sh` boots it in QEMU (BIOS, UEFI Secure Boot, live session).
 - **Operations dashboard** (Overview): CPU, memory, GPU, storage, vulnerabilities (packages
   with Ubuntu security fixes), updates, network and mount tiles with live sparklines and one
   hardware line each; (i) spec cards with CPU specification and per-core load, memory slots
@@ -55,6 +65,11 @@ All notable changes to NexusOS are documented here. The format follows
 - System Settings marks KDE modules that are not installed and names the package to install.
 
 ### Changed
+- The image installs neither Plasma Discover nor Flatpak (Software Center for APT, `fwupd` for
+  firmware, Flatpak opt-in); Falkon is the default browser until the Firefox snap is seeded.
+- `nexusos-branding` keeps `GRUB_DISTRIBUTOR=Ubuntu` (`/etc/default/grub.d/50-nexusos.cfg`):
+  26.04 derives it from os-release, which would move GRUB to `/EFI/nexusos` while the
+  Canonical-signed GRUB looks in `/EFI/ubuntu` (Secure Boot).
 - `nexus-center` uses Qt's `generic` platform theme by default (−93 MiB RSS under Plasma);
   `NEXUS_CENTER_PLATFORMTHEME=kde` restores native KDE file dialogs.
 - `nexusos-desktop` recommends the packages that provide the catalogued KCMs (kscreen,
@@ -64,6 +79,11 @@ All notable changes to NexusOS are documented here. The format follows
 - CLI services moved into `nexus_core`; `nexus-cli` depends on `python3-nexus-core`.
 - `nexusos-desktop` depends on the Command Center and the management agent.
 - Gateway renders IPv6 listeners only when the host has IPv6.
+
+### Removed
+- Unused code: `metrics.gpus`/`top_processes` (replaced by `nexus_core.hardware` and the
+  dashboard), `network.proxy_settings`, `paths.config_dir`, `privilege.require_admin`,
+  `terminal.save_layout`/`export_note`, `validation.path_within`; first-round Overview mockups.
 
 ### Fixed
 - Command Center under Plasma: full Qt palette from the design tokens (light or unreadable

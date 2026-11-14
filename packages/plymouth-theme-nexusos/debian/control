@@ -6,7 +6,8 @@ Build-Depends: debhelper-compat (= 13),
                librsvg2-bin,
                optipng,
                python3:any,
-               fonts-inter
+               fonts-inter,
+               plymouth-theme-spinner
 Standards-Version: 4.7.0
 Homepage: https://github.com/thrinadsanjay/NexusOS
 Vcs-Browser: https://github.com/thrinadsanjay/NexusOS
@@ -18,13 +19,15 @@ Architecture: all
 Multi-Arch: foreign
 Depends: ${misc:Depends},
          plymouth,
-         plymouth-theme-spinner
-Recommends: fonts-inter
+         plymouth-theme-spinner,
+         fonts-inter
 Description: NexusOS boot splash (Plymouth)
  Plymouth theme for NexusOS Engineering Edition: the NexusOS mark on the brand
  background with a teal hexagon animation. It uses Plymouth's two-step plugin,
  so disk-encryption password prompts, update progress and messages keep
- working; the dialog images come from the spinner theme.
+ working. The dialog images are the spinner theme's (copied at build time so
+ they are part of the initrd), and the Inter fonts are added to the initrd for
+ prompts.
  .
  The theme is registered as the default.plymouth alternative with a higher
  priority than Ubuntu's themes; removing the package restores them.

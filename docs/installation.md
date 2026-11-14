@@ -72,10 +72,35 @@ In the VM window: log in to **Plasma (Wayland)** as `nexus` (set a password firs
 
 Destroy the VM afterwards (`rm -rf ~/nexusos-vm`).
 
-## Option C — prototype ISO in a VM
+## Option C — NexusOS test ISO in a VM
 
-Build it with Cubic following [`iso/prototype/README.md`](../iso/prototype/README.md),
-then boot it in QEMU with OVMF. Only install onto a virtual disk.
+```bash
+scripts/package/build-in-container.sh   # the 11 NexusOS packages
+iso/production/build.sh                 # build/iso/nexusos-1.0-dev-<date>-amd64.iso
+```
+
+Boot it in a VM only (QEMU/KVM with OVMF for UEFI, or virt-manager / GNOME Boxes), with a
+**new virtual disk** of at least 30 GB and 8 GB RAM. See
+[`iso/production/README.md`](../iso/production/README.md) for the QEMU command. Never write
+a test ISO to a USB stick that will be used on a machine holding data.
+
+Test-ISO checklist (in addition to the VM checklist below):
+
+- [ ] UEFI with Secure Boot (OVMF `secboot` firmware): shim → GRUB menu shows the NexusOS entries
+- [ ] UEFI without Secure Boot, and legacy BIOS (`-machine pc` without OVMF)
+- [ ] NexusOS splash during boot; live session logs in as *NexusOS Live* on Plasma (Wayland)
+- [ ] "Install NexusOS" on the desktop opens Calamares with NexusOS branding and slides
+- [ ] Erase disk + **encryption**: the passphrase prompt at the next boot uses the NexusOS splash
+- [ ] Erase disk without encryption; manual partitioning screen opens (do not use a real disk)
+- [ ] After reboot: SDDM, the account created in the installer is in `sudo` and `adm`
+      (`id`), Command Center sidebar shows *Administrator · sudo*, installing a package asks
+      for the password in the floating box
+- [ ] `ls /boot/efi/EFI` shows `ubuntu` (Canonical-signed boot chain); GRUB menu says Ubuntu
+- [ ] Installed system has no `calamares`, `casper` or `/etc/apt/sources.list.d/cdrom.sources`
+- [ ] `sudo apt update` uses the Ubuntu archive; `/var/log/installer/` contains the logs
+
+The Cubic prototype in [`iso/prototype/README.md`](../iso/prototype/README.md) remains as an
+alternative for remastering the official Kubuntu image.
 
 ## VM test checklist
 

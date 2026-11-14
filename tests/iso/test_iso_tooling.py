@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 
 import pytest
 
@@ -74,7 +75,7 @@ def test_no_production_iso_claimed():
     readme = " ".join((REPO_ROOT / "iso/production/README.md").read_text().lower().split())
     assert "no production iso has been built" in readme
     prototype = " ".join((REPO_ROOT / "iso/prototype/README.md").read_text().lower().split())
-    assert "no nexusos iso has been built" in prototype
+    assert "not yet produced" in prototype and "test images only" in readme
 
 
 @pytest.mark.skipif(shutil.which("ischroot") is None, reason="ischroot (debianutils) not installed")
@@ -90,3 +91,43 @@ def test_cubic_customisation_refuses_to_run_outside_chroot(tmp_path):
     if proc.returncode == 0:
         pytest.skip("test environment is itself a chroot")
     assert "must only run inside Cubic's chroot" in proc.stderr
+
+
+# ---------------------------------------------------------------------------- test ISO build
+def test_image_package_set_comes_from_the_manifests():
+    root = REPO_ROOT
+    out = subprocess.run(
+        [sys.executable, str(root / "iso/production/package-set.py"), str(root / "manifests"), "base", "desktop"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    pkgs = out.split(",")
+    assert len(pkgs) == len(set(pkgs))
+    for required in (
+        "linux-generic",
+        "shim-signed",
+        "grub-efi-amd64-signed",
+        "kde-plasma-desktop",
+        "casper",
+        "calamares-settings-nexusos",
+        "nexusos-desktop",
+        "plymouth-theme-nexusos",
+        "grub-pc-bin",
+    ):
+        assert required in pkgs, required
+    for excluded in ("plasma-discover", "flatpak", "snapd", "firefox"):
+        assert excluded not in pkgs, excluded
+    for opt_in in ("docker.io", "ollama", "code"):  # profiles stay opt-in
+        assert opt_in not in pkgs
+
+
+def test_iso_build_script_policy():
+    root = REPO_ROOT
+    script = (root / "iso/production/build-in-container.sh").read_text()
+    assert "gcdx64.efi.signed" in script and "shimx64.efi.signed" in script  # Canonical-signed UEFI chain
+    assert "boot_hybrid.img" in script and "i386-pc-eltorito" in script  # BIOS boot
+    assert "nexusos-image.pref" in script and "plasma-discover*" in script  # exclusions during the build
+    assert "/dev/sd" not in script and "losetup" not in script and "dd if=" not in script  # never touches disks
+    wrapper = (root / "iso/production/build.sh").read_text()
+    assert "--privileged" in wrapper and '"$REPO_ROOT:/repo:ro"' in wrapper

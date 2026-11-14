@@ -1,7 +1,7 @@
 # Prototype ISO with Cubic
 
-Status: **documented, not yet produced.** No NexusOS ISO has been built from
-this repository so far. Follow this guide only on a disposable machine or VM.
+Status: **documented, not yet produced.** This Cubic remaster has not been built; test
+ISOs come from `iso/production/build.sh`. Follow this guide only on a disposable machine or VM.
 
 The prototype remasters the official **Kubuntu 26.04 LTS** desktop ISO with
 [Cubic](https://github.com/PJ-Singh-001/Cubic) (Custom Ubuntu ISO Creator).
