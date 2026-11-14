@@ -42,7 +42,7 @@ if command -v update-ca-certificates >/dev/null; then update-ca-certificates >/d
 apt-get update -qq
 apt-get install -y -qq --no-install-recommends mmdebstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin \
     grub-efi-amd64-signed shim-signed grub2-common grub-common mtools dosfstools dpkg-dev apt-utils python3-yaml \
-    ca-certificates zstd >/dev/null
+    ca-certificates zstd gpg >/dev/null
 
 # ---------------------------------------------------------------------------- local repository of NexusOS packages
 log "local NexusOS package repository"
