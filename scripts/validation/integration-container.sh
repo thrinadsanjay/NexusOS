@@ -134,7 +134,7 @@ assert privilege.access().admin == "none"
 PY
 su guest -c "NEXUSOS_ADMIN_TRANSPORT=sudo python3 /tmp/sudo_denied.py" || fail "user without sudo must be denied"
 dpkg -s hello >/dev/null 2>&1 && fail "hello installed by a user without sudo"
-grep -F "\"via\": \"sudo\"" /var/log/nexusos/agent-audit.log | grep -qF "\"user\": \"ops\"" || fail "sudo tasks missing from the audit log"
+[ "$(grep -F "\"via\": \"sudo\"" /var/log/nexusos/agent-audit.log | grep -cF "\"user\": \"ops\"")" -gt 0 ] || fail "sudo tasks missing from the audit log"
 pass "sudo: user without sudo denied without a password prompt; sudo tasks audited with the invoking user"
 
 python3 - <<"PY"
@@ -236,7 +236,7 @@ PY
 [ ! -e /etc/nexusos/gateway/generated/broken.conf ] && pass "gateway: failing nginx -t -> previous configuration restored, not reloaded"
 body=$(curl -s --noproxy "*" --retry 5 --retry-connrefused --retry-delay 1 --cacert /etc/nexusos/gateway/ca/ca.crt --resolve test.nexus.lan:443:127.0.0.1 https://test.nexus.lan/)
 [ "$body" = "nexus backend ok" ] && pass "gateway: existing route keeps serving after the failed activation"
-nexus gateway routes list >/dev/null && nexus gateway ssl list | grep -q test-nexus-lan && pass "CLI: gateway routes list / ssl list"
+nexus gateway routes list >/dev/null && out=$(nexus gateway ssl list) && grep -q test-nexus-lan <<<"$out" && pass "CLI: gateway routes list / ssl list"
 python3 - <<"PY"
 from pathlib import Path
 from nexus_core.gateway import certs
@@ -249,14 +249,14 @@ PY
 pass "gateway: Lets Encrypt refused for .local names"
 
 # ------------------------------------------------------------------ CLI as a normal user
-su alice -c "nexus packages search nginx --limit 3" | grep -q nginx && pass "CLI: packages search"
-su alice -c "nexus apps list" | grep -q "Private Cloud" && pass "CLI: apps list (registry installed in /usr/share/nexusos/applications)" || fail "apps registry"
-su alice -c "nexus profiles list" | grep -q "Private Cloud Host" && pass "CLI: profiles list"
-su alice -c "nexus ssh add homelab admin@192.168.1.10:2222 --group Homelab --tag nas" >/dev/null && su alice -c "nexus ssh list" | grep -q homelab && pass "CLI: ssh add / list"
+out=$(su alice -c "nexus packages search nginx --limit 3") && grep -q nginx <<<"$out" && pass "CLI: packages search"
+out=$(su alice -c "nexus apps list") && grep -q "Private Cloud" <<<"$out" && pass "CLI: apps list (registry installed in /usr/share/nexusos/applications)" || fail "apps registry"
+out=$(su alice -c "nexus profiles list") && grep -q "Private Cloud Host" <<<"$out" && pass "CLI: profiles list"
+su alice -c "nexus ssh add homelab admin@192.168.1.10:2222 --group Homelab --tag nas" >/dev/null && out=$(su alice -c "nexus ssh list") && grep -q homelab <<<"$out" && pass "CLI: ssh add / list"
 out=$(su alice -c "printf dummy-not-a-secret | nexus ssh credentials set test-ref 2>&1" || true)
-echo "$out" | grep -qiE "secret service|wallet|secretstorage" && pass "CLI: credential save refused without a Secret Service (no plaintext fallback)" || fail "credential: $out"
+grep -qiE "secret service|wallet|secretstorage" <<<"$out" && pass "CLI: credential save refused without a Secret Service (no plaintext fallback)" || fail "credential: $out"
 out=$(su alice -c "nexus system services list 2>&1" || true)
-echo "$out" | grep -qi "cannot query systemd" && pass "CLI: system services reports missing systemd clearly (container)"
+grep -qi "cannot query systemd" <<<"$out" && pass "CLI: system services reports missing systemd clearly (container)"
 
 # ------------------------------------------------------------------ Command Center headless
 apt-get install -y -qq libegl1 libgl1 fonts-inter >/dev/null 2>&1 || true

@@ -49,7 +49,8 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     [ "$UBUNTU_CODENAME" = resolute ] || fail "UBUNTU_CODENAME"
     pass "os-release: $PRETTY_NAME (ID=$ID, ID_LIKE=$ID_LIKE)"
     grep -q "^ID=ubuntu" /usr/lib/os-release.ubuntu || fail "Ubuntu os-release not preserved"
-    dpkg-divert --list /usr/lib/os-release | grep -q nexusos-branding || fail "diversion missing"
+    divert=$(dpkg-divert --list /usr/lib/os-release)
+    grep -q nexusos-branding <<<"$divert" || fail "diversion missing"
     pass "Ubuntu os-release preserved at /usr/lib/os-release.ubuntu (dpkg-divert)"
     grep -q "^DISTRIB_ID=Ubuntu" /etc/lsb-release && pass "/etc/lsb-release untouched (Ubuntu)"
     [ "$(cat /etc/hostname 2>/dev/null || hostname)" != nexusos ] && pass "hostname not changed by package"
@@ -61,8 +62,11 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     [ -f /usr/share/wallpapers/NexusOS/contents/images/3840x2160.png ] && pass "wallpaper packages rendered"
     [ -f /usr/share/icons/hicolor/scalable/apps/nexusos.svg ] && pass "nexusos icon installed"
 
-    nexus version | grep -q "NexusOS Engineering Edition 1.0" || fail "nexus version"
-    pass "nexus version -> $(nexus version | head -1)"
+    # Capture first: "cmd | grep -q" races under pipefail (grep exits at the first match).
+    ver=$(nexus version) || fail "nexus version exit status"
+    grep -q "NexusOS Engineering Edition 1.0" <<<"$ver" || fail "nexus version: $ver"
+    grep -q "Crafted by Sanjay" <<<"$ver" || fail "nexus version credit"
+    pass "nexus version -> $(head -1 <<<"$ver")"
     nexus system info --json | python3 -c "import json,sys; d=json.load(sys.stdin); assert d[\"os\"][\"id\"]==\"nexusos\"" || fail "system info json"
     pass "nexus system info reports NexusOS"
     set +e; nexus system health >/dev/null; rc=$?; set -e
@@ -83,14 +87,15 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" -v "$DEB_DIR:/debs:ro" "$IMAG
     pass "nexusos-theme + nexusos-desktop dependencies resolve ($(grep -c "^Inst " /tmp/sim.log) packages would be installed)"
 
     dpkg -i /debs/nexusos-branding_*.deb >/dev/null
-    dpkg-divert --list /usr/lib/os-release | grep -q nexusos-branding && grep -q "^ID=nexusos" /usr/lib/os-release || fail "reinstall"
+    divert=$(dpkg-divert --list /usr/lib/os-release)
+    grep -q nexusos-branding <<<"$divert" && grep -q "^ID=nexusos" /usr/lib/os-release || fail "reinstall"
     pass "reinstall/upgrade keeps diversion"
 
     apt-get remove -y -qq nexus-cli python3-nexus-core nexusos-defaults nexusos-branding >/dev/null
     . /etc/os-release
     [ "$ID" = ubuntu ] || fail "os-release not restored after removal (ID=$ID)"
     [ ! -e /usr/lib/os-release.ubuntu ] || fail "stale os-release.ubuntu"
-    dpkg-divert --list /usr/lib/os-release | grep -q . && fail "diversion left behind"
+    [ -z "$(dpkg-divert --list /usr/lib/os-release)" ] || fail "diversion left behind"
     pass "removal restores Ubuntu os-release ($PRETTY_NAME)"
     apt-get purge -y -qq nexusos-branding >/dev/null 2>&1 || true
     [ ! -e /etc/profile.d/nexusos-banner.sh ] || fail "conffile left after purge"
