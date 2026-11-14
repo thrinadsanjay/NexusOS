@@ -36,7 +36,7 @@ done
 
 # ---- Command Center on KWin Wayland --------------------------------------------------------
 cd /tmp || exit 1
-smoke_args=(--smoke); [ -n "$SHOTS" ] && smoke_args+=(--screenshots "$SHOTS")
+smoke_args=(--smoke --size 1680x980); [ -n "$SHOTS" ] && smoke_args+=(--screenshots "$SHOTS")
 if out=$(timeout 300 nexus-center "${smoke_args[@]}" 2>/dev/null); then
     rss=$(echo "$out" | python3 -c 'import json,sys; print(json.load(sys.stdin)["idle_rss_mib"])')
     pass "Command Center: all modules load on Wayland without QML warnings (RSS after all modules ${rss} MiB)"
@@ -77,7 +77,7 @@ try:
     services.control("nginx.service", "restart")
     report(False, "systemctl restart allowed without authentication")
 except Exception as exc:
-    report("denied" in str(exc).lower() or "authentication" in str(getattr(exc, "hint", "") or "").lower(), "service control without a polkit agent is refused")
+    report("password" in str(exc).lower(), f"service control without a password box is refused: {exc}")
 sys.exit(1 if fails else 0)
 PY
 then

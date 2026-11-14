@@ -12,7 +12,10 @@
 #   * a headless KWin Wayland + plasmashell session (software rendering) for user "nexus":
 #     NexusOS global theme, colours, icons, fonts, Konsole profile, panel/dock layout, wallpaper;
 #   * the Command Center on Wayland: every module loads without QML warnings, memory budgets;
-#   * desktop integration: KCM catalogue vs kcmshell6, Konsole tabs, systemd state, polkit.
+#   * desktop integration: KCM catalogue vs kcmshell6, Konsole tabs, systemd state, polkit;
+#   * administrative access through the user's own sudo rights, for sudo-rs and sudo 1.9:
+#     NOPASSWD runs directly, password sudo asks (retry, cancel, cache), no sudo is denied;
+#     a real service restart and package install through nexus-admin, audited per user.
 #
 # Needs Docker with --privileged (systemd in a container). Not run in hosted CI.
 set -euo pipefail
@@ -25,7 +28,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --screenshots) SHOTS="$(realpath -m "$2")"; shift 2 ;;
         --keep) KEEP=1; shift ;;
-        -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
         *) DEB_DIR="$(realpath "$1")"; shift ;;
     esac
 done
@@ -40,7 +43,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-cp "$REPO_ROOT"/scripts/validation/plasma/{Dockerfile,entry.sh,session.sh,env.sh,session-checks.sh} "$CTX/"
+cp "$REPO_ROOT"/scripts/validation/plasma/{Dockerfile,entry.sh,session.sh,env.sh,session-checks.sh,sudo-checks.sh,sudo-driver.py} "$CTX/"
 mkdir "$CTX/debs" && cp "$DEB_DIR"/*.deb "$CTX/debs/"
 build_args=()
 for var in http_proxy https_proxy HTTP_PROXY HTTPS_PROXY no_proxy NO_PROXY; do
@@ -69,10 +72,10 @@ systemctl is-active -q nexusos-agent.socket && pass "nexusos-agent.socket active
 perm=$(stat -c '%U:%G %a' /run/nexusos/agent.sock 2>/dev/null)
 [ "$perm" = "root:sudo 660" ] && pass "agent socket $perm" || fail "agent socket permissions: $perm"
 n=$(pkaction | grep -c '^org\.nexusos\.agent\.')
-[ "$n" -eq 7 ] && pass "7 polkit actions registered" || fail "polkit actions: $n"
+[ "$n" -eq 8 ] && pass "8 polkit actions registered" || fail "polkit actions: $n"
 
 agent() {  # agent USER OP JSON -> prints "ok" or the error message
-    su "$1" -c "python3 -c 'import json,sys
+    su "$1" -c "NEXUSOS_ADMIN_TRANSPORT=agent python3 -c 'import json,sys
 from nexus_core import agent_client
 try:
     agent_client.call(sys.argv[1], json.loads(sys.argv[2])); print(\"ok\")
@@ -98,6 +101,9 @@ case "$r" in *ermission*|*denied*|*navailable*) pass "non-administrator cannot r
 rm -f /etc/polkit-1/rules.d/49-nexusos-test.rules
 exit $fails
 ROOT
+
+echo "== administrative access through sudo (sudo-rs and sudo 1.9)"
+docker exec "$NAME" /opt/nexusos-plasma/sudo-checks.sh || fails=$((fails + $?))
 
 U=$(docker exec "$NAME" id -u nexus)
 docker exec "$NAME" systemctl start "user@$U" >/dev/null
