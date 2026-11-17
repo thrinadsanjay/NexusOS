@@ -1,0 +1,8 @@
+# Always check out text files with LF line endings, also on Windows / WSL clones with
+# core.autocrlf=true: shell scripts, Debian maintainer scripts and shebang lines break on CRLF.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ttf binary
+*.otf binary
+*.woff2 binary
