@@ -31,8 +31,6 @@ echo "$layout" | grep -q "^PANEL right org.nexusos.status,org.kde.plasma.notific
 echo "$layout" | grep -qE "^PANEL (top|bottom)" && fail "a top or bottom panel exists" || pass "no top or bottom panel"
 echo "$layout" | grep -q "org.kde.plasma.systemtray\|org.kde.plasma.icontasks\|org.kde.plasma.taskmanager" && fail "system tray or taskbar present" || pass "no system tray, no taskbar"
 echo "$layout" | grep -q "^WALLPAPER .*/usr/share/wallpapers/NexusOS" && pass "NexusOS wallpaper" || fail "wallpaper"
-widget_errors=$(grep -E "org\.nexusos\.(status|launcher)" "/tmp/nx-plasma-$(id -u).log" | grep -iE "error|is not a type|not installed|unavailable|undefined|cannot" | sort -u | head -15)
-[ -z "$widget_errors" ] && pass "NexusOS widgets load without QML errors" || { fail "NexusOS widget errors:"; printf '      %s\n' "$widget_errors"; }
 if status_json=$(timeout 120 nexus system desktop-status --json 2>/dev/null) && echo "$status_json" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "services" in d and "alerts" in d'; then
     pass "desktop-status backend answers as the user"
 else
@@ -43,8 +41,10 @@ expect "lock screen slideshow" "$lock" org.kde.slideshow
 
 # desktop screenshots: plain, System Status panel open, launcher expanded (activated through
 # the applets' "activate widget" global shortcuts, like a keyboard user would)
-if [ -n "$SHOTS" ]; then
-    mkdir -p "$SHOTS"
+SHOTS_DIR=${SHOTS:-/tmp/nx-shots-discard}
+mkdir -p "$SHOTS_DIR"
+{
+    SHOTS=$SHOTS_DIR
     shot() {
         sleep "${2:-3}"
         timeout 30 spectacle -b -n -f -o "$SHOTS/$1.png" >"/tmp/nx-spectacle-$1.log" 2>&1
@@ -63,7 +63,10 @@ var r=[]; panels().forEach(function(p){ p.widgets(\"$1\").forEach(function(w){ r
     activate org.nexusos.status; sleep 1
     activate org.nexusos.launcher; shot launcher-expanded 4
     activate org.nexusos.launcher
-fi
+}
+# Widgets load their expanded views lazily: check the log after opening both.
+widget_errors=$(grep -E "org\.nexusos\.(status|launcher)" "/tmp/nx-plasma-$(id -u).log" | grep -iE "error|is not a type|not installed|unavailable|undefined|cannot|deprecated|is not defined" | sort -u | head -15)
+[ -z "$widget_errors" ] && pass "NexusOS widgets load without QML errors" || { fail "NexusOS widget errors:"; printf '      %s\n' "$widget_errors"; }
 
 # ---- Command Center on KWin Wayland --------------------------------------------------------
 cd /tmp || exit 1

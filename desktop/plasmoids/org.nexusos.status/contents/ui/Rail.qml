@@ -173,19 +173,19 @@ Item {
         Rectangle { Layout.alignment: Qt.AlignHCenter; Layout.preferredWidth: rail.railWidth * 0.45; Layout.preferredHeight: 1; color: rail.tk.border }
 
         Indicator {
-            icon: "cpu"
+            icon: Qt.resolvedUrl("../icons/cpu.svg")
             value: root.cfg.showPercentages && root.cpu >= 0 ? root.cpu + "%" : ""
             valueColor: root.levelColor(root.cpu)
             mainText: i18n("CPU %1 %", root.cpu)
         }
         Indicator {
-            icon: "memory"
+            icon: Qt.resolvedUrl("../icons/memory.svg")
             value: root.cfg.showPercentages && root.memory >= 0 ? root.memory + "%" : ""
             valueColor: root.levelColor(root.memory)
             mainText: i18n("Memory %1 %", root.memory)
         }
         Indicator {
-            icon: "drive-harddisk"
+            icon: Qt.resolvedUrl("../icons/disk.svg")
             value: root.cfg.showPercentages && root.disk >= 0 ? root.disk + "%" : ""
             valueColor: root.levelColor(root.disk)
             mainText: i18n("Disk %1 % used", root.disk)

@@ -42,9 +42,9 @@ PlasmoidItem {
     Plasmoid.icon: "nexusos"
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
 
-    onExpandedChanged: {
-        cfg.wasExpanded = expanded
-        if (expanded) refreshStatus()
+    onExpandedChanged: () => {
+        cfg.wasExpanded = root.expanded
+        if (root.expanded) refreshStatus()
     }
     Component.onCompleted: {
         refreshNetwork()

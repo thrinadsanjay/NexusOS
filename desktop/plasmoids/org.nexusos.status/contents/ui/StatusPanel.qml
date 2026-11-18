@@ -331,7 +331,7 @@ Item {
             Section {
                 id: health
                 title: i18n("Health & Alerts")
-                iconName: "security-high"
+                iconName: Qt.resolvedUrl("../icons/shield.svg")
                 expandable: (root.status.alerts || []).length > 0
                 summary: !root.status.loaded ? i18n("Checking…")
                        : root.status.error ? i18n("Unavailable")
@@ -382,7 +382,7 @@ Item {
             Section {
                 id: storage
                 title: i18n("Storage")
-                iconName: "drive-harddisk"
+                iconName: Qt.resolvedUrl("../icons/disk.svg")
                 expandable: (root.status.mounts || []).length > 1
                 readonly property var worst: (root.status.mounts || []).reduce((a, m) => !a || m.percent > a.percent ? m : a, null)
                 summary: root.status.root ? root.status.root.mount + " " + Math.round(root.status.root.percent) + " %"
@@ -415,14 +415,15 @@ Item {
             // G. services
             Section {
                 title: i18n("Services")
-                iconName: "preferences-system-services"
+                id: services
+                iconName: Qt.resolvedUrl("../icons/services.svg")
                 readonly property var s: root.status.services || ({})
                 summary: root.status.loaded && !root.status.error
                          ? [i18n("%1 running", s.running || 0), (s.failed ? i18n("%1 failed", s.failed) : ""), (s.warnings ? i18np("%1 changing", "%1 changing", s.warnings) : "")].filter(x => x).join("  ·  ")
                          : "–"
                 summaryColor: s.failed ? panel.tk.critical : s.warnings ? panel.tk.warning : panel.tk.textSecondary
                 onClicked: root.openCenter("settings")
-                Muted { visible: !!(s.failed_units && s.failed_units.length); Layout.fillWidth: true; wrapMode: Text.Wrap; text: (s.failed_units || []).join(", ") ; color: panel.tk.critical }
+                Muted { visible: !!(services.s.failed_units && services.s.failed_units.length); Layout.fillWidth: true; wrapMode: Text.Wrap; text: (services.s.failed_units || []).join(", "); color: panel.tk.critical }
             }
 
             // H. quick controls
