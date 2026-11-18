@@ -39,7 +39,8 @@ if [ -n "${NEXUSOS_EXTRA_CA:-}" ] && [ -f "$NEXUSOS_EXTRA_CA" ]; then
     ca_args=(-v "$NEXUSOS_EXTRA_CA:/usr/local/share/ca-certificates/nexusos-extra.crt:ro")
 fi
 
-echo "calamares: building with $(ls "$PATCH_DIR"/*.patch | wc -l) NexusOS patch(es) (takes a while)"
+patches=("$PATCH_DIR"/*.patch)
+echo "calamares: building with ${#patches[@]} NexusOS patch(es) (takes a while)"
 rm -f "$OUT_DIR"/calamares_*.deb "$OUT_DIR"/calamares-data_*.deb "$OUT_DIR"/libcalamares*.deb
 docker run --rm "${proxy_args[@]}" "${ca_args[@]}" \
     -v "$PATCH_DIR:/patches:ro" -v "$OUT_DIR:/out" -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \

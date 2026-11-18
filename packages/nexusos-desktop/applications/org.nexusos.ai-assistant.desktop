@@ -7,6 +7,6 @@ Exec=nexus-center --page ai
 TryExec=ollama
 Icon=nexus-ai
 Terminal=false
-Categories=Utility;Development;
+Categories=Development;
 Keywords=ai;llm;ollama;chat;assistant;
 StartupWMClass=nexus-center
