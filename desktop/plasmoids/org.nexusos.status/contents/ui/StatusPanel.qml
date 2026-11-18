@@ -63,7 +63,7 @@ Item {
     component Muted: Label { color: panel.tk.textSecondary; font.pixelSize: Kirigami.Theme.smallFont.pixelSize }
     component Glyph: Kirigami.Icon {
         property color tint: panel.tk.text
-        isMask: true
+        isMask: !String(source).startsWith("file:")   // own outline SVGs are drawn as they are
         color: tint
         implicitWidth: Kirigami.Units.iconSizes.smallMedium
         implicitHeight: implicitWidth

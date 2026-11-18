@@ -57,7 +57,9 @@ Item {
                 Kirigami.Icon {
                     anchors.fill: parent
                     source: ind.icon
-                    isMask: true
+                    // our own outline SVGs are drawn as they are: recolouring them as a mask fills
+                    // their rectangles (CPU and memory became solid blocks)
+                    isMask: !ind.icon.startsWith("file:")
                     color: ind.dim ? rail.tk.textSecondary : rail.tk.text
                     opacity: ind.dim ? 0.55 : 1
                 }

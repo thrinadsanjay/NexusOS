@@ -191,7 +191,7 @@ if os.environ.get("LAYOUT_TEST"):
         "LVM helper refuses without --confirm-disk",
     )
     medium = run(
-        "lsblk -no PKNAME $(findmnt -n -o SOURCE /cdrom) 2>/dev/null | sed 's|^|/dev/|' | grep . || findmnt -n -o SOURCE /cdrom"
+        'p=$(lsblk -no PKNAME $(findmnt -n -o SOURCE /cdrom) 2>/dev/null | head -1); [ -n "$p" ] && echo /dev/$p || findmnt -n -o SOURCE /cdrom'
     )
     check(
         "nexusos-lvm-layout:" in run(f"{tool} --disk {medium} --confirm-disk {medium} --yes 2>&1; true"),
