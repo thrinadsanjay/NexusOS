@@ -78,6 +78,13 @@ def test_every_sequence_module_is_installed_on_the_image():
                 assert name in ids, f"{name}: no matching instance"
 
 
+def test_partition_layout_works_on_mbr_disks():
+    # BIOS installs get an MBR table, which cannot store partition names.
+    layout = _yaml(CAL / "modules" / "partition.conf")["partitionLayout"]
+    assert layout and all("name" not in part for part in layout)
+    assert layout[-1]["mountPoint"] == "/" and layout[-1]["size"] == "100%"
+
+
 def test_install_sequence_shows_partitioning_before_anything_is_written():
     seq = _yaml(CAL / "settings.conf")["sequence"]
     assert list(seq[0]) == ["show"] and "summary" in seq[0]["show"]
