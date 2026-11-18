@@ -27,6 +27,7 @@ ignore = [
 "conftest.py" = ["S101"]
 "scripts/**" = ["S310"]
 "branding/tools/**" = ["E501"]  # SVG path data and gradient definitions
+"scripts/validation/iso-live-checks.py" = ["E501", "S108"]  # shell one-liners for the VM; runs in a disposable container
 # Root-run code carries explicit S603 review markers for the strict CI check (security.yml);
 # the general config ignores S603, so the markers would otherwise count as unused.
 "command-center/privileged-agent/nexus_agent/auth.py" = ["RUF100"]

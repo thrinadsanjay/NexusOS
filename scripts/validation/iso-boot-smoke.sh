@@ -16,10 +16,12 @@ set -euo pipefail
 ISO=""
 OUT=""
 LIVE_MIN=25
+LAYOUT=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --out) OUT="$(realpath -m "$2")"; shift 2 ;;
         --live-minutes) LIVE_MIN="$2"; shift 2 ;;
+        --layout-test) LAYOUT=1; shift ;;   # + virtual disk: LVM layout helper, desktop panels, installer start
         -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
         *) ISO="$(realpath "$1")"; shift ;;
     esac
@@ -30,7 +32,7 @@ mkdir -p "$OUT"
 kvm_args=()
 [ -e /dev/kvm ] && kvm_args=(--device /dev/kvm)
 
-docker run --rm "${kvm_args[@]}" -e LIVE_MIN="$LIVE_MIN" -v "$ISO:/test.iso:ro" -v "$OUT:/out" \
+docker run --rm "${kvm_args[@]}" -e LIVE_MIN="$LIVE_MIN" -e LAYOUT_TEST="$LAYOUT" -v "$ISO:/test.iso:ro" -v "$OUT:/out" \
     -v "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/iso-live-checks.py:/checks/iso-live-checks.py:ro" ubuntu:26.04 bash -euo pipefail -c '
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq && apt-get install -y -qq --no-install-recommends qemu-system-x86 ovmf python3 python3-pil \
@@ -82,12 +84,18 @@ fi
 echo "== 3. live boot to the Plasma desktop (serial console login, up to ${LIVE_MIN} min)"
 mkdir -p /tmp/k && cd /tmp/k
 xorriso -osirrox on -indev /test.iso -extract /casper/vmlinuz vmlinuz -extract /casper/initrd initrd >/dev/null 2>&1
+disk_args=""
+if [ -n "${LAYOUT_TEST:-}" ]; then   # an empty virtual disk inside this container (VM only, never a host disk)
+    apt-get install -y -qq --no-install-recommends qemu-utils >/dev/null
+    qemu-img create -q -f qcow2 /tmp/disk.qcow2 40G
+    disk_args="-drive file=/tmp/disk.qcow2,if=virtio,format=qcow2"
+fi
 qemu-system-x86_64 $accel -m 6144 -smp 4 -machine q35 -vga std -display none -qmp unix:/tmp/live.qmp,server,nowait \
-    -cdrom /test.iso -kernel vmlinuz -initrd initrd \
+    -cdrom /test.iso -kernel vmlinuz -initrd initrd $disk_args -qmp unix:/tmp/checks.qmp,server,nowait \
     -append "boot=casper quiet splash console=tty0 console=ttyS0,115200n8 ---" \
     -serial unix:/tmp/serial.sock,server,nowait &
 pid=$!
-python3 /checks/iso-live-checks.py /tmp/serial.sock /out "$LIVE_MIN" || fails=$((fails + $?))
+QMP_SOCKET=/tmp/checks.qmp python3 /checks/iso-live-checks.py /tmp/serial.sock /out "$LIVE_MIN" || fails=$((fails + $?))
 sleep 20
 shot /tmp/live.qmp live-desktop
 kill $pid 2>/dev/null; wait $pid 2>/dev/null || true
