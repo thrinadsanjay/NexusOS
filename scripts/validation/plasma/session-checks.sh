@@ -48,7 +48,9 @@ if [ -n "$SHOTS" ]; then
     shot() {
         sleep "${2:-3}"
         timeout 30 spectacle -b -n -f -o "$SHOTS/$1.png" >"/tmp/nx-spectacle-$1.log" 2>&1
-        [ -s "$SHOTS/$1.png" ] && pass "screenshot $1" || { fail "screenshot $1"; tail -3 "/tmp/nx-spectacle-$1.log"; }
+        if [ -s "$SHOTS/$1.png" ]; then pass "screenshot $1"
+        elif grep -q "not authorized" "/tmp/nx-spectacle-$1.log"; then echo "SKIP  screenshot $1 (headless KWin refuses capture; the ISO boot test screenshots the desktop)"
+        else fail "screenshot $1"; tail -3 "/tmp/nx-spectacle-$1.log"; fi
     }
     activate() {
         local id
