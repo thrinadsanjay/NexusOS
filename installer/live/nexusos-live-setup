@@ -1,5 +1,7 @@
 #!/bin/sh
-# Live session only: put "Install NexusOS" on the desktop of the live account.
+# Live session only: put "Install NexusOS" on the desktop of the live account, and keep the
+# screen on and unlocked (the live account has no password: a locked live session could not be
+# unlocked, and a blank screen during a long read or install looks like a hang).
 # Started from /etc/xdg/autostart; does nothing on an installed system.
 grep -qw "boot=casper" /proc/cmdline 2>/dev/null || exit 0
 
@@ -10,4 +12,15 @@ if [ ! -e "$target" ]; then
     cp /usr/share/applications/nexusos-install.desktop "$target"
     chmod +x "$target"   # Plasma runs executable .desktop files on the desktop without a prompt
 fi
+
+for profile in AC Battery LowBattery; do
+    kwriteconfig6 --file powerdevilrc --group "$profile" --group Display --key TurnOffDisplayWhenIdle false 2>/dev/null
+    kwriteconfig6 --file powerdevilrc --group "$profile" --group Display --key DimDisplayWhenIdle false 2>/dev/null
+    kwriteconfig6 --file powerdevilrc --group "$profile" --group SuspendAndShutdown --key AutoSuspendAction 0 2>/dev/null
+done
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key Autolock false 2>/dev/null
+kwriteconfig6 --file kscreenlockerrc --group Daemon --key LockOnResume false 2>/dev/null
+# apply now (PowerDevil and the screen locker are already running)
+qdbus6 org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1
+qdbus6 org.freedesktop.ScreenSaver /ScreenSaver org.kde.screensaver.configure >/dev/null 2>&1
 exit 0

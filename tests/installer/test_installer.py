@@ -123,7 +123,9 @@ def test_live_launcher_refuses_outside_the_live_session():
     script = (ROOT / "installer" / "live" / "nexusos-install").read_text()
     assert "boot=casper" in script and "calamares" in script
     helper = (ROOT / "installer" / "live" / "nexusos-live-setup").read_text()
-    assert helper.splitlines()[3].startswith('grep -qw "boot=casper"')
+    commands = [line for line in helper.splitlines() if line.strip() and not line.startswith("#")]
+    assert commands[0] == 'grep -qw "boot=casper" /proc/cmdline 2>/dev/null || exit 0'  # first thing it does
+    assert "Autolock false" in helper and "TurnOffDisplayWhenIdle false" in helper
 
 
 def test_plymouth_frames_are_generated(tmp_path):

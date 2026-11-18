@@ -145,7 +145,7 @@ if os.environ.get("LAYOUT_TEST"):
         bus
         + " qdbus6 org.kde.kglobalaccel /component/plasmashell org.kde.kglobalaccel.Component.invokeShortcut 'activate widget %s'"
     )
-    time.sleep(30)
+    time.sleep(90)  # let Plasma finish loading the panels before the first screenshot
     screendump("desktop")
     status_id = run(widget % "org.nexusos.status")
     check(status_id.isdigit(), f"System Status widget present (id {status_id})")
@@ -210,14 +210,22 @@ if os.environ.get("LAYOUT_TEST"):
     check("root" in lvs and "swap" in lvs, f"volume group nexus: {lvs.replace(chr(10), ',')}; free {vfree}")
 
     # The installer window (start only; nothing is installed)
-    run("(sudo -E nexusos-install >/tmp/inst.log 2>&1 &) ; sleep 1; echo started")
+    # start it inside the graphical session's environment (the serial shell has no display)
+    session_env = (
+        "export $(tr '\\0' '\\n' < /proc/$(pgrep -u nexus-live -x plasmashell)/environ"
+        " | grep -E '^(WAYLAND_DISPLAY|DISPLAY|XAUTHORITY|XDG_RUNTIME_DIR|DBUS_SESSION_BUS_ADDRESS|XDG_SESSION_TYPE)=' | xargs)"
+    )
+    run(session_env + "; (nexusos-install >/tmp/inst.log 2>&1 &) ; sleep 1; echo started")
     time.sleep(90)
     screendump("installer")
-    check(run("pgrep -x calamares >/dev/null && echo yes") == "yes", "installer (Calamares) starts")
+    started = run("pgrep -x calamares >/dev/null && echo yes") == "yes"
+    check(started, "installer (Calamares) starts")
+    if not started:
+        print(run("tail -5 /tmp/inst.log"), flush=True)
     calamares_log = run(
         "sudo sh -c 'cat /root/.cache/calamares/session.log 2>/dev/null' | grep -cE 'failed modules|not found in module'"
     )
-    check(calamares_log == "0", "installer loads every module")
+    check(started and calamares_log == "0", "installer loads every module")
 
 s.sendall(b"exit\r")
 sys.exit(fails)
