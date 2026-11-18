@@ -1,0 +1,13 @@
+{
+    "KPackageStructure": "Wallpaper/Images",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "NexusOS contributors"
+            }
+        ],
+        "Id": "NexusOS-HexGrid",
+        "License": "GPL-2.0-or-later",
+        "Name": "NexusOS Hex Grid"
+    }
+}

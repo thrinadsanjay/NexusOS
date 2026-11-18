@@ -19,11 +19,20 @@ override_dh_auto_install:
 	install -D -m 0644 lookandfeel/contents/layouts/org.kde.plasma.desktop-layout.js \
 	  $(LNF)/contents/layouts/org.kde.plasma.desktop-layout.js
 	install -D -m 0644 debian/rendered/preview.png $(LNF)/contents/previews/preview.png
+	# Desktop widgets: launcher rail and System Status panel
+	set -e; for w in org.nexusos.launcher org.nexusos.status; do \
+	  (cd plasmoids && find $$w -type f) | while read -r f; do \
+	    install -D -m 0644 plasmoids/$$f $(P)/usr/share/plasma/plasmoids/$$f; \
+	  done; \
+	done
 	# Colour scheme
 	install -D -m 0644 color-schemes/Nexus.colors $(P)/usr/share/color-schemes/Nexus.colors
 	# Icon theme: brand icons over breeze-dark
 	install -D -m 0644 icons/Nexus/index.theme $(ICONS)/index.theme
 	install -D -m 0644 icons/nexus-n.svg $(ICONS)/apps/scalable/nexusos.svg
+	install -m 0644 icons/Nexus/apps/*.svg $(ICONS)/apps/scalable/
+	install -d $(ICONS)/categories/scalable
+	install -m 0644 icons/Nexus/categories/*.svg $(ICONS)/categories/scalable/
 	set -e; for name in start-here start-here-kde start-here-kde-plasma distributor-logo; do \
 	  install -D -m 0644 icons/nexus-n.svg $(ICONS)/places/scalable/$$name.svg; \
 	done

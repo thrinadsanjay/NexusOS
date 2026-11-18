@@ -17,13 +17,24 @@ Multi-Arch: foreign
 Depends: ${misc:Depends},
          nexusos-branding (= ${source:Version}),
          breeze-icon-theme,
-         plasma-workspace
-Recommends: fonts-inter, fonts-jetbrains-mono, konsole
+         plasma-workspace,
+         plasma-desktop,
+         plasma-nm,
+         network-manager,
+         kde-cli-tools,
+         qml6-module-org-kde-ksysguard,
+         qml6-module-org-kde-bluezqt,
+         qml6-module-org-kde-plasma-plasma5support,
+         qml6-module-org-kde-kcmutils,
+         qml6-module-qtquick-shapes
+Recommends: fonts-inter, fonts-jetbrains-mono, konsole, bluedevil, powerdevil, ksystemstats, nexus-cli
 Description: Nexus global theme for KDE Plasma 6
  The NexusOS Engineering Edition look-and-feel package "Nexus":
  .
   * Nexus colour scheme (dark, teal accent) generated from design tokens
-  * global theme with top system panel and floating bottom dock layout
+  * global theme with a floating launcher rail (left) and a System Status
+    rail that expands into a control panel (right); no top bar or taskbar
+  * desktop widgets org.nexusos.launcher and org.nexusos.status
   * Nexus icon theme (Breeze Dark plus NexusOS launcher icons)
   * Nexus Konsole profile and terminal palette
  .

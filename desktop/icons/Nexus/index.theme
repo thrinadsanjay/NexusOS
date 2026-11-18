@@ -4,7 +4,7 @@ Comment=NexusOS icon theme: Breeze Dark with NexusOS launcher and distributor ic
 Inherits=breeze-dark,hicolor
 Example=nexusos
 DisplayDepth=32
-Directories=apps/scalable,places/scalable
+Directories=apps/scalable,places/scalable,categories/scalable
 
 [apps/scalable]
 Size=48
@@ -18,4 +18,11 @@ Size=48
 MinSize=16
 MaxSize=512
 Context=Places
+Type=Scalable
+
+[categories/scalable]
+Size=48
+MinSize=16
+MaxSize=512
+Context=Categories
 Type=Scalable

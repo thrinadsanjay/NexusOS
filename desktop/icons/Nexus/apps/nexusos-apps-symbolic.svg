@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- NexusOS application-launcher glyph (follows the Plasma text colour). Original artwork, GPL-2.0-or-later. -->
+  <style id="current-color-scheme">.ColorScheme-Text { color: #E8F1F2; }</style>
+  <g class="ColorScheme-Text" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+    <rect x="4" y="4" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2"/>
+    <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2"/>
+  </g>
+</svg>

@@ -7,11 +7,11 @@
             }
         ],
         "Category": "",
-        "Description": "Nexus: the NexusOS Engineering Edition desktop (dark, teal accent, top system bar and bottom dock)",
+        "Description": "Nexus: the NexusOS Engineering Edition desktop (dark, teal accent, launcher rail on the left, System Status rail on the right)",
         "Id": "org.nexusos.nexus.desktop",
         "License": "GPL-2.0-or-later",
         "Name": "Nexus",
-        "Version": "0.1.0",
+        "Version": "0.3.0",
         "Website": "https://github.com/thrinadsanjay/NexusOS"
     },
     "X-Plasma-APIVersion": "2"

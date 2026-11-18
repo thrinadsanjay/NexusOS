@@ -165,6 +165,29 @@ def cleanup(
             console.print(status_text("ok") + f" {item.id}: freed {human_bytes(freed)}")
 
 
+@app.command("desktop-status")
+@handle_errors
+def desktop_status(
+    json_output: bool = typer.Option(False, "--json", help="Emit JSON (used by the desktop status panel)."),
+    no_updates: bool = typer.Option(False, "--no-updates", help="Skip the (cached) APT update check."),
+) -> None:
+    """Health, alerts, storage and services shown by the desktop System Status panel."""
+    from nexus_core import desktop_status as ds
+
+    report = ds.collect(include_updates=not no_updates)
+    if json_output:
+        print_json(report)
+        return
+    console.print(f"Services   {report.services.running} running, {report.services.failed} failed")
+    if report.updates.known:
+        console.print(f"Updates    {report.updates.security} security, {report.updates.regular} regular")
+    if report.root:
+        console.print(f"Storage    {report.root.mount} {report.root.percent:.0f} % used")
+    for alert in report.alerts:
+        level = "fail" if alert.severity == "critical" else "warn"
+        console.print(status_text(level) + f" {alert.title}  {alert.detail}")
+
+
 # ----------------------------------------------------------------------------- v0.2
 @app.command("services")
 @handle_errors

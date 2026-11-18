@@ -1,0 +1,19 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "NexusOS contributors"
+            }
+        ],
+        "Category": "System Information",
+        "Description": "NexusOS System Status: a compact rail with clock, connectivity, battery and load that expands into a control panel",
+        "Icon": "nexusos",
+        "Id": "org.nexusos.status",
+        "License": "GPL-2.0-or-later",
+        "Name": "NexusOS System Status",
+        "Version": "1.0",
+        "Website": "https://github.com/thrinadsanjay/NexusOS"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

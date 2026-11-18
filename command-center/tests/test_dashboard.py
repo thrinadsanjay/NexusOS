@@ -302,3 +302,27 @@ def test_cpu_package_temperature(labels, expected):
     from nexus_core.metrics import Temperature
 
     assert dashboard.cpu_package_temperature([Temperature(label=label, celsius=c) for label, c in labels]) == expected
+
+
+def test_desktop_status_mount_levels_and_update_cache(tmp_path, monkeypatch):
+    from nexus_core import dashboard, desktop_status, storage
+
+    def u(mount, used):
+        return storage.Usage(mount=mount, source="/dev/x", fstype="ext4", size=100, used=used, available=100 - used)
+
+    levels = {m.mount: m.level for m in desktop_status.mounts_status([u("/", 50), u("/data", 90), u("/var", 97)])}
+    assert levels == {"/": "ok", "/data": "warning", "/var": "critical"}
+
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    calls = []
+
+    def fake_updates():
+        calls.append(1)
+        return dashboard.UpdateSummary(total=3, security=1, security_packages=["openssl"], checked_at="10:00")
+
+    monkeypatch.setattr(dashboard, "updates_summary", fake_updates)
+    first = desktop_status.cached_updates(now=1000.0)
+    again = desktop_status.cached_updates(now=1000.0 + 60)
+    assert first == again and len(calls) == 1  # cached: APT simulation runs once
+    desktop_status.cached_updates(now=1000.0 + desktop_status.UPDATES_TTL_S + 1)
+    assert len(calls) == 2  # expired: recomputed

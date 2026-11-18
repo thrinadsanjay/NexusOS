@@ -3,6 +3,9 @@ desktop/global-theme/org.nexusos.nexus.desktop          lookandfeel
 desktop/panels/org.kde.plasma.desktop-layout.js          lookandfeel/contents/layouts/org.kde.plasma.desktop-layout.js
 desktop/color-schemes/Nexus.colors                       color-schemes/Nexus.colors
 desktop/icons/Nexus/index.theme                          icons/Nexus/index.theme
+desktop/icons/Nexus/categories                           icons/Nexus/categories
+desktop/icons/Nexus/apps                                 icons/Nexus/apps
+desktop/plasmoids                                        plasmoids
 branding/icons/nexus-n.svg                               icons/nexus-n.svg
 branding/wallpapers/nexusos-default.svg                  previews/nexusos-default.svg
 configs/kde/konsole/Nexus.profile                        konsole/Nexus.profile

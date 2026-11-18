@@ -94,27 +94,34 @@ def test_kde_color_scheme_uses_tokens():
     assert "ColorScheme=Nexus" in colors
 
 
-def test_panel_layout_uses_only_upstream_widgets():
+def test_panel_layout_is_two_rails_without_tray_or_taskbar():
     layout = (REPO_ROOT / "desktop/panels/org.kde.plasma.desktop-layout.js").read_text()
-    allowed = {
-        "org.kde.plasma.kickoff",
-        "org.kde.plasma.pager",
-        "org.kde.plasma.panelspacer",
-        "org.kde.plasma.systemmonitor.cpu",
-        "org.kde.plasma.systemmonitor.memory",
-        "org.kde.plasma.systemmonitor.net",
-        "org.kde.plasma.digitalclock",
-        "org.kde.plasma.systemtray",
-        "org.kde.plasma.showdesktop",
-        "org.kde.plasma.icontasks",
-    }
     import re
 
     used = set(re.findall(r'addWidget\("([^"]+)"\)', layout))
-    assert used <= allowed, used - allowed
-    for launcher in ("org.nexusos.dev.desktop", "org.nexusos.infra.desktop", "org.nexusos.ai.desktop"):
-        assert launcher in layout
-        assert (REPO_ROOT / "packages/nexusos-desktop/applications" / launcher).is_file()
+    upstream = {"org.kde.plasma.kickoff", "org.kde.plasma.notifications"}
+    ours = {"org.nexusos.launcher", "org.nexusos.status"}
+    assert used == upstream | ours, used
+    assert 'railPanel("left")' in layout and 'railPanel("right")' in layout
+    assert '"top"' not in layout and '"bottom"' not in layout
+    for widget in ours:
+        meta = json.loads((REPO_ROOT / "desktop/plasmoids" / widget / "metadata.json").read_text())
+        assert meta["KPlugin"]["Id"] == widget and meta["KPackageStructure"] == "Plasma/Applet"
+        assert (REPO_ROOT / "desktop/plasmoids" / widget / "contents/ui/main.qml").is_file()
+
+
+def test_launcher_tools_have_desktop_entries_gated_by_tryexec():
+    apps = REPO_ROOT / "packages/nexusos-desktop/applications"
+    for name, tryexec in (
+        ("org.nexusos.containers.desktop", "docker"),
+        ("org.nexusos.ai-assistant.desktop", "ollama"),
+        ("org.nexusos.cloud.desktop", "nexus-center"),
+    ):
+        entry = (apps / name).read_text()
+        assert f"TryExec={tryexec}\n" in entry and "Exec=nexus-center --page " in entry
+    launcher = (REPO_ROOT / "desktop/plasmoids/org.nexusos.launcher/contents/ui/main.qml").read_text()
+    for desktop_id in ("org.nexusos.containers", "org.nexusos.ai-assistant", "org.nexusos.cloud", "virt-manager"):
+        assert f'"{desktop_id}"' in launcher
 
 
 def test_creator_credit_is_consistent():

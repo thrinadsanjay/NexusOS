@@ -12,7 +12,7 @@ P := debian/nexusos-branding
 
 override_dh_auto_build:
 	set -e; \
-	for spec in default:NexusOS abstract:NexusOS-Abstract engineering:NexusOS-Engineering; do \
+	for spec in default:NexusOS abstract:NexusOS-Abstract engineering:NexusOS-Engineering aurora:NexusOS-Aurora summit:NexusOS-Summit hexgrid:NexusOS-HexGrid; do \
 	  src=$${spec%%:*}; pkg=$${spec##*:}; \
 	  mkdir -p debian/rendered/wallpapers/$$pkg/contents/images; \
 	  for size in $(WALLPAPER_SIZES); do \
@@ -59,7 +59,7 @@ override_dh_auto_install:
 	  install -D -m 0644 assets/branding/icons/$$i.svg $(P)/usr/share/icons/hicolor/scalable/apps/$$i.svg; \
 	done
 	# KDE wallpaper packages
-	set -e; for pkg in NexusOS NexusOS-Abstract NexusOS-Engineering; do \
+	set -e; for pkg in NexusOS NexusOS-Abstract NexusOS-Engineering NexusOS-Aurora NexusOS-Summit NexusOS-HexGrid; do \
 	  install -D -m 0644 assets/wallpapers/$$pkg/metadata.json $(P)/usr/share/wallpapers/$$pkg/metadata.json; \
 	  install -D -m 0644 debian/rendered/wallpapers/$$pkg/contents/screenshot.png \
 	    $(P)/usr/share/wallpapers/$$pkg/contents/screenshot.png; \

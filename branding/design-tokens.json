@@ -33,7 +33,10 @@
     "tool-infra": "#E0AE4A",
     "tool-infra-light": "#F3CF83",
     "tool-ai": "#E46DB8",
-    "tool-ai-light": "#F7A8D8"
+    "tool-ai-light": "#F7A8D8",
+    "navy-deep": "#0A1424",
+    "navy": "#10213A",
+    "navy-mist": "#1A3350"
   },
   "typography": {
     "ui": {

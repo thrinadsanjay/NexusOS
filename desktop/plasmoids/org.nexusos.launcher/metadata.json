@@ -1,0 +1,19 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "NexusOS contributors"
+            }
+        ],
+        "Category": "Application Launchers",
+        "Description": "NexusOS launcher rail: icon-only application shortcuts with running indicators; tools appear only when installed",
+        "Icon": "nexusos",
+        "Id": "org.nexusos.launcher",
+        "License": "GPL-2.0-or-later",
+        "Name": "NexusOS Launcher",
+        "Version": "1.0",
+        "Website": "https://github.com/thrinadsanjay/NexusOS"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

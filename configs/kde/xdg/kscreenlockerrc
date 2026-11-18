@@ -1,0 +1,9 @@
+# NexusOS lock screen ("screen saver"): a slideshow of the NexusOS landscapes.
+# Users can change it in System Settings > Screen Locking > Appearance.
+[Greeter]
+WallpaperPlugin=org.kde.slideshow
+
+[Greeter][Wallpaper][org.kde.slideshow][General]
+SlidePaths=/usr/share/wallpapers/NexusOS-Aurora/,/usr/share/wallpapers/NexusOS-Summit/,/usr/share/wallpapers/NexusOS-HexGrid/,/usr/share/wallpapers/NexusOS/
+SlideInterval=300
+FillMode=2

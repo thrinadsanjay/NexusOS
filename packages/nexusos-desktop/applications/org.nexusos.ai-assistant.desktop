@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Nexus AI Assistant
+GenericName=Local AI Chat
+Comment=Chat with local models (Ollama) in the Nexus Command Center
+Exec=nexus-center --page ai
+TryExec=ollama
+Icon=nexus-ai
+Terminal=false
+Categories=Utility;Development;
+Keywords=ai;llm;ollama;chat;assistant;
+StartupWMClass=nexus-center

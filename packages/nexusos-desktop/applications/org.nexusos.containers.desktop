@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Containers
+GenericName=Container Management
+Comment=Docker containers, images, volumes and Compose in the Nexus Command Center
+Exec=nexus-center --page containers
+TryExec=docker
+Icon=nexus-infra
+Terminal=false
+Categories=System;Development;
+Keywords=docker;podman;compose;containers;
+StartupWMClass=nexus-center

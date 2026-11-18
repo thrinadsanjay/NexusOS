@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Nexus Cloud Platform
+GenericName=Self-hosted Applications
+Comment=Nexus applications, routes and certificates in the Command Center
+Exec=nexus-center --page applications
+TryExec=nexus-center
+Icon=nexusos-command-center
+Terminal=false
+Categories=System;Network;
+Keywords=cloud;apps;gateway;nginx;self-hosted;
+StartupWMClass=nexus-center
