@@ -34,6 +34,50 @@ def test_calamares_yaml_parses_and_instances_have_configs():
     assert settings["branding"] == "nexusos" and (CAL / "branding" / "nexusos" / "branding.desc").exists()
 
 
+# Modules installed on the image: the `calamares` package (3.3) plus
+# calamares-settings-ubuntu-common-data. Anything else (e.g. Ubuntu's automirror, which needs
+# calamares-settings-ubuntu-common) stops the installer at start-up with
+# "Calamares Initialization Failed".
+CALAMARES_MODULES = {
+    "bootloader",
+    "contextualprocess",
+    "displaymanager",
+    "finished",
+    "fstab",
+    "grubcfg",
+    "hwclock",
+    "initramfs",
+    "initramfscfg",
+    "keyboard",
+    "locale",
+    "localecfg",
+    "luksbootkeyfile",
+    "machineid",
+    "mount",
+    "networkcfg",
+    "packages",
+    "partition",
+    "plymouthcfg",
+    "shellprocess",
+    "summary",
+    "umount",
+    "unpackfs",
+    "users",
+    "welcome",
+}
+
+
+def test_every_sequence_module_is_installed_on_the_image():
+    settings = _yaml(CAL / "settings.conf")
+    ids = {f"{i['module']}@{i['id']}" for i in settings["instances"]}
+    for step in settings["sequence"]:
+        for name in next(iter(step.values())):
+            module = name.split("@")[0]
+            assert module in CALAMARES_MODULES, f"{name}: module not on the image"
+            if "@" in name:
+                assert name in ids, f"{name}: no matching instance"
+
+
 def test_install_sequence_shows_partitioning_before_anything_is_written():
     seq = _yaml(CAL / "settings.conf")["sequence"]
     assert list(seq[0]) == ["show"] and "summary" in seq[0]["show"]
