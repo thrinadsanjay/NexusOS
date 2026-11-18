@@ -8,7 +8,8 @@ export XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true XD
 export QT_QUICK_BACKEND=software LIBGL_ALWAYS_SOFTWARE=1 LANG=C.UTF-8
 # shellcheck disable=SC1090
 for f in /etc/xdg/plasma-workspace/env/*.sh; do . "$f"; done   # NexusOS sets XDG_CONFIG_DIRS here
-kwin_wayland --no-lockscreen --virtual --width 1600 --height 1000 --socket wayland-nexus >"/tmp/nx-kwin-$U.log" 2>&1 &
+# test container only: let spectacle capture the virtual screen without a portal prompt
+KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 kwin_wayland --no-lockscreen --virtual --width 1600 --height 1000 --socket wayland-nexus >"/tmp/nx-kwin-$U.log" 2>&1 &
 for _ in $(seq 30); do [ -S "$XDG_RUNTIME_DIR/wayland-nexus" ] && break; sleep 0.5; done
 export WAYLAND_DISPLAY=wayland-nexus QT_QPA_PLATFORM=wayland
 systemctl --user import-environment WAYLAND_DISPLAY QT_QPA_PLATFORM XDG_CONFIG_DIRS XDG_CURRENT_DESKTOP QT_QUICK_BACKEND KDE_FULL_SESSION

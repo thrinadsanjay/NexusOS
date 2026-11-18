@@ -45,7 +45,11 @@ expect "lock screen slideshow" "$lock" org.kde.slideshow
 # the applets' "activate widget" global shortcuts, like a keyboard user would)
 if [ -n "$SHOTS" ]; then
     mkdir -p "$SHOTS"
-    shot() { sleep "${2:-3}"; timeout 30 spectacle -b -n -f -o "$SHOTS/$1.png" >/dev/null 2>&1 && pass "screenshot $1" || fail "screenshot $1"; }
+    shot() {
+        sleep "${2:-3}"
+        timeout 30 spectacle -b -n -f -o "$SHOTS/$1.png" >"/tmp/nx-spectacle-$1.log" 2>&1
+        [ -s "$SHOTS/$1.png" ] && pass "screenshot $1" || { fail "screenshot $1"; tail -3 "/tmp/nx-spectacle-$1.log"; }
+    }
     activate() {
         local id
         id=$(qdbus6 org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
