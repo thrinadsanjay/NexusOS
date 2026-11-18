@@ -33,7 +33,9 @@ kvm_args=()
 [ -e /dev/kvm ] && kvm_args=(--device /dev/kvm)
 
 docker run --rm "${kvm_args[@]}" -e LIVE_MIN="$LIVE_MIN" -e LAYOUT_TEST="$LAYOUT" -v "$ISO:/test.iso:ro" -v "$OUT:/out" \
-    -v "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/iso-live-checks.py:/checks/iso-live-checks.py:ro" ubuntu:26.04 bash -euo pipefail -c '
+    -v "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/iso-live-checks.py:/checks/iso-live-checks.py:ro" \
+    -v "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/installer/live/nexusos-lvm-layout:/checks/nexusos-lvm-layout:ro" \
+    -e LVM_TOOL_OVERRIDE="${LVM_TOOL_OVERRIDE:+/checks/nexusos-lvm-layout}" ubuntu:26.04 bash -euo pipefail -c '
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq && apt-get install -y -qq --no-install-recommends qemu-system-x86 ovmf python3 python3-pil \
     xorriso socat >/dev/null

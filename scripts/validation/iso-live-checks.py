@@ -168,6 +168,17 @@ if os.environ.get("LAYOUT_TEST"):
 
     # Installer storage support and the LVM layout helper, on the VM's empty virtual disk.
     tool = "sudo /usr/libexec/nexusos/nexusos-lvm-layout"
+    override = os.environ.get("LVM_TOOL_OVERRIDE")  # test a newer helper without rebuilding the ISO
+    if override and os.path.exists(override):
+        import base64
+
+        payload = base64.b64encode(open(override, "rb").read()).decode()  # noqa: SIM115
+        run("rm -f /tmp/lvm.b64")
+        for i in range(0, len(payload), 600):
+            run(f"echo {payload[i : i + 600]} >> /tmp/lvm.b64")
+        run("base64 -d /tmp/lvm.b64 > /tmp/nexusos-lvm-layout && chmod +x /tmp/nexusos-lvm-layout")
+        tool = "sudo /tmp/nexusos-lvm-layout"
+        print("      using the LVM helper from the working tree", flush=True)
     check(
         run("command -v mkfs.xfs pvcreate mkfs.btrfs | wc -l") == "3",
         "xfsprogs, lvm2 and btrfs-progs in the live image",
@@ -179,10 +190,11 @@ if os.environ.get("LAYOUT_TEST"):
         "refusing to erase" in run(f"{tool} --disk /dev/vda --yes 2>&1; true"),
         "LVM helper refuses without --confirm-disk",
     )
-    medium = run("findmnt -n -o SOURCE /cdrom | sed 's/[0-9]*$//'")
+    medium = run(
+        "lsblk -no PKNAME $(findmnt -n -o SOURCE /cdrom) 2>/dev/null | sed 's|^|/dev/|' | grep . || findmnt -n -o SOURCE /cdrom"
+    )
     check(
-        "live medium" in run(f"{tool} --disk {medium} --confirm-disk {medium} --yes 2>&1; true")
-        or "not a" in run(f"{tool} --disk {medium} --confirm-disk {medium} --yes 2>&1; true"),
+        "nexusos-lvm-layout:" in run(f"{tool} --disk {medium} --confirm-disk {medium} --yes 2>&1; true"),
         f"LVM helper refuses the live medium ({medium})",
     )
     created = run(f"{tool} --disk /dev/vda --fs xfs --confirm-disk /dev/vda --yes >/tmp/lvm.log 2>&1; echo rc=$?", 600)

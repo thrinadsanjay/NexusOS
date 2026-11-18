@@ -134,6 +134,20 @@ def partition_path(disk: str, number: int) -> str:
     return f"{disk}p{number}" if disk[-1].isdigit() else f"{disk}{number}"
 
 
+def sfdisk_script(plan: Plan) -> str:
+    """sfdisk input for the plan (sfdisk calls an MBR table "dos", the installer "msdos")."""
+    lines = [f"label: {'gpt' if plan.table == 'gpt' else 'dos'}", "unit: sectors", ""]
+    for p in plan.partitions:
+        size = f"size={p.size_mib}MiB, " if p.size_mib else ""
+        if plan.table == "gpt":
+            ptype = {"efi": "U", "boot": "L", "lvm": "E6D6D379-F507-44C2-A23C-238F2A3DF928"}[p.name]
+            lines.append(f"{size}type={ptype}, name={p.label}")
+        else:
+            ptype = {"boot": "83", "lvm": "8e"}[p.name]
+            lines.append(f"{size}type={ptype}" + (", bootable" if p.name == "boot" else ""))
+    return "\n".join(lines) + "\n"
+
+
 # ---------------------------------------------------------------------------- environment checks
 def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
     print("+ " + " ".join(cmd), flush=True)
@@ -205,16 +219,8 @@ def apply(plan: Plan) -> None:
         if shutil.which(tool) is None:
             raise LayoutError(f"{tool} is missing")
     run(["wipefs", "--all", "--force", disk])
-    script = [f"label: {plan.table}", "unit: sectors", ""]
-    for p in plan.partitions:
-        size = f"size={p.size_mib}MiB, " if p.size_mib else ""
-        if plan.table == "gpt":
-            ptype = {"efi": "U", "boot": "L", "lvm": "E6D6D379-F507-44C2-A23C-238F2A3DF928"}[p.name]
-            script.append(f"{size}type={ptype}, name={p.label}")
-        else:
-            ptype = {"boot": "83", "lvm": "8e"}[p.name]
-            script.append(f"{size}type={ptype}" + (", bootable" if p.name == "boot" else ""))
-    run(["sfdisk", "--wipe", "always", "--wipe-partitions", "always", disk], input="\n".join(script) + "\n")
+    script = sfdisk_script(plan)
+    run(["sfdisk", "--wipe", "always", "--wipe-partitions", "always", disk], input=script)
     run(["udevadm", "settle"])
     paths = {p.name: partition_path(disk, i + 1) for i, p in enumerate(plan.partitions)}
     for _ in range(20):

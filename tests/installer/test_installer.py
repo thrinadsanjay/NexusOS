@@ -173,6 +173,20 @@ def test_lvm_layout_plan_uefi_and_bios():
     assert bios.logical_volumes[0].size_mib + bios.vg_free_mib == bios.pv_size_mib - 4
 
 
+def test_lvm_layout_sfdisk_scripts():
+    tool = _lvm_tool()
+    bios = tool.sfdisk_script(tool.plan_layout("/dev/vda", 40 * 1024, efi=False, fs="xfs", ram_mib=4096))
+    assert bios.splitlines()[0] == "label: dos"  # sfdisk rejects "msdos" ("unsupported command")
+    assert bios.splitlines()[3:] == ["size=2048MiB, type=83, bootable", "type=8e"]
+    efi = tool.sfdisk_script(tool.plan_layout("/dev/nvme0n1", 100 * 1024, efi=True, fs="ext4", ram_mib=4096))
+    assert efi.splitlines()[0] == "label: gpt"
+    assert efi.splitlines()[3:] == [
+        "size=1024MiB, type=U, name=NEXUS-EFI",
+        "size=2048MiB, type=L, name=nexus-boot",
+        "type=E6D6D379-F507-44C2-A23C-238F2A3DF928, name=nexus-pv",
+    ]
+
+
 def test_lvm_layout_refuses_bad_input():
     import pytest
 
