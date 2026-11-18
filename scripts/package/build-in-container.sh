@@ -56,3 +56,8 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" \
         chown -R "$HOST_UID:$HOST_GID" /out
     ' bash "${packages[@]}"
 echo "packages written to $OUT_DIR"
+# The installer needs Calamares with the NexusOS patches (default partition layouts); rebuilt
+# only when installer/calamares/patches change. Skip with NEXUSOS_SKIP_CALAMARES=1.
+if [ "${#packages[@]}" -eq 0 ] && [ -z "${NEXUSOS_SKIP_CALAMARES:-}" ]; then
+    "$REPO_ROOT/scripts/package/build-calamares.sh" --out "$OUT_DIR"
+fi

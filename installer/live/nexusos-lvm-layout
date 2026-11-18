@@ -1,0 +1,297 @@
+#!/usr/bin/python3 -I
+"""Prepare the NexusOS LVM disk layout for the installer (live session only).
+
+    nexusos-lvm-layout --disk /dev/sda --fs xfs --plan              # print the plan, change nothing
+    nexusos-lvm-layout --disk /dev/sda --fs xfs --confirm-disk /dev/sda --yes
+
+Called by the installer's manual partitioning page ("Default layout > LVM"). Erases the chosen
+disk and creates:
+
+    UEFI:  GPT   1 GiB EFI system (FAT32, NEXUS-EFI) | 2 GiB /boot (ext4, nexus-boot) | LVM PV
+    BIOS:  MBR   2 GiB /boot (ext4, nexus-boot) | LVM PV
+    LVM:   volume group "nexus": swap (nexus-swap), root (ext4/xfs, nexus-root), the rest free
+
+The installer then rescans the disk, assigns /boot/efi, /boot, / and swap from those labels, and
+the free space in the volume group can hold more logical volumes (/home, /var, ...).
+
+Safety: runs only as root inside the live session (boot=casper), only on a whole disk, never on
+a disk that holds the live medium or has anything mounted, active swap or device-mapper users,
+and only with --yes plus --confirm-disk repeating the disk path.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from dataclasses import asdict, dataclass, field
+
+MIB = 1024 * 1024
+GIB = 1024 * MIB
+EFI_MIB = 1024
+BOOT_MIB = 2048
+ALIGN_MIB = 1
+MIN_ROOT_GIB = 12
+VG_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9+_.-]{0,62}$")
+
+
+class LayoutError(Exception):
+    pass
+
+
+@dataclass
+class Volume:
+    name: str
+    size_mib: int  # 0 = rest
+    fs: str
+    label: str
+    mount: str
+
+
+@dataclass
+class Plan:
+    disk: str
+    disk_size_mib: int
+    table: str  # gpt | msdos
+    partitions: list[Volume]
+    vg: str
+    pv_size_mib: int
+    logical_volumes: list[Volume]
+    vg_free_mib: int
+    notes: list[str] = field(default_factory=list)
+
+
+def swap_suggestion_mib(ram_mib: int) -> int:
+    """Like the installer's "small swap": RAM up to 8 GiB, at least 1 GiB, rounded to 256 MiB."""
+    size = max(1024, min(ram_mib, 8192))
+    return (size + 255) // 256 * 256
+
+
+def plan_layout(
+    disk: str,
+    disk_size_mib: int,
+    *,
+    efi: bool,
+    fs: str,
+    ram_mib: int,
+    root_gib: int = 0,
+    swap_gib: int = -1,
+    vg: str = "nexus",
+) -> Plan:
+    """Pure planning (unit-tested): sizes in MiB, nothing touches the disk."""
+    if fs not in ("ext4", "xfs"):
+        raise LayoutError("root filesystem must be ext4 or xfs")
+    if not VG_NAME_RE.match(vg):
+        raise LayoutError(f"invalid volume group name: {vg!r}")
+    parts: list[Volume] = []
+    if efi:
+        parts.append(Volume("efi", EFI_MIB, "vfat", "NEXUS-EFI", "/boot/efi"))
+    parts.append(Volume("boot", BOOT_MIB, "ext4", "nexus-boot", "/boot"))
+    overhead = ALIGN_MIB + (1 if efi else 0)  # leading alignment, backup GPT
+    pv_mib = disk_size_mib - overhead - sum(p.size_mib for p in parts)
+    pv_mib -= pv_mib % 4  # whole extents (4 MiB)
+    pv_usable = pv_mib - 4  # LVM metadata area
+    swap_mib = swap_suggestion_mib(ram_mib) if swap_gib < 0 else swap_gib * 1024
+    if pv_usable < MIN_ROOT_GIB * 1024 + swap_mib:
+        raise LayoutError(
+            f"disk too small: {disk_size_mib // 1024} GiB, need at least {(MIN_ROOT_GIB * 1024 + swap_mib + overhead + BOOT_MIB + (EFI_MIB if efi else 0)) // 1024 + 1} GiB"
+        )
+    room = pv_usable - swap_mib
+    if root_gib > 0:
+        root_mib = root_gib * 1024
+        if root_mib > room:
+            raise LayoutError(f"root of {root_gib} GiB does not fit ({room // 1024} GiB available after swap)")
+    else:  # half of the volume group, at least 30 GiB (or all of it on small disks)
+        root_mib = min(room, max(30 * 1024, room // 2))
+    root_mib -= root_mib % 4
+    lvs = []
+    if swap_mib:
+        lvs.append(Volume("swap", swap_mib, "swap", "nexus-swap", "swap"))
+    lvs.append(Volume("root", root_mib, fs, "nexus-root", "/"))
+    parts.append(Volume("lvm", 0, "lvm2_pv", "nexus-pv", ""))
+    plan = Plan(
+        disk=disk,
+        disk_size_mib=disk_size_mib,
+        table="gpt" if efi else "msdos",
+        partitions=parts,
+        vg=vg,
+        pv_size_mib=pv_mib,
+        logical_volumes=lvs,
+        vg_free_mib=pv_usable - swap_mib - root_mib,
+    )
+    if plan.vg_free_mib >= 1024:
+        plan.notes.append(f"{plan.vg_free_mib // 1024} GiB stay free in {vg} for more logical volumes")
+    return plan
+
+
+def partition_path(disk: str, number: int) -> str:
+    """/dev/sda + 1 -> /dev/sda1; /dev/nvme0n1 + 1 -> /dev/nvme0n1p1."""
+    return f"{disk}p{number}" if disk[-1].isdigit() else f"{disk}{number}"
+
+
+# ---------------------------------------------------------------------------- environment checks
+def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
+    print("+ " + " ".join(cmd), flush=True)
+    return subprocess.run(cmd, check=True, text=True, **kw)  # noqa: S603 - fixed tool names, validated arguments
+
+
+def lsblk(disk: str) -> dict:
+    out = subprocess.run(  # noqa: S603
+        ["lsblk", "--json", "--bytes", "-o", "NAME,PATH,TYPE,SIZE,MOUNTPOINTS,RM,RO,FSTYPE", disk],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    return json.loads(out)["blockdevices"][0]
+
+
+def in_live_session() -> bool:
+    try:
+        with open("/proc/cmdline") as f:
+            return "boot=casper" in f.read().split()
+    except OSError:
+        return False
+
+
+def check_disk(disk: str) -> int:
+    """Refuse anything but an idle whole disk; returns its size in MiB."""
+    if not re.match(r"^/dev/(sd[a-z]+|vd[a-z]+|xvd[a-z]+|hd[a-z]+|nvme\d+n\d+|mmcblk\d+)$", disk):
+        raise LayoutError(f"{disk} is not a whole-disk device name")
+    info = lsblk(disk)
+    if info.get("type") != "disk":
+        raise LayoutError(f"{disk} is not a disk")
+    if info.get("ro"):
+        raise LayoutError(f"{disk} is read-only")
+
+    def walk(node: dict):
+        yield node
+        for child in node.get("children") or []:
+            yield from walk(child)
+
+    for node in walk(info):
+        mounts = [m for m in (node.get("mountpoints") or []) if m]
+        if mounts:
+            raise LayoutError(f"{node['path']} is mounted on {', '.join(mounts)}: the disk is in use")
+        if node.get("type") in ("crypt", "lvm", "raid0", "raid1", "raid5", "raid6", "raid10") and node is not info:
+            raise LayoutError(f"{node['path']} is active ({node['type']}); close it first")
+    with open("/proc/swaps") as f:
+        for line in f.read().splitlines()[1:]:
+            dev = line.split()[0]
+            if dev.startswith(disk):
+                raise LayoutError(f"swap is active on {dev}")
+    live = subprocess.run(["findmnt", "-n", "-o", "SOURCE", "/cdrom"], capture_output=True, text=True).stdout.strip()  # noqa: S603, S607
+    if live and live.startswith(disk):
+        raise LayoutError(f"{disk} holds the live medium")
+    return int(info["size"]) // MIB
+
+
+def ram_mib() -> int:
+    with open("/proc/meminfo") as f:
+        for line in f:
+            if line.startswith("MemTotal:"):
+                return int(line.split()[1]) // 1024
+    return 4096
+
+
+# ---------------------------------------------------------------------------- apply
+def apply(plan: Plan) -> None:
+    disk = plan.disk
+    for tool in ("wipefs", "sfdisk", "pvcreate", "vgcreate", "lvcreate", "mkfs.ext4", "mkswap", "udevadm"):
+        if shutil.which(tool) is None:
+            raise LayoutError(f"{tool} is missing")
+    run(["wipefs", "--all", "--force", disk])
+    script = [f"label: {plan.table}", "unit: sectors", ""]
+    for p in plan.partitions:
+        size = f"size={p.size_mib}MiB, " if p.size_mib else ""
+        if plan.table == "gpt":
+            ptype = {"efi": "U", "boot": "L", "lvm": "E6D6D379-F507-44C2-A23C-238F2A3DF928"}[p.name]
+            script.append(f"{size}type={ptype}, name={p.label}")
+        else:
+            ptype = {"boot": "83", "lvm": "8e"}[p.name]
+            script.append(f"{size}type={ptype}" + (", bootable" if p.name == "boot" else ""))
+    run(["sfdisk", "--wipe", "always", "--wipe-partitions", "always", disk], input="\n".join(script) + "\n")
+    run(["udevadm", "settle"])
+    paths = {p.name: partition_path(disk, i + 1) for i, p in enumerate(plan.partitions)}
+    for _ in range(20):
+        if all(os.path.exists(path) for path in paths.values()):
+            break
+        time.sleep(0.5)
+    if "efi" in paths:
+        run(["mkfs.vfat", "-F", "32", "-n", "NEXUS-EFI", paths["efi"]])
+    run(["mkfs.ext4", "-F", "-q", "-L", "nexus-boot", paths["boot"]])
+    run(["pvcreate", "-ff", "-y", paths["lvm"]])
+    run(["vgcreate", "-y", "-s", "4M", plan.vg, paths["lvm"]])
+    for lv in plan.logical_volumes:
+        run(["lvcreate", "-y", "-W", "y", "-L", f"{lv.size_mib}M", "-n", lv.name, plan.vg])
+        dev = f"/dev/{plan.vg}/{lv.name}"
+        if lv.fs == "swap":
+            run(["mkswap", "-L", lv.label, dev])
+        elif lv.fs == "xfs":
+            run(["mkfs.xfs", "-f", "-L", lv.label, dev])
+        else:
+            run(["mkfs.ext4", "-F", "-q", "-L", lv.label, dev])
+    run(["udevadm", "settle"])
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="Prepare the NexusOS LVM disk layout (erases the disk).")
+    ap.add_argument("--disk", required=True, help="whole disk, e.g. /dev/sda or /dev/nvme0n1")
+    ap.add_argument("--fs", default="ext4", choices=["ext4", "xfs"], help="root filesystem")
+    ap.add_argument("--root-gib", type=int, default=0, help="root size; 0 = half of the volume group (min 30 GiB)")
+    ap.add_argument("--swap-gib", type=int, default=-1, help="swap size; -1 = like RAM (max 8 GiB), 0 = none")
+    ap.add_argument("--vg", default="nexus", help="volume group name")
+    ap.add_argument("--firmware", choices=["auto", "efi", "bios"], default="auto")
+    ap.add_argument("--plan", action="store_true", help="print the plan as JSON and change nothing")
+    ap.add_argument("--confirm-disk", default="", help="repeat the disk path to confirm erasing it")
+    ap.add_argument("--yes", action="store_true", help="erase the disk and create the layout")
+    args = ap.parse_args(argv)
+    try:
+        efi = os.path.isdir("/sys/firmware/efi") if args.firmware == "auto" else args.firmware == "efi"
+        if args.plan:
+            size = check_disk(args.disk) if os.path.exists(args.disk) else 0
+            plan = plan_layout(
+                args.disk,
+                size,
+                efi=efi,
+                fs=args.fs,
+                ram_mib=ram_mib(),
+                root_gib=args.root_gib,
+                swap_gib=args.swap_gib,
+                vg=args.vg,
+            )
+            print(json.dumps(asdict(plan), indent=2))
+            return 0
+        if not args.yes or args.confirm_disk != args.disk:
+            raise LayoutError("refusing to erase: pass --yes and --confirm-disk with the same disk path")
+        if os.geteuid() != 0:
+            raise LayoutError("must run as root (the installer runs it)")
+        if not in_live_session():
+            raise LayoutError("only available in the NexusOS live session")
+        plan = plan_layout(
+            args.disk,
+            check_disk(args.disk),
+            efi=efi,
+            fs=args.fs,
+            ram_mib=ram_mib(),
+            root_gib=args.root_gib,
+            swap_gib=args.swap_gib,
+            vg=args.vg,
+        )
+        apply(plan)
+        print(json.dumps(asdict(plan)))
+        return 0
+    except LayoutError as exc:
+        print(f"nexusos-lvm-layout: {exc}", file=sys.stderr)
+        return 2
+    except subprocess.CalledProcessError as exc:
+        print(f"nexusos-lvm-layout: {' '.join(exc.cmd)} failed ({exc.returncode})", file=sys.stderr)
+        return 3
+
+
+if __name__ == "__main__":
+    sys.exit(main())

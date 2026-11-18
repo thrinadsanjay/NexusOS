@@ -27,6 +27,8 @@ done
 for pkg in nexusos-desktop plymouth-theme-nexusos calamares-settings-nexusos nexusos-command-center; do
     ls "$DEB_DIR"/"${pkg}"_*.deb >/dev/null 2>&1 || { echo "missing $pkg in $DEB_DIR (run scripts/package/build-in-container.sh)" >&2; exit 1; }
 done
+ls "$DEB_DIR"/calamares_*nexusos*.deb >/dev/null 2>&1 || {
+    echo "missing the NexusOS Calamares build in $DEB_DIR (run scripts/package/build-calamares.sh)" >&2; exit 1; }
 mkdir -p "$OUT_DIR"
 
 env_args=()

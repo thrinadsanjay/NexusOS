@@ -141,3 +141,52 @@ def test_plymouth_frames_are_generated(tmp_path):
     assert "#31C6BD" in (tmp_path / "animation-0001.svg").read_text()
     theme = (ROOT / "boot/plymouth/nexusos/nexusos.plymouth").read_text()
     assert "ModuleName=two-step" in theme and "ImageDir=/usr/share/plymouth/themes/nexusos" in theme
+
+
+def _lvm_tool():
+    import importlib.machinery
+    import importlib.util
+
+    loader = importlib.machinery.SourceFileLoader("nexusos_lvm_layout", str(ROOT / "installer/live/nexusos-lvm-layout"))
+    spec = importlib.util.spec_from_loader("nexusos_lvm_layout", loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["nexusos_lvm_layout"] = module  # dataclasses look the module up
+    loader.exec_module(module)
+    return module
+
+
+def test_lvm_layout_plan_uefi_and_bios():
+    tool = _lvm_tool()
+    plan = tool.plan_layout("/dev/sda", 100 * 1024, efi=True, fs="xfs", ram_mib=4096)
+    assert plan.table == "gpt"
+    assert [(p.name, p.mount) for p in plan.partitions] == [("efi", "/boot/efi"), ("boot", "/boot"), ("lvm", "")]
+    lvs = {lv.name: lv for lv in plan.logical_volumes}
+    assert lvs["swap"].size_mib == 4096 and lvs["root"].fs == "xfs" and lvs["root"].mount == "/"
+    assert lvs["root"].size_mib >= 30 * 1024 and plan.vg_free_mib > 0  # room left for /home, /var, ...
+    used = sum(p.size_mib for p in plan.partitions) + plan.pv_size_mib
+    assert used <= 100 * 1024
+    assert plan.pv_size_mib - 4 == sum(lv.size_mib for lv in plan.logical_volumes) + plan.vg_free_mib
+
+    bios = tool.plan_layout("/dev/vda", 25 * 1024, efi=False, fs="ext4", ram_mib=16384, swap_gib=0)
+    assert bios.table == "msdos" and [p.name for p in bios.partitions] == ["boot", "lvm"]
+    assert [lv.name for lv in bios.logical_volumes] == ["root"]  # swap 0 = none
+    assert bios.logical_volumes[0].size_mib + bios.vg_free_mib == bios.pv_size_mib - 4
+
+
+def test_lvm_layout_refuses_bad_input():
+    import pytest
+
+    tool = _lvm_tool()
+    with pytest.raises(tool.LayoutError):
+        tool.plan_layout("/dev/sda", 10 * 1024, efi=True, fs="ext4", ram_mib=4096)  # too small
+    with pytest.raises(tool.LayoutError):
+        tool.plan_layout("/dev/sda", 100 * 1024, efi=True, fs="ntfs", ram_mib=4096)
+    with pytest.raises(tool.LayoutError):
+        tool.plan_layout("/dev/sda", 100 * 1024, efi=True, fs="ext4", ram_mib=4096, vg="bad name")
+    with pytest.raises(tool.LayoutError):
+        tool.plan_layout("/dev/sda", 50 * 1024, efi=True, fs="ext4", ram_mib=4096, root_gib=200)
+    assert (
+        tool.partition_path("/dev/nvme0n1", 2) == "/dev/nvme0n1p2" and tool.partition_path("/dev/sda", 3) == "/dev/sda3"
+    )
+    # without --yes and a matching --confirm-disk nothing is erased (checked before any disk access)
+    assert tool.main(["--disk", "/dev/sda", "--confirm-disk", "/dev/sdb", "--yes"]) == 2

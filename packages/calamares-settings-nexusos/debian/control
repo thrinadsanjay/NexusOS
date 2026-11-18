@@ -20,6 +20,12 @@ Depends: ${misc:Depends},
          calamares-settings-ubuntu-common-data,
          qml6-module-qtquick,
          cryptsetup,
+         lvm2,
+         xfsprogs,
+         btrfs-progs,
+         dosfstools,
+         fdisk,
+         python3,
          kdialog,
          sudo | sudo-rs,
          xdg-user-dirs,
@@ -28,7 +34,8 @@ Conflicts: calamares-settings-kubuntu
 Description: NexusOS installer configuration (Calamares)
  Calamares settings and branding for installing NexusOS Engineering Edition
  from the live image: NexusOS slides and colours, erase-disk installs with
- optional LUKS2 encryption, the first account created as the administrator
+ optional LUKS2 encryption, a "Default layout" for
+ manual partitioning (standard, or LVM prepared by nexusos-lvm-layout), the first account created as the administrator
  (sudo group), Plasma on Wayland with SDDM, Ubuntu's signed boot chain, and
  removal of the installer and live-session tools from the installed system.
  .

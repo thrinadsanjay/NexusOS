@@ -43,6 +43,14 @@ packages:
     - unzip
     - zsh
     - fastfetch
+    # Storage: filesystems and volume management offered by the installer and kept afterwards
+    # (the partitioner only lists a filesystem when its tools are installed)
+    - xfsprogs
+    - btrfs-progs
+    - lvm2
+    - cryptsetup
+    - dosfstools
+    - gdisk
     # nexus CLI runtime (Python 3 + libraries from the archive)
     - python3
     - python3-venv

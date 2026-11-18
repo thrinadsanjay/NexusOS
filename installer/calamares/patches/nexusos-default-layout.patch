@@ -1,0 +1,302 @@
+Description: NexusOS: "Default layout" menu on the manual partitioning page
+ Standard: plans EFI, /boot, swap and / on the selected disk with the auto-partitioning
+ code (pending, editable; nothing is written until the installation starts).
+ LVM: asks for root filesystem and sizes, prepares the disk with nexusos-lvm-layout
+ (EFI, /boot, volume group "nexus" with swap and root, free space for more volumes),
+ rescans and assigns mount points from the NexusOS filesystem labels.
+Author: NexusOS contributors
+Forwarded: not-needed
+---
+--- a/src/modules/partition/gui/PartitionPage.h	2026-11-18 07:07:52.427566651 +0000
++++ b/src/modules/partition/gui/PartitionPage.h	2026-11-18 07:07:52.429187830 +0000
+@@ -56,6 +56,14 @@
+ private:
+     QScopedPointer< Ui_PartitionPage > m_ui;
+     PartitionCoreModule* m_core;
++    const Config* m_config = nullptr;
++
++    // NexusOS: "Default layout" menu (standard layout as pending, editable operations;
++    // LVM layout prepared by nexusos-lvm-layout, then mount points assigned from labels)
++    Device* nexusCurrentDevice() const;
++    void nexusStandardLayout();
++    void nexusLvmLayout();
++    void nexusAssignMountPoints();
+     void updateButtons();
+     void onNewPartitionTableClicked();
+     void onNewVolumeGroupClicked();
+--- a/src/modules/partition/gui/PartitionPage.cpp	2026-11-18 07:07:52.427527909 +0000
++++ b/src/modules/partition/gui/PartitionPage.cpp	2026-11-18 07:07:52.429133025 +0000
+@@ -20,6 +20,7 @@
+ #include "core/DeviceModel.h"
+ #include "core/KPMHelpers.h"
+ #include "core/PartUtils.h"
++#include "core/PartitionActions.h"
+ #include "core/PartitionCoreModule.h"
+ #include "core/PartitionInfo.h"
+ #include "core/PartitionModel.h"
+@@ -35,7 +36,9 @@
+ #include "Branding.h"
+ #include "GlobalStorage.h"
+ #include "JobQueue.h"
++#include "partition/PartitionIterator.h"
+ #include "partition/PartitionQuery.h"
++#include "utils/Units.h"
+ #include "utils/Logger.h"
+ #include "utils/Retranslator.h"
+ #include "widgets/TranslationFix.h"
+@@ -46,7 +49,22 @@
+ #include <kpmcore/ops/deactivatevolumegroupoperation.h>
+ #include <kpmcore/ops/removevolumegroupoperation.h>
+ 
++#include <QCheckBox>
++#include <QComboBox>
++#include <QDialog>
++#include <QDialogButtonBox>
+ #include <QDir>
++#include <QFile>
++#include <QFormLayout>
++#include <QLabel>
++#include <QMenu>
++#include <QProcess>
++#include <QPushButton>
++#include <QSpinBox>
++#include <QToolButton>
++#include <QVBoxLayout>
++
++#include <memory>
+ #include <QFutureWatcher>
+ #include <QHeaderView>
+ #include <QItemSelectionModel>
+@@ -67,6 +85,24 @@
+     }
+ 
+     m_ui->setupUi( this );
++    m_config = &config;
++    {
++        auto* layoutButton = new QToolButton( this );
++        layoutButton->setText( tr( "Default &Layout" ) );
++        layoutButton->setToolTip( tr( "Start from the NexusOS layout (EFI, /boot, swap and /) and edit it" ) );
++        layoutButton->setPopupMode( QToolButton::InstantPopup );
++        layoutButton->setToolButtonStyle( Qt::ToolButtonTextOnly );
++        layoutButton->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Preferred );
++        auto* menu = new QMenu( layoutButton );
++        menu->addAction( tr( "Standard: EFI, /boot, swap and /" ), this, &PartitionPage::nexusStandardLayout );
++        if ( QFile::exists( QStringLiteral( "/usr/libexec/nexusos/nexusos-lvm-layout" ) ) )
++        {
++            menu->addAction(
++                tr( "LVM: EFI, /boot and a volume group with swap and /…" ), this, &PartitionPage::nexusLvmLayout );
++        }
++        layoutButton->setMenu( menu );
++        m_ui->horizontalLayout->insertWidget( 0, layoutButton );
++    }
+     m_ui->partitionLabelsView->setVisible(
+         Calamares::JobQueue::instance()->globalStorage()->value( "alwaysShowPartitionLabels" ).toBool() );
+     m_ui->deviceComboBox->setModel( m_core->deviceModel() );
+@@ -127,6 +163,207 @@
+ 
+ PartitionPage::~PartitionPage() {}
+ 
++Device*
++PartitionPage::nexusCurrentDevice() const
++{
++    const QModelIndex index = m_core->deviceModel()->index( m_ui->deviceComboBox->currentIndex(), 0 );
++    return index.isValid() ? m_core->deviceModel()->deviceForIndex( index ) : nullptr;
++}
++
++void
++PartitionPage::nexusStandardLayout()
++{
++    Device* device = nexusCurrentDevice();
++    if ( !device || device->type() != Device::Type::Disk_Device )
++    {
++        QMessageBox::information( this, tr( "Default layout" ), tr( "Select a disk first (not a volume group)." ) );
++        return;
++    }
++    const auto answer = QMessageBox::question(
++        this,
++        tr( "Default layout" ),
++        tr( "Plan the NexusOS layout on %1: %2/boot, swap and / with the remaining space?<br/><br/>"
++            "This replaces the changes planned for this disk. Nothing is written until you start the "
++            "installation, and you can still edit, resize, delete or add partitions." )
++            .arg( device->deviceNode(), m_isEfi ? tr( "an EFI system partition, " ) : QString() ),
++        QMessageBox::Yes | QMessageBox::Cancel );
++    if ( answer != QMessageBox::Yes )
++    {
++        return;
++    }
++    auto* gs = Calamares::JobQueue::instance()->globalStorage();
++    const PartitionActions::Choices::AutoPartitionOptions options {
++        gs->value( "defaultPartitionTableType" ).toString(),
++        FileSystem::nameForType( m_config->defaultFsType() ),
++        m_config->luksFileSystemType(),
++        QString(),
++        gs->value( "efiSystemPartition" ).toString(),
++        Calamares::GiBtoBytes( gs->value( "requiredStorageGiB" ).toDouble() ),
++        Config::SwapChoice::SmallSwap
++    };
++    const int row = m_ui->deviceComboBox->currentIndex();
++    ScanningDialog::run(
++        QtConcurrent::run(
++            [ this, device ]
++            {
++                QMutexLocker locker( &m_revertMutex );
++                m_core->revertDevice( device );  // start from the disk as it is
++            } ),
++        [ this, row, options ]
++        {
++            m_ui->deviceComboBox->setCurrentIndex( row );
++            if ( Device* fresh = nexusCurrentDevice() )
++            {
++                PartitionActions::doAutopartition( m_core, fresh, options );
++            }
++            updateFromCurrentDevice();
++        },
++        this );
++}
++
++void
++PartitionPage::nexusLvmLayout()
++{
++    Device* device = nexusCurrentDevice();
++    if ( !device || device->type() != Device::Type::Disk_Device )
++    {
++        QMessageBox::information( this, tr( "LVM layout" ), tr( "Select a disk first (not a volume group)." ) );
++        return;
++    }
++    const QString node = device->deviceNode();
++
++    QDialog dialog( this );
++    dialog.setWindowTitle( tr( "LVM layout" ) );
++    auto* outer = new QVBoxLayout( &dialog );
++    auto* intro = new QLabel(
++        tr( "Creates on <b>%1</b>: %2/boot (2 GiB) and the LVM volume group <b>nexus</b> with swap and the "
++            "root volume. The rest of the volume group stays free for more logical volumes (/home, /var, "
++            "/var/lib/docker, …), which you can add on the next screen." )
++            .arg( node, m_isEfi ? tr( "an EFI system partition (1 GiB), " ) : QString() ),
++        &dialog );
++    intro->setWordWrap( true );
++    outer->addWidget( intro );
++    auto* form = new QFormLayout;
++    auto* fs = new QComboBox( &dialog );
++    fs->addItems( { QStringLiteral( "ext4" ), QStringLiteral( "xfs" ) } );
++    fs->setCurrentText( FileSystem::nameForType( m_config->defaultFsType() ) );
++    form->addRow( tr( "Root file system:" ), fs );
++    auto* root = new QSpinBox( &dialog );
++    root->setRange( 0, 65536 );
++    root->setSuffix( tr( " GiB" ) );
++    root->setSpecialValueText( tr( "Automatic (half the volume group, at least 30 GiB)" ) );
++    form->addRow( tr( "Root size:" ), root );
++    auto* swap = new QSpinBox( &dialog );
++    swap->setRange( -1, 512 );
++    swap->setValue( -1 );
++    swap->setSuffix( tr( " GiB" ) );
++    swap->setSpecialValueText( tr( "Like the memory size (at most 8 GiB)" ) );
++    swap->setToolTip( tr( "0 creates no swap volume." ) );
++    form->addRow( tr( "Swap size:" ), swap );
++    outer->addLayout( form );
++    const QString capacity = QString::number( double( device->capacity() ) / ( 1024.0 * 1024 * 1024 ), 'f', 1 );
++    auto* confirm = new QCheckBox(
++        tr( "Erase %1 now (%2 GiB). This happens immediately and cannot be undone." ).arg( node, capacity ), &dialog );
++    outer->addWidget( confirm );
++    auto* buttons = new QDialogButtonBox( QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog );
++    buttons->button( QDialogButtonBox::Ok )->setText( tr( "Create layout" ) );
++    buttons->button( QDialogButtonBox::Ok )->setEnabled( false );
++    connect( confirm, &QCheckBox::toggled, buttons->button( QDialogButtonBox::Ok ), &QWidget::setEnabled );
++    connect( buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept );
++    connect( buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject );
++    outer->addWidget( buttons );
++    if ( dialog.exec() != QDialog::Accepted || !confirm->isChecked() )
++    {
++        return;
++    }
++
++    const QStringList args { QStringLiteral( "--disk" ),
++                             node,
++                             QStringLiteral( "--fs" ),
++                             fs->currentText(),
++                             QStringLiteral( "--root-gib" ),
++                             QString::number( root->value() ),
++                             QStringLiteral( "--swap-gib" ),
++                             QString::number( swap->value() ),
++                             QStringLiteral( "--confirm-disk" ),
++                             node,
++                             QStringLiteral( "--yes" ) };
++    auto result = std::make_shared< QPair< int, QString > >( -1, QString() );
++    ScanningDialog::run(
++        QtConcurrent::run(
++            [ this, args, result ]
++            {
++                QProcess process;
++                process.start( QStringLiteral( "/usr/libexec/nexusos/nexusos-lvm-layout" ), args );
++                process.waitForFinished( 10 * 60 * 1000 );
++                result->first = process.exitStatus() == QProcess::NormalExit ? process.exitCode() : -1;
++                result->second = QString::fromUtf8( process.readAllStandardError() ).trimmed();
++                cDebug() << "nexusos-lvm-layout" << args << "exit" << result->first << result->second;
++                QMutexLocker locker( &m_revertMutex );
++                m_core->revertAllDevices();  // rescan: the new partitions and volume group appear
++            } ),
++        [ this, result ]
++        {
++            if ( result->first != 0 )
++            {
++                QMessageBox::critical( this,
++                                       tr( "LVM layout" ),
++                                       tr( "The layout could not be created:\n%1" )
++                                           .arg( result->second.isEmpty() ? tr( "unknown error" ) : result->second ) );
++            }
++            else
++            {
++                nexusAssignMountPoints();
++            }
++            updateFromCurrentDevice();
++        },
++        this );
++}
++
++void
++PartitionPage::nexusAssignMountPoints()
++{
++    auto* gs = Calamares::JobQueue::instance()->globalStorage();
++    QString efi = gs->value( "efiSystemPartition" ).toString();
++    if ( efi.isEmpty() )
++    {
++        efi = QStringLiteral( "/boot/efi" );
++    }
++    const QMap< QString, QString > byLabel { { QStringLiteral( "NEXUS-EFI" ), efi },
++                                             { QStringLiteral( "nexus-boot" ), QStringLiteral( "/boot" ) },
++                                             { QStringLiteral( "nexus-root" ), QStringLiteral( "/" ) },
++                                             { QStringLiteral( "nexus-swap" ), QString() } };
++    DeviceModel* devices = m_core->deviceModel();
++    for ( int row = 0; row < devices->rowCount(); ++row )
++    {
++        Device* device = devices->deviceForIndex( devices->index( row, 0 ) );
++        if ( !device || !device->partitionTable() )
++        {
++            continue;
++        }
++        for ( auto it = Calamares::Partition::PartitionIterator::begin( device );
++              it != Calamares::Partition::PartitionIterator::end( device );
++              ++it )
++        {
++            Partition* partition = *it;
++            const QString label = partition->fileSystem().label();
++            if ( !byLabel.contains( label ) )
++            {
++                continue;
++            }
++            m_core->clearJobs( device, partition );
++            PartitionInfo::reset( partition );
++            if ( !byLabel.value( label ).isEmpty() )
++            {
++                PartitionInfo::setMountPoint( partition, byLabel.value( label ) );
++            }
++            m_core->formatPartition( device, partition );  // fresh filesystem, and claims swap for fstab
++            PartitionInfo::setFormat( partition, true );
++            cDebug() << "NexusOS layout:" << partition->partitionPath() << label << "->" << byLabel.value( label );
++        }
++    }
++}
++
+ void
+ PartitionPage::updateButtons()
+ {
