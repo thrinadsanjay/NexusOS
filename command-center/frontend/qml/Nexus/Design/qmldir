@@ -20,3 +20,4 @@ NxProgress 1.0 NxProgress.qml
 NxPasswordPrompt 1.0 NxPasswordPrompt.qml
 NxIcon 1.0 NxIcon.qml
 NxSparkline 1.0 NxSparkline.qml
+NxIconButton 1.0 NxIconButton.qml

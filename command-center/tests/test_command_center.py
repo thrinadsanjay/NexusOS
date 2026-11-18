@@ -231,3 +231,43 @@ def test_platform_theme_defaults_to_generic():
     env = {"NEXUS_CENTER_PLATFORMTHEME": "xdgdesktopportal"}
     configure_platform_theme(env)
     assert env["QT_QPA_PLATFORMTHEME"] == "xdgdesktopportal"
+
+
+def test_optional_tools_appear_in_the_sidebar_only_when_installed():
+    from nexus_center.app import discover_modules, sidebar_modules
+
+    modules = discover_modules(MODULES)
+    nothing = [m["id"] for m in sidebar_modules(modules, which=lambda _c: None)]
+    assert "containers" not in nothing and "ai" not in nothing and "gateway" not in nothing
+    assert "notifications" not in nothing  # the header bell replaces the sidebar entry
+    assert "overview" in nothing and "files" in nothing and "packages" in nothing
+    everything = [m["id"] for m in sidebar_modules(modules, which=lambda c: f"/usr/bin/{c}")]
+    assert {"containers", "ai", "gateway"} <= set(everything)
+    podman_only = [
+        m["id"] for m in sidebar_modules(modules, which=lambda c: "/usr/bin/podman" if c == "podman" else None)
+    ]
+    assert "containers" in podman_only and "ai" not in podman_only
+
+
+def test_files_quick_access_and_new_folder(tmp_path):
+    from nexus_core import files
+    from nexus_core.errors import ValidationError
+
+    (tmp_path / "Documents").mkdir()
+    (tmp_path / "Bilder").mkdir()
+    (tmp_path / ".config").mkdir()
+    (tmp_path / ".config" / "user-dirs.dirs").write_text(
+        'XDG_PICTURES_DIR="$HOME/Bilder"\nXDG_MUSIC_DIR="$HOME/Missing"\n'
+    )
+    quick = files.quick_access(tmp_path)
+    assert [(q.title, q.icon) for q in quick] == [("Home", "home"), ("Documents", "doc"), ("Bilder", "image")]
+
+    assert files.unique_name(str(tmp_path), "New folder") == "New folder"
+    created = files.make_folder(str(tmp_path), "New folder")
+    assert (tmp_path / "New folder").is_dir() and created.endswith("New folder")
+    assert files.unique_name(str(tmp_path), "New folder") == "New folder (2)"
+    for bad in ("", "a/b", "..", "x\ny"):
+        with pytest.raises(ValidationError):
+            files.make_folder(str(tmp_path), bad)
+    with pytest.raises(ValidationError):
+        files.make_folder(str(tmp_path), "New folder")  # never overwrites

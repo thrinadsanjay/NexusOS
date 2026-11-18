@@ -5,10 +5,13 @@ import Nexus.Design
 
 Item {
     id: page
+    objectName: "notificationsPage"
     property var controller
     property var confirm
     property string intent: ""
     readonly property var d: controller ? controller.data : ({})
+    readonly property var smokeStates: ["bell"]   // screenshot of the header bell panel
+    function applySmokeState(name) { App.showNoticePanel(name === "bell") }
     RowLayout {
         anchors.fill: parent
         anchors.margins: Theme.s5

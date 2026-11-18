@@ -6,5 +6,11 @@
   "description": "Ollama models and the native chat",
   "page": "Page.qml",
   "controller": "controller.py",
-  "class": "Controller"
+  "class": "Controller",
+  "requires": {
+    "commands": [
+      "ollama"
+    ],
+    "hint": "Install Ollama to use local models"
+  }
 }

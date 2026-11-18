@@ -6,5 +6,12 @@
   "description": "Docker Engine containers, images, volumes, networks and Compose",
   "page": "Page.qml",
   "controller": "controller.py",
-  "class": "Controller"
+  "class": "Controller",
+  "requires": {
+    "commands": [
+      "docker",
+      "podman"
+    ],
+    "hint": "Install Docker or Podman from the Software Center"
+  }
 }

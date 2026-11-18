@@ -11,10 +11,11 @@ import argparse
 import importlib.util
 import json
 import os
+import shutil
 import sys
 import threading
 import time
-from collections.abc import MutableMapping
+from collections.abc import Callable, MutableMapping
 from pathlib import Path
 from typing import Any
 
@@ -69,6 +70,21 @@ def discover_modules(root: Path | None = None) -> list[dict[str, Any]]:
     return sorted(found, key=lambda m: m.get("order", 100))
 
 
+def module_available(meta: dict[str, Any], which: Callable[[str], str | None] = shutil.which) -> bool:
+    """A module with ``requires.commands`` is shown only once one of those programs is installed."""
+    commands = (meta.get("requires") or {}).get("commands") or []
+    return not commands or any(which(c) for c in commands)
+
+
+def sidebar_modules(modules: list[dict[str, Any]], which: Callable[[str], str | None] = shutil.which) -> list[dict]:
+    """Modules for the navigation: installed tools only; the bell replaces the Notifications entry."""
+    return [
+        {k: v for k, v in m.items() if k != "dir"}
+        for m in modules
+        if m.get("sidebar", True) and module_available(m, which)
+    ]
+
+
 def load_controller_class(meta: dict[str, Any]) -> type[ModuleController]:
     path = Path(meta["dir"]) / meta.get("controller", "controller.py")
     spec = importlib.util.spec_from_file_location(f"nexus_center_module_{meta['id']}", path)
@@ -83,6 +99,8 @@ class AppController(QObject):
     themeChanged = Signal()
     preferencesChanged = Signal()
     unreadChanged = Signal()
+    modulesChanged = Signal()
+    noticePanelRequested = Signal(bool)  # open/close the bell panel (screenshots)
     searchChanged = Signal()
     pageTimed = Signal(str, float)
     toastRequested = Signal(str, str)
@@ -95,9 +113,11 @@ class AppController(QObject):
         super().__init__()
         self.tasks = tasks
         self._modules = modules
+        self._sidebar = sidebar_modules(modules)
         self._controllers: dict[str, ModuleController] = {}
         self._results: list[dict] = []
         self._unread = 0
+        self._notices: list = []
         self._search_job = 0
         self.timings: dict[str, float] = {}
         store = default_store()
@@ -221,9 +241,22 @@ class AppController(QObject):
 
         return creator()
 
+    def _get_modules(self) -> list:
+        return self._sidebar
+
+    # Sidebar entries; re-checked every minute so Docker/Ollama/NGINX appear once installed.
+    modules = Property("QVariantList", _get_modules, notify=modulesChanged)
+
     @Property("QVariantList", constant=True)
-    def modules(self) -> list:
+    def allModules(self) -> list:
         return [{k: v for k, v in m.items() if k != "dir"} for m in self._modules]
+
+    @Slot()
+    def refreshModules(self) -> None:
+        fresh = sidebar_modules(self._modules)
+        if fresh != self._sidebar:
+            self._sidebar = fresh
+            self.modulesChanged.emit()
 
     # ------------------------------------------------------------ module host
     @Slot(str, result=QObject)
@@ -256,10 +289,28 @@ class AppController(QObject):
 
     unread = Property(int, _get_unread, notify=unreadChanged)
 
+    def _get_notices(self) -> list:
+        return self._notices
+
+    # Latest unread notifications for the bell panel in the header.
+    notices = Property("QVariantList", _get_notices, notify=unreadChanged)
+
     @Slot()
     def refreshUnread(self) -> None:
         self._unread = notifications.unread_count()
+        self._notices = to_qml(notifications.list_notifications()[:30])
         self.unreadChanged.emit()
+        self.refreshModules()
+
+    @Slot(bool)
+    def showNoticePanel(self, shown: bool) -> None:
+        self.noticePanelRequested.emit(shown)
+
+    @Slot(int)
+    def dismissNotice(self, notification_id: int) -> None:
+        """Dismiss one notification (or all with -1) from the bell panel."""
+        notifications.dismiss(notification_id if notification_id >= 0 else None)
+        self.refreshUnread()
 
     # ------------------------------------------------------------ global search
     def _get_results(self) -> list:

@@ -83,6 +83,61 @@ def places() -> list[Place]:
     return out
 
 
+_USER_DIRS = (  # Windows-Explorer-style "Quick access" (XDG user directories)
+    ("DESKTOP", "Desktop", "desktop"),
+    ("DOCUMENTS", "Documents", "doc"),
+    ("DOWNLOAD", "Downloads", "download"),
+    ("PICTURES", "Pictures", "image"),
+    ("MUSIC", "Music", "music"),
+    ("VIDEOS", "Videos", "video"),
+)
+
+
+class QuickPlace(BaseModel):
+    title: str
+    path: str
+    icon: str
+
+
+def quick_access(home: Path | None = None) -> list[QuickPlace]:
+    """Home and the XDG user directories that exist (names from ~/.config/user-dirs.dirs)."""
+    home = home or Path.home()
+    configured: dict[str, str] = {}
+    cfg = home / ".config" / "user-dirs.dirs"
+    if cfg.exists():
+        for line in cfg.read_text(errors="replace").splitlines():
+            key, _, value = line.partition("=")
+            if key.startswith("XDG_") and key.endswith("_DIR") and value:
+                configured[key[4:-4]] = value.strip().strip('"').replace("$HOME", str(home))
+    out = [QuickPlace(title="Home", path=str(home), icon="home")]
+    for key, default, icon in _USER_DIRS:
+        path = Path(configured.get(key, str(home / default)))
+        if path.is_dir() and path != home:
+            out.append(QuickPlace(title=path.name, path=str(path), icon=icon))
+    return out
+
+
+def make_folder(parent: str, name: str) -> str:
+    """Create a folder in *parent*; returns its path. Never overwrites."""
+    if "/" in name or name in (".", "..") or not name:
+        raise ValidationError("invalid folder name")
+    validation.single_line(name, max_len=255, field="name")
+    target = Path(os.path.expanduser(parent)) / name
+    if target.exists():
+        raise ValidationError(f"{name} already exists")
+    target.mkdir()
+    return str(target)
+
+
+def unique_name(parent: str, name: str) -> str:
+    """'New folder', 'New folder (2)', … — the first name not taken in *parent*."""
+    base = Path(os.path.expanduser(parent))
+    candidate, n = name, 2
+    while (base / candidate).exists():
+        candidate, n = f"{name} ({n})", n + 1
+    return candidate
+
+
 def _place_key(url: str) -> str:
     """Normalise ``file:///home/a/`` and ``/home/a`` to the same key."""
     path = unquote(url[7:]) if url.startswith("file://") else url

@@ -47,11 +47,25 @@ ApplicationWindow {
 
     property string currentPage: InitialPage
     property string pendingIntent: ""
-    property var currentMeta: App.modules.find(m => m.id === currentPage) || App.modules[0]
+    property var currentMeta: App.allModules.find(m => m.id === currentPage) || App.allModules[0]
     property var currentController: null
 
     // Used by `nexus-center --smoke --screenshots DIR` (review and documentation captures).
     function capture(path) { shellBackdrop.grabToImage(result => result.saveToFile(path)) }
+
+    // Height a page needs: its implicitHeight, or that of its anchored layouts plus margins.
+    // Pages with their own scroll area (scrollsItself: true) always fit the viewport.
+    function neededHeight(item) {
+        if (!item || item.scrollsItself) return 0
+        if (item.implicitHeight > 0) return item.implicitHeight
+        let h = 0
+        for (let i = 0; i < item.children.length; i++) {
+            const c = item.children[i]
+            if (!c.visible || c.implicitHeight <= 0) continue
+            h = Math.max(h, c.implicitHeight + c.anchors.topMargin + c.anchors.bottomMargin)
+        }
+        return Math.ceil(h)
+    }
 
     function navigate(pageId, intent) {
         pendingIntent = intent || ""
@@ -63,7 +77,7 @@ ApplicationWindow {
 
     function loadPage() {
         if (currentController) currentController.deactivate()
-        const meta = App.modules.find(m => m.id === currentPage)
+        const meta = App.allModules.find(m => m.id === currentPage)
         if (!meta) return
         pageLoader.startedAt = Date.now()
         currentController = App.controller(meta.id)
@@ -79,6 +93,7 @@ ApplicationWindow {
         function onAuthRequested(request) { passwordPrompt.ask(request) }
         function onAuthPreviewClosed() { passwordPrompt.close() }
         function onNavigateRequested(page, intent) { window.navigate(page, intent) }
+        function onNoticePanelRequested(shown) { shown ? noticePanel.open() : noticePanel.close() }
     }
 
     // Opaque backdrop so grabToImage captures (--screenshots) match what is on screen.
@@ -135,11 +150,6 @@ ApplicationWindow {
                                 spacing: Theme.s2
                                 Rectangle { Layout.preferredWidth: 3; Layout.preferredHeight: 18; radius: 1.5; color: parent.parent.highlighted ? Theme.c.accent : "transparent" }
                                 Text { text: parent.parent.modelData.title; color: parent.parent.highlighted ? Theme.c.text : Theme.c.textSecondary; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.fillWidth: true; elide: Text.ElideRight }
-                                Rectangle {
-                                    visible: !!(parent.parent.modelData.id === "notifications" && App.unread > 0)
-                                    Layout.preferredHeight: 18; Layout.preferredWidth: Math.max(18, badge.implicitWidth + 8); radius: 9; color: Theme.c.accentSecondary
-                                    Text { id: badge; anchors.centerIn: parent; text: App.unread; color: Theme.c.textOnAccent; font.pixelSize: Theme.fontSmall }
-                                }
                             }
                             background: Rectangle { radius: Theme.radiusSmall; color: parent.highlighted ? Theme.c.backgroundSecondary : parent.hovered ? Theme.c.surfaceElevated : "transparent" }
                         }
@@ -196,22 +206,70 @@ ApplicationWindow {
                         anchors.fill: parent
                         anchors.leftMargin: Theme.s5
                         anchors.rightMargin: Theme.s4
-                        Text { text: "NexusOS  ›  " + (window.currentMeta ? window.currentMeta.title : ""); color: Theme.c.textSecondary; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.fillWidth: true }
-                        NxButton { text: "Search…   Ctrl+K"; Layout.preferredWidth: 220; onClicked: commandPalette.openPalette() }
-                        NxButton { text: App.unread > 0 ? "Notifications (" + App.unread + ")" : "Notifications"; variant: "ghost"; onClicked: window.navigate("notifications") }
-                        NxButton { text: Theme.dark ? "Light theme" : "Dark theme"; variant: "ghost"; onClicked: App.dark = !App.dark }
+                        spacing: Theme.s2
+                        Text { text: "NexusOS  ›  " + (window.currentMeta ? window.currentMeta.title : ""); color: Theme.c.textSecondary; font.pixelSize: Theme.fontBody; font.family: Theme.fontFamily; Layout.fillWidth: true; elide: Text.ElideRight }
+                        // Search box look-alike: opens the command palette.
+                        Rectangle {
+                            id: searchBox
+                            Layout.preferredWidth: Math.min(300, Math.max(180, window.width * 0.2))
+                            Layout.preferredHeight: Theme.controlHeight
+                            radius: Theme.radiusSmall
+                            color: searchHover.hovered ? Theme.c.surfaceElevated : Theme.c.surface
+                            border.color: Theme.c.border
+                            Accessible.role: Accessible.Button
+                            Accessible.name: "Search (Ctrl+K)"
+                            RowLayout {
+                                anchors.fill: parent; anchors.leftMargin: Theme.s2; anchors.rightMargin: Theme.s2
+                                spacing: Theme.s2
+                                NxIcon { name: "search"; size: 15 }
+                                Text { text: "Search…"; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody; Layout.fillWidth: true; elide: Text.ElideRight }
+                                Rectangle {
+                                    implicitWidth: kbd.implicitWidth + 10; implicitHeight: 20; radius: 4
+                                    color: Theme.c.background; border.color: Theme.c.border
+                                    Text { id: kbd; anchors.centerIn: parent; text: "Ctrl K"; color: Theme.c.textSecondary; font.family: Theme.monoFamily; font.pixelSize: Theme.fontSmall }
+                                }
+                            }
+                            HoverHandler { id: searchHover; cursorShape: Qt.PointingHandCursor }
+                            TapHandler { onTapped: commandPalette.openPalette() }
+                        }
+                        NxIconButton {
+                            id: bell
+                            iconName: "bell"
+                            tip: App.unread > 0 ? App.unread + " unread notifications" : "Notifications"
+                            badge: App.unread
+                            active: noticePanel.visible
+                            onClicked: noticePanel.visible ? noticePanel.close() : noticePanel.open()
+                        }
+                        NxIconButton {
+                            iconName: Theme.dark ? "sun" : "moon"
+                            tip: Theme.dark ? "Switch to the light theme" : "Switch to the dark theme"
+                            onClicked: App.dark = !App.dark
+                        }
                     }
                 }
+                // Pages scroll as a whole when the window is smaller than their content.
+                Flickable {
+                    id: pageFlick
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    contentWidth: width
+                    contentHeight: Math.max(height, window.neededHeight(pageLoader.item))
+                    boundsBehavior: Flickable.StopAtBounds
+                    interactive: contentHeight > height + 1
+                    ScrollBar.vertical: ScrollBar { policy: pageFlick.interactive ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff }
                 Loader {
                     id: pageLoader
                     property double startedAt: 0
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    width: pageFlick.width
+                    height: pageFlick.contentHeight
                     asynchronous: false
                     onLoaded: {
+                        pageFlick.contentY = 0
                         App.recordPageLoad(window.currentPage, Date.now() - startedAt)
                         if (window.currentController) window.currentController.activate()
                     }
+                }
                 }
             }
         }
@@ -223,6 +281,85 @@ ApplicationWindow {
         parent: shellBackdrop
         onSubmitted: password => App.submitPassword(password)
         onCancelled: App.cancelAuth()
+    }
+
+    // ------------------------------------------------------------ notification panel (bell)
+    // A plain item (not a Popup) so --screenshots captures it like the rest of the shell.
+    Item {
+        id: noticePanel
+        parent: shellBackdrop
+        anchors.fill: parent
+        visible: false
+        z: 50
+        function open() { App.refreshUnread(); visible = true }
+        function close() { visible = false }
+        MouseArea { anchors.fill: parent; onClicked: noticePanel.close() }   // click outside closes
+        Shortcut { sequence: "Escape"; enabled: noticePanel.visible; onActivated: noticePanel.close() }
+    Rectangle {
+        x: parent.width - width - Theme.s4
+        y: 50
+        width: Math.min(400, parent.width - 40)
+        height: Math.min(520, parent.height - 80)
+        color: Theme.c.surfaceElevated
+        radius: Theme.radius
+        border.color: Theme.c.border
+        MouseArea { anchors.fill: parent }   // keep clicks inside the panel
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 0
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: Theme.s3
+                Text { text: "Notifications"; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: Theme.fontTitle; font.weight: Font.DemiBold; Layout.fillWidth: true }
+                NxButton { text: "Clear all"; variant: "ghost"; visible: App.notices.length > 0; onClicked: App.dismissNotice(-1) }
+            }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.c.border }
+            ListView {
+                id: noticeList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                model: App.notices
+                ScrollBar.vertical: ScrollBar {}
+                delegate: Item {
+                    required property var modelData
+                    width: noticeList.width
+                    height: noticeRow.implicitHeight + Theme.s3 * 2
+                    Rectangle { anchors.fill: parent; color: noticeHover.hovered ? Theme.c.surface : "transparent" }
+                    HoverHandler { id: noticeHover }
+                    RowLayout {
+                        id: noticeRow
+                        anchors.fill: parent; anchors.margins: Theme.s3
+                        spacing: Theme.s2
+                        Rectangle { Layout.alignment: Qt.AlignTop; Layout.topMargin: 5; width: 8; height: 8; radius: 4; color: Theme.statusColor(modelData.severity === "success" ? "ok" : modelData.severity) }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            Text { text: modelData.title + (modelData.count > 1 ? "  ×" + modelData.count : ""); color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody; font.weight: Font.DemiBold; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                            Text { text: modelData.body; visible: text.length > 0; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall + 1; wrapMode: Text.Wrap; maximumLineCount: 3; elide: Text.ElideRight; Layout.fillWidth: true }
+                            Text { text: new Date(modelData.ts * 1000).toLocaleString(Qt.locale(), Locale.ShortFormat) + "  ·  " + modelData.category; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall }
+                        }
+                        NxIconButton { Layout.alignment: Qt.AlignTop; iconName: "cross"; iconSize: 15; implicitWidth: 26; implicitHeight: 26; tip: "Dismiss"; onClicked: App.dismissNotice(modelData.id) }
+                    }
+                }
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    visible: noticeList.count === 0
+                    spacing: Theme.s2
+                    NxIcon { Layout.alignment: Qt.AlignHCenter; name: "bell"; size: 28 }
+                    Text { Layout.alignment: Qt.AlignHCenter; text: "You're all caught up"; color: Theme.c.text; font.family: Theme.fontFamily; font.weight: Font.DemiBold }
+                    Text { Layout.alignment: Qt.AlignHCenter; text: "Updates, failures, certificate and disk alerts appear here."; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall }
+                }
+            }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.c.border }
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: Theme.s2
+                NxButton { text: "History and settings"; variant: "ghost"; iconName: "external"; onClicked: { noticePanel.close(); window.navigate("notifications") } }
+                Item { Layout.fillWidth: true }
+            }
+        }
+    }
     }
 
     // ------------------------------------------------------------ toasts

@@ -6,5 +6,6 @@
   "description": "Unified notification centre",
   "page": "Page.qml",
   "controller": "controller.py",
-  "class": "Controller"
+  "class": "Controller",
+  "sidebar": false
 }

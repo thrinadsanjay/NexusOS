@@ -8,6 +8,7 @@ B.Button {
     id: control
     property string variant: "secondary"
     property bool admin: false
+    property string iconName: ""  // optional NxIcon shown before the text
     visible: !admin || typeof App === "undefined" || App.canAdmin
     implicitHeight: Theme.controlHeight
     leftPadding: Theme.s3
@@ -16,16 +17,30 @@ B.Button {
     font.pixelSize: Theme.fontBody
     font.weight: variant === "primary" ? Font.DemiBold : Font.Normal
     Accessible.name: text
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        color: !control.enabled ? Theme.c.textSecondary
+    readonly property color fg: !control.enabled ? Theme.c.textSecondary
              : control.variant === "primary" ? Theme.c.textOnAccent
              : control.variant === "danger" ? Theme.c.negative
              : control.variant === "ghost" ? Theme.c.accent : Theme.c.text
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
+    contentItem: Item {
+        implicitWidth: (control.iconName.length > 0 ? 21 : 0) + label.implicitWidth
+        implicitHeight: label.implicitHeight
+        Row {
+            id: row
+            anchors.centerIn: parent
+            spacing: 6
+            NxIcon { visible: control.iconName.length > 0; name: control.iconName; size: 15; color: control.fg; anchors.verticalCenter: parent.verticalCenter }
+            Text {
+                id: label
+                width: Math.min(implicitWidth, Math.max(0, control.availableWidth - (control.iconName.length > 0 ? 21 : 0)))
+                text: control.text
+                visible: text.length > 0
+                font: control.font
+                color: control.fg
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
     }
     background: Rectangle {
         radius: Theme.radiusSmall

@@ -15,6 +15,11 @@ Item {
     readonly property var t: d.tiles || ({})
     readonly property var hw: d.hardware || ({})
     readonly property bool wide: width >= 1240
+    readonly property bool narrow: width < 1060          // panels stacked in two columns
+    readonly property int tileCols: width < 900 ? 2 : 4
+    function tileRow(i) { return Math.floor(i / tileCols) }
+    function tileCol(i) { return i % tileCols }
+    property bool scrollsItself: true                     // Main.qml: this page has its own ScrollView
     readonly property int gap: Theme.s3
 
     // ------------------------------------------------------------------ formatting
@@ -63,8 +68,8 @@ Item {
                 spacing: Theme.s2
                 NxIcon { name: panel.icon; size: 17; visible: panel.icon.length > 0 }
                 Text { text: panel.title; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Font.DemiBold }
-                Text { text: panel.subtitle; visible: text.length > 0; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody }
-                Item { Layout.fillWidth: true }
+                Text { text: panel.subtitle; visible: text.length > 0; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody; elide: Text.ElideRight; Layout.fillWidth: true }
+                Item { Layout.fillWidth: true; visible: panel.subtitle.length === 0 }
                 Text {
                     visible: panel.action.length > 0
                     text: panel.action
@@ -92,7 +97,7 @@ Item {
         spacing: Theme.s2
         NxIcon { name: parent.icon; color: parent.iconColor; size: 16; visible: parent.icon.length > 0 }
         Text { text: parent.label; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody; Layout.fillWidth: true; Layout.fillHeight: true; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
-        Text { text: parent.value; color: parent.valueColor; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody; font.weight: Font.DemiBold; Layout.fillHeight: true; verticalAlignment: Text.AlignVCenter }
+        Text { text: parent.value; color: parent.valueColor; font.family: Theme.fontFamily; font.pixelSize: Theme.fontBody; font.weight: Font.DemiBold; Layout.fillHeight: true; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight; Layout.maximumWidth: 170 }
     }
 
     component KV: RowLayout {     // spec line inside cards (hidden when there is no value)
@@ -166,6 +171,7 @@ Item {
             anchors.margins: 14
             spacing: Theme.s3
             Rectangle {
+                visible: tile.width >= 250   // narrow windows: drop the badge, keep the numbers readable
                 Layout.alignment: Qt.AlignTop
                 Layout.topMargin: 2
                 width: 44; height: 44; radius: Theme.radius + 2
@@ -182,8 +188,7 @@ Item {
                     Layout.fillHeight: false
                     spacing: Theme.s2
                     Text { text: tile.label; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 13; font.weight: Font.Medium }
-                    Item { Layout.fillWidth: true }
-                    Text { text: tile.meta; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall + 1; elide: Text.ElideLeft; Layout.maximumWidth: tile.width * 0.5 }
+                    Text { text: tile.meta; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSmall + 1; elide: Text.ElideLeft; horizontalAlignment: Text.AlignRight; Layout.fillWidth: true }
                     Rectangle {   // (i): hardware details
                         visible: tile.info
                         width: 16; height: 16; radius: 8
@@ -209,7 +214,7 @@ Item {
                     Row {
                         spacing: 3
                         Layout.alignment: Qt.AlignVCenter
-                        Text { text: tile.value; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: 26; font.weight: Font.DemiBold }
+                        Text { text: tile.value; color: Theme.c.text; font.family: Theme.fontFamily; font.pixelSize: tile.value.length > 7 ? 21 : 26; font.weight: Font.DemiBold }
                         Text { text: tile.unit; anchors.baseline: parent.children[0].baseline; color: Theme.c.textSecondary; font.family: Theme.fontFamily; font.pixelSize: 14; font.weight: Font.DemiBold }
                     }
                     NxSparkline {
@@ -496,9 +501,13 @@ Item {
     // ------------------------------------------------------------------ layout
     readonly property int fixedHeight: 56 + 236 + 172 + gap * 3 + Theme.s5 * 2 + (wide ? 0 : 150)
     ScrollView {
+        id: scroller
         anchors.fill: parent
         contentWidth: availableWidth
+        contentHeight: mainColumn.implicitHeight + Theme.s4 * 2
+        ScrollBar.vertical.policy: contentHeight > height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
         ColumnLayout {
+            id: mainColumn
             x: Theme.s5
             y: Theme.s4
             width: parent.width - Theme.s5 * 2
@@ -537,12 +546,12 @@ Item {
             // tiles (+ attention column when wide)
             GridLayout {
                 Layout.fillWidth: true
-                columns: page.wide ? 5 : 4
+                columns: page.wide ? 5 : page.tileCols
                 columnSpacing: page.gap
                 rowSpacing: page.gap
 
                 Tile {
-                    Layout.row: 0; Layout.column: 0
+                    Layout.row: page.tileRow(0); Layout.column: page.tileCol(0)
                     kind: "cpu"; label: "CPU"; icon: "cpu"; k: Theme.c.mCpu; info: true
                     readonly property var x_: page.t.cpu || ({})
                     meta: [page.ghz(x_.mhz), x_.temp !== null && x_.temp !== undefined ? page.num(x_.temp) + " °C" : ""].filter(s => s).join(" · ")
@@ -551,7 +560,7 @@ Item {
                     foot: page.hw.cpu ? "<b><font color='" + Theme.c.text + "'>" + page.cpuModelShort(page.hw.cpu.model) + "</font></b>&nbsp;&nbsp;" + (page.hw.cpu.cores || "?") + "C / " + (page.hw.cpu.threads || "?") + "T" : ""
                 }
                 Tile {
-                    Layout.row: 0; Layout.column: 1
+                    Layout.row: page.tileRow(1); Layout.column: page.tileCol(1)
                     kind: "memory"; label: "Memory"; icon: "memory"; k: Theme.c.mMemory; info: true
                     readonly property var x_: page.t.memory || ({})
                     meta: x_.total ? (x_.used / 2 ** 30).toFixed(1) + " / " + (x_.total / 2 ** 30).toFixed(0) + " GiB" : ""
@@ -560,7 +569,7 @@ Item {
                     foot: page.hw.memory && page.hw.memory.summary ? "<b><font color='" + Theme.c.text + "'>" + page.hw.memory.summary.split(" · ")[0] + "</font></b>&nbsp;&nbsp;" + page.hw.memory.summary.split(" · ").slice(1).join(" · ") : "module details not exposed"
                 }
                 Tile {
-                    Layout.row: 0; Layout.column: 2
+                    Layout.row: page.tileRow(2); Layout.column: page.tileCol(2)
                     kind: "gpu"; label: "GPU"; icon: "gpu"; k: Theme.c.mGpu; info: true
                     readonly property var x_: page.t.gpu || ({})
                     readonly property var g0: (page.hw.gpus || [])[0]
@@ -570,24 +579,24 @@ Item {
                     foot: g0 ? "<b><font color='" + Theme.c.text + "'>" + g0.name.replace(/^NVIDIA GeForce /, "").replace(/^AMD /, "") + "</font></b>&nbsp;&nbsp;" + (g0.vram_total_bytes ? page.gb(g0.vram_total_bytes).replace(".0", "") : g0.integrated ? "integrated" : "") : "no GPU exposed"
                 }
                 Tile {
-                    Layout.row: 0; Layout.column: 3
-                    kind: "storage"; label: "Storage  " + (page.t.storage && page.t.storage.mount ? page.t.storage.mount : ""); icon: "disk"; k: Theme.c.mDisk; info: true
+                    Layout.row: page.tileRow(3); Layout.column: page.tileCol(3)
+                    kind: "storage"; label: "Storage"; icon: "disk"; k: Theme.c.mDisk; info: true
                     readonly property var x_: page.t.storage || ({})
                     readonly property var dr: page.hw.drives || []
-                    meta: x_.free !== null && x_.free !== undefined ? page.gb(x_.free) + " free" : ""
+                    meta: x_.free !== null && x_.free !== undefined ? (x_.mount ? x_.mount + " · " : "") + page.gb(x_.free) + " free" : ""
                     value: page.num(x_.percent); unit: "%"
                     spark: x_.spark || []
                     foot: dr.length ? "<b><font color='" + Theme.c.text + "'>" + dr.length + (dr.length === 1 ? " drive" : " drives") + "</font></b>&nbsp;&nbsp;" + page.gb(dr.reduce((a, x) => a + x.size_bytes, 0)) + (dr.filter(x => x.kind === "NVMe").length ? " · " + dr.filter(x => x.kind === "NVMe").length + " NVMe" : "") : ""
                 }
                 Tile {
-                    Layout.row: 1; Layout.column: 0
+                    Layout.row: page.tileRow(4); Layout.column: page.tileCol(4)
                     kind: "vuln"; label: "Vulnerabilities"; icon: "shield"; k: Theme.c.mVuln; info: true
                     readonly property var x_: page.t.vulnerabilities || ({})
                     value: x_.known ? String(x_.count) : "…"
                     foot: !x_.known ? "checking APT…" : x_.count ? "<font color='" + Theme.c.negative + "'>packages with security fixes</font>" : "<font color='" + Theme.c.positive + "'>no known fixes pending</font>"
                 }
                 Tile {
-                    Layout.row: 1; Layout.column: 1
+                    Layout.row: page.tileRow(5); Layout.column: page.tileCol(5)
                     kind: "updates"; label: "Updates"; icon: "update"; k: Theme.c.mUpdates; target: "packages"; targetIntent: "packages.upgrade"
                     readonly property var x_: page.t.updates || ({})
                     value: x_.known ? String(x_.total) : (x_.error ? "?" : "…")
@@ -595,7 +604,7 @@ Item {
                     foot: x_.known ? "<font color='" + Theme.c.warning + "'>" + x_.security + " security</font> · " + (x_.total - x_.security) + " regular · checked " + x_.checked : (x_.error || "checking APT…")
                 }
                 Tile {
-                    Layout.row: 1; Layout.column: 2
+                    Layout.row: page.tileRow(6); Layout.column: page.tileCol(6)
                     kind: "network"; label: "Network"; icon: "network"; k: Theme.c.mNetwork; target: "network"
                     readonly property var x_: page.t.network || ({})
                     value: x_.online === true ? "Online" : x_.online === false ? "Offline" : "–"
@@ -603,7 +612,7 @@ Item {
                     foot: "↓ " + page.rate(x_.rx) + "  ·  ↑ " + page.rate(x_.tx)
                 }
                 Tile {
-                    Layout.row: 1; Layout.column: 3
+                    Layout.row: page.tileRow(7); Layout.column: page.tileCol(7)
                     kind: "mounts"; label: "Mount points"; icon: "mount"; k: Theme.c.mMounts; target: "storage"
                     readonly property var x_: page.t.mounts || ({})
                     value: x_.count !== undefined ? String(x_.count) : "–"
@@ -613,10 +622,10 @@ Item {
                 // System attention
                 Panel {
                     id: attentionPanel
-                    Layout.row: page.wide ? 0 : 2
+                    Layout.row: page.wide ? 0 : 8 / page.tileCols
                     Layout.column: page.wide ? 4 : 0
                     Layout.rowSpan: page.wide ? 2 : 1
-                    Layout.columnSpan: page.wide ? 1 : 4
+                    Layout.columnSpan: page.wide ? 1 : page.tileCols
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: page.wide ? 118 : 400
@@ -672,11 +681,16 @@ Item {
             }
 
             // middle: 24 h chart · services + infrastructure · recent activity
-            RowLayout {
+            GridLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.max(270, page.height - page.fixedHeight)
-                spacing: page.gap
+                Layout.preferredHeight: page.narrow ? -1 : Math.max(270, page.height - page.fixedHeight)
+                columns: page.narrow ? 2 : 3
+                columnSpacing: page.gap
+                rowSpacing: page.gap
+
                 Panel {
+                    Layout.columnSpan: page.narrow ? 2 : 1
+                    Layout.preferredHeight: page.narrow ? 300 : -1
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: 155
@@ -716,6 +730,7 @@ Item {
                     }
                 }
                 ColumnLayout {
+                    Layout.preferredHeight: page.narrow ? 270 : -1
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: 100
@@ -742,6 +757,7 @@ Item {
                     }
                 }
                 Panel {
+                    Layout.preferredHeight: page.narrow ? 270 : -1
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: 100
@@ -770,11 +786,15 @@ Item {
             }
 
             // bottom: history · backups · certificates
-            RowLayout {
+            GridLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 172
-                spacing: page.gap
+                Layout.preferredHeight: page.narrow ? -1 : 172
+                columns: page.narrow ? 2 : 3
+                columnSpacing: page.gap
+                rowSpacing: page.gap
                 Panel {
+                    Layout.columnSpan: page.narrow ? 2 : 1
+                    Layout.preferredHeight: page.narrow ? 172 : -1
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: 155
@@ -823,6 +843,7 @@ Item {
                     }
                 }
                 Panel {
+                    Layout.preferredHeight: page.narrow ? 172 : -1
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: 100
@@ -844,6 +865,7 @@ Item {
                     }
                 }
                 Panel {
+                    Layout.preferredHeight: page.narrow ? 172 : -1
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.preferredWidth: 100

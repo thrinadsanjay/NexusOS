@@ -157,6 +157,15 @@ def usage() -> list[Usage]:
             "squashfs",
             "-x",
             "overlay",
+            # read-only media are always "full": no usage alerts for an install DVD or ISO
+            "-x",
+            "iso9660",
+            "-x",
+            "udf",
+            "-x",
+            "erofs",
+            "-x",
+            "efivarfs",
         ],
         timeout=15,
     )

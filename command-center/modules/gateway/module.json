@@ -6,5 +6,11 @@
   "description": "Native NGINX routes, certificates and activation",
   "page": "Page.qml",
   "controller": "controller.py",
-  "class": "Controller"
+  "class": "Controller",
+  "requires": {
+    "commands": [
+      "nginx"
+    ],
+    "hint": "Install NGINX to manage routes and certificates"
+  }
 }
