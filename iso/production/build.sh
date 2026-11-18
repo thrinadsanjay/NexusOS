@@ -31,6 +31,19 @@ ls "$DEB_DIR"/calamares_*nexusos*.deb >/dev/null 2>&1 || {
     echo "missing the NexusOS Calamares build in $DEB_DIR (run scripts/package/build-calamares.sh)" >&2; exit 1; }
 mkdir -p "$OUT_DIR"
 
+# The root filesystem, squashfs and ISO are built inside the container (Docker's data
+# directory) and the ISO is written to OUT_DIR: check space before downloading anything.
+NEED_GB=${NEXUSOS_ISO_MIN_FREE_GB:-30}
+docker_root="$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || echo /var/lib/docker)"
+for dir in "$docker_root" "$OUT_DIR"; do
+    free_gb=$(df -P -B1G "$dir" 2>/dev/null | awk 'NR==2 {print $4}')
+    if [ -n "$free_gb" ] && [ "$free_gb" -lt "$NEED_GB" ]; then
+        echo "not enough free disk space: ${free_gb} GB free on $(df -P "$dir" | awk 'NR==2 {print $6}') (for $dir), the build needs about ${NEED_GB} GB" >&2
+        echo "free space (docker system prune, docker builder prune -af) or enlarge the disk; override with NEXUSOS_ISO_MIN_FREE_GB" >&2
+        exit 1
+    fi
+done
+
 env_args=()
 for var in http_proxy https_proxy HTTP_PROXY HTTPS_PROXY no_proxy NO_PROXY NEXUSOS_ARCHIVE NEXUSOS_SECURITY_ARCHIVE NEXUSOS_ISO_NAME; do
     [ -n "${!var:-}" ] && env_args+=(-e "$var")
