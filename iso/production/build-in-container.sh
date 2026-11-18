@@ -59,6 +59,9 @@ mmdebstrap --mode=root --variant=apt --format=directory \
     --components=main,restricted,universe,multiverse \
     --aptopt='APT::Install-Recommends "true"' \
     --aptopt='Acquire::Retries "5"' \
+    --aptopt='Acquire::http::Timeout "60"' \
+    --aptopt='Acquire::https::Timeout "60"' \
+    --aptopt='Acquire::http::Pipeline-Depth "0"' \
     --setup-hook='mkdir -p "$1/etc/apt/preferences.d"' \
     --setup-hook='printf "Package: plasma-discover* flatpak snapd ubiquity* kubuntu-*\nPin: version *\nPin-Priority: -1\n" > "$1/etc/apt/preferences.d/nexusos-image.pref"' \
     --include="$PKGS" \
