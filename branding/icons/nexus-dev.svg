@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Nexus Dev application icon: the NexusOS hexagon with a code glyph.
+     Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Nexus Dev</title>
+  <defs>
+    <linearGradient id="hexFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B3036"/>
+      <stop offset="1" stop-color="#0B171B"/>
+    </linearGradient>
+    <linearGradient id="glyph" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C7B8FF"/>
+      <stop offset="1" stop-color="#A38BF5"/>
+    </linearGradient>
+  </defs>
+  <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="url(#hexFill)" stroke="#A38BF5" stroke-opacity="0.7" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M96 92 L60 128 L96 164" fill="none" stroke="url(#glyph)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M160 92 L196 128 L160 164" fill="none" stroke="url(#glyph)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M141 80 L115 176" stroke="#E8F1F2" stroke-width="12" stroke-linecap="round"/>
+  <path d="M186 76 L206 62" stroke="#C47750" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="208" cy="60" r="9" fill="#C47750"/>
+</svg>

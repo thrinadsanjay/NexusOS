@@ -3,6 +3,8 @@
 
 WALLPAPER_SIZES := 3840x2160 2560x1440 1920x1080 1366x768
 ICON_SIZES := 16 22 24 32 48 64 128 256 512
+# Per-tool launcher icons (same hexagon family, distinct glyph and colour)
+APP_ICONS := nexus-dev nexus-infra nexus-ai nexusos-installer
 P := debian/nexusos-branding
 
 %:
@@ -24,6 +26,9 @@ override_dh_auto_build:
 	set -e; mkdir -p debian/rendered/icons; \
 	for s in $(ICON_SIZES); do \
 	  rsvg-convert -w $$s -h $$s assets/branding/icons/nexus-n.svg -o debian/rendered/icons/nexusos-$$s.png; \
+	  for i in $(APP_ICONS); do \
+	    rsvg-convert -w $$s -h $$s assets/branding/icons/$$i.svg -o debian/rendered/icons/$$i-$$s.png; \
+	  done; \
 	done
 	find debian/rendered -name '*.png' -print0 | xargs -0 -r optipng -quiet -o2
 
@@ -46,6 +51,12 @@ override_dh_auto_install:
 	install -D -m 0644 assets/branding/icons/nexus-n.svg $(P)/usr/share/icons/hicolor/scalable/apps/nexusos.svg
 	set -e; for s in $(ICON_SIZES); do \
 	  install -D -m 0644 debian/rendered/icons/nexusos-$$s.png $(P)/usr/share/icons/hicolor/$${s}x$${s}/apps/nexusos.png; \
+	  for i in $(APP_ICONS); do \
+	    install -D -m 0644 debian/rendered/icons/$$i-$$s.png $(P)/usr/share/icons/hicolor/$${s}x$${s}/apps/$$i.png; \
+	  done; \
+	done
+	set -e; for i in $(APP_ICONS); do \
+	  install -D -m 0644 assets/branding/icons/$$i.svg $(P)/usr/share/icons/hicolor/scalable/apps/$$i.svg; \
 	done
 	# KDE wallpaper packages
 	set -e; for pkg in NexusOS NexusOS-Abstract NexusOS-Engineering; do \

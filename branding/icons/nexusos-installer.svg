@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NexusOS installer icon: the NexusOS hexagon with an arrow into a drive.
+     Original artwork, (c) NexusOS contributors, GPL-2.0-or-later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Install NexusOS</title>
+  <defs>
+    <linearGradient id="hexFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1B3036"/>
+      <stop offset="1" stop-color="#0B171B"/>
+    </linearGradient>
+    <linearGradient id="glyph" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FD3CB"/>
+      <stop offset="1" stop-color="#31C6BD"/>
+    </linearGradient>
+  </defs>
+  <polygon points="128,12 228.5,70 228.5,186 128,244 27.5,186 27.5,70" fill="url(#hexFill)" stroke="#31C6BD" stroke-opacity="0.7" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M128 62 V138" stroke="url(#glyph)" stroke-width="16" stroke-linecap="round"/>
+  <path d="M96 108 L128 140 L160 108" fill="none" stroke="url(#glyph)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="66" y="156" width="124" height="36" rx="8" fill="none" stroke="#E8F1F2" stroke-width="9"/>
+  <circle cx="168" cy="174" r="6" fill="#31C6BD"/>
+  <path d="M186 76 L206 62" stroke="#C47750" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="208" cy="60" r="9" fill="#C47750"/>
+</svg>

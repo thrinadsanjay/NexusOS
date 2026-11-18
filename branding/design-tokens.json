@@ -27,7 +27,13 @@
     "glass-stroke": "rgba(49, 198, 189, 0.28)",
     "positive": "#3DBE7A",
     "warning": "#D9A441",
-    "negative": "#D9574F"
+    "negative": "#D9574F",
+    "tool-dev": "#A38BF5",
+    "tool-dev-light": "#C7B8FF",
+    "tool-infra": "#E0AE4A",
+    "tool-infra-light": "#F3CF83",
+    "tool-ai": "#E46DB8",
+    "tool-ai-light": "#F7A8D8"
   },
   "typography": {
     "ui": {

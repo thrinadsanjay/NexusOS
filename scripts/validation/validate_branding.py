@@ -48,6 +48,10 @@ REQUIRED_SVGS = {
     "wallpapers/nexusos-abstract.svg": "abstract technology wallpaper",
     "wallpapers/nexusos-engineering.svg": "Engineering Edition wallpaper",
     "icons/nexusos-command-center.svg": "Command Center application icon",
+    "icons/nexus-dev.svg": "Nexus Dev launcher icon",
+    "icons/nexus-infra.svg": "Nexus Infra launcher icon",
+    "icons/nexus-ai.svg": "Nexus AI launcher icon",
+    "icons/nexusos-installer.svg": "installer launcher icon",
     "login/nexusos-login-background.svg": "login (SDDM) background",
 }
 
