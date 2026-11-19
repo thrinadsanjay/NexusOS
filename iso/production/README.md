@@ -13,7 +13,10 @@ iso/production/build.sh                        # build/iso: nexusos-1.0-dev-<dat
 
 Needs Docker with `--privileged` (the build chroots into the new root filesystem and mounts
 `/proc`, `/sys`, `/dev` inside the container), about 30 GB of free disk and access to the
-Ubuntu archive. Nothing on the host is modified: no host disk, loop device or bootloader is
+Ubuntu archive (about 2.6 GB of packages; set `NEXUSOS_ARCHIVE=http://<cc>.archive.ubuntu.com/ubuntu`
+for a nearby mirror). Downloaded packages are kept in `build/apt-cache/` and reused by the next
+build, so a rerun after a failure fetches only what is missing (delete the directory to start
+clean). The build checks for about 30 GB of free space first. Nothing on the host is modified: no host disk, loop device or bootloader is
 touched. Takes 20–40 minutes depending on bandwidth and CPU.
 
 ## What is in the image

@@ -30,6 +30,9 @@ done
 ls "$DEB_DIR"/calamares_*nexusos*.deb >/dev/null 2>&1 || {
     echo "missing the NexusOS Calamares build in $DEB_DIR (run scripts/package/build-calamares.sh)" >&2; exit 1; }
 mkdir -p "$OUT_DIR"
+# Ubuntu packages downloaded by earlier builds (reused; delete the directory to start clean)
+CACHE_DIR="${NEXUSOS_APT_CACHE:-$REPO_ROOT/build/apt-cache}"
+mkdir -p "$CACHE_DIR"
 
 # The root filesystem, squashfs and ISO are built inside the container (Docker's data
 # directory) and the ISO is written to OUT_DIR: check space before downloading anything.
@@ -55,5 +58,5 @@ fi
 
 echo "building NexusOS test ISO from $(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo 'working tree') into $OUT_DIR"
 docker run --rm --privileged "${env_args[@]}" "${ca_args[@]}" \
-    -v "$REPO_ROOT:/repo:ro" -v "$DEB_DIR:/debs:ro" -v "$OUT_DIR:/out" \
+    -v "$REPO_ROOT:/repo:ro" -v "$DEB_DIR:/debs:ro" -v "$OUT_DIR:/out" -v "$CACHE_DIR:/cache" \
     "$IMAGE" bash /repo/iso/production/build-in-container.sh

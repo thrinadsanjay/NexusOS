@@ -55,6 +55,16 @@ find "$WORK/localrepo" -name '*.deb' -printf '   %f\n' | sort
 PKGS=$(python3 "$REPO/iso/production/package-set.py" "$REPO/manifests" base desktop)
 log "root filesystem: $(tr ',' '\n' <<<"$PKGS" | wc -l) requested packages (+ dependencies and recommends)"
 rm -rf "$ROOTFS"
+# Downloaded packages are kept in /cache (build/apt-cache on the host) while they arrive, so a
+# rerun after a failure or on a slow connection only fetches what is missing. apt verifies
+# every cached file against the archive's checksums before using it.
+save_cache() { [ -d /cache ] && [ -d "$ROOTFS/var/cache/apt/archives" ] && cp -n "$ROOTFS"/var/cache/apt/archives/*.deb /cache/ 2>/dev/null; true; }
+if [ -d /cache ]; then
+    echo "   package cache: $(find /cache -maxdepth 1 -name '*.deb' | wc -l) files"
+    ( while sleep 30; do save_cache; done ) &
+    saver=$!
+fi
+status=0
 mmdebstrap --mode=root --variant=apt --format=directory \
     --components=main,restricted,universe,multiverse \
     --aptopt='APT::Install-Recommends "true"' \
@@ -63,13 +73,18 @@ mmdebstrap --mode=root --variant=apt --format=directory \
     --aptopt='Acquire::https::Timeout "60"' \
     --aptopt='Acquire::http::Pipeline-Depth "0"' \
     --setup-hook='mkdir -p "$1/etc/apt/preferences.d"' \
+    --setup-hook='[ -d /cache ] && mkdir -p "$1/var/cache/apt/archives" && find /cache -maxdepth 1 -name "*.deb" -exec cp -t "$1/var/cache/apt/archives/" {} + || true' \
+    --skip=download/empty \
     --setup-hook='printf "Package: plasma-discover* flatpak snapd ubiquity* kubuntu-*\nPin: version *\nPin-Priority: -1\n" > "$1/etc/apt/preferences.d/nexusos-image.pref"' \
     --include="$PKGS" \
     "$SUITE" "$ROOTFS" \
     "deb $ARCHIVE $SUITE main restricted universe multiverse" \
     "deb $ARCHIVE $SUITE-updates main restricted universe multiverse" \
     "deb $SECURITY $SUITE-security main restricted universe multiverse" \
-    "deb [trusted=yes] copy://$WORK/localrepo ./"
+    "deb [trusted=yes] copy://$WORK/localrepo ./" || status=$?
+[ -n "${saver:-}" ] && kill "$saver" 2>/dev/null
+save_cache
+[ "$status" -eq 0 ] || { echo "root filesystem failed (exit $status); downloaded packages are kept for the next run" >&2; exit "$status"; }
 
 # ---------------------------------------------------------------------------- configure the image
 log "configure the image"
