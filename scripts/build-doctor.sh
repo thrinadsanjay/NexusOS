@@ -81,7 +81,7 @@ if [ -d "$REPO_ROOT/.git" ] && command -v git >/dev/null; then
     else
         fail "$(echo "$crlf_files" | wc -l) file(s) checked out with Windows (CRLF) line endings: $(echo "$crlf_files" | head -5 | tr '\n' ' ')"
         echo "      fix (restores them from git; check 'git status' first if you edited them):"
-        echo "      git rm --cached -q -- $(echo "$crlf_files" | head -20 | tr '\n' ' ')&& git checkout -- $(echo "$crlf_files" | head -20 | tr '\n' ' ')"
+        echo "      cd $REPO_ROOT && rm -- $(echo "$crlf_files" | head -20 | tr '\n' ' ')&& git checkout -- $(echo "$crlf_files" | head -20 | tr '\n' ' ')"
     fi
 fi
 if ls "$REPO_ROOT"/build/debs/calamares_*nexusos*.deb >/dev/null 2>&1; then
