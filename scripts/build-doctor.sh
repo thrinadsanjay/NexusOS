@@ -75,8 +75,14 @@ fi
 
 # --- checkout ---------------------------------------------------------------------------------
 if [ -d "$REPO_ROOT/.git" ] && command -v git >/dev/null; then
-    crlf=$(git -C "$REPO_ROOT" ls-files --eol 2>/dev/null | awk '$2 ~ /crlf/' | wc -l)
-    [ "$crlf" -eq 0 ] && ok "line endings LF" || fail "$crlf file(s) checked out with CRLF: git config core.autocrlf false, then re-checkout (see README)"
+    crlf_files=$(git -C "$REPO_ROOT" ls-files --eol 2>/dev/null | awk '$2 ~ /crlf/ {print $NF}')
+    if [ -z "$crlf_files" ]; then
+        ok "line endings LF"
+    else
+        fail "$(echo "$crlf_files" | wc -l) file(s) checked out with Windows (CRLF) line endings: $(echo "$crlf_files" | head -5 | tr '\n' ' ')"
+        echo "      fix (restores them from git; check 'git status' first if you edited them):"
+        echo "      git rm --cached -q -- $(echo "$crlf_files" | head -20 | tr '\n' ' ')&& git checkout -- $(echo "$crlf_files" | head -20 | tr '\n' ' ')"
+    fi
 fi
 if ls "$REPO_ROOT"/build/debs/calamares_*nexusos*.deb >/dev/null 2>&1; then
     ok "NexusOS Calamares already built (next package build skips the long compile)"
