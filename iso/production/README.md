@@ -6,6 +6,18 @@ pool is unsigned, and the image has not been boot- and install-tested on hardwar
 
 ## Build a test image
 
+Check the machine first (a few seconds, changes nothing):
+
+```bash
+scripts/build-doctor.sh
+```
+
+It verifies what the build needs and how to fix what is missing: an x86_64 Linux kernel
+(physical, VM, server or WSL2), rootful Docker that may run privileged containers, about 30 GB
+free for Docker, 4+ GB RAM, access to the Ubuntu archive (proxies are passed through) and a
+correct clock. Not supported: rootless Docker/Podman, CI runners or Kubernetes pods without
+privileged containers, ARM machines.
+
 ```bash
 scripts/package/build-in-container.sh          # build/debs: the 11 NexusOS packages
 iso/production/build.sh                        # build/iso: nexusos-1.0-dev-<date>-amd64.iso (+ .sha256, .manifest)
