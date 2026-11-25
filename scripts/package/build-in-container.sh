@@ -46,10 +46,13 @@ docker run --rm "${proxy_args[@]}" "${ca_args[@]}" \
         apt-get update -qq
         apt-get install -y -qq --no-install-recommends \
             ca-certificates build-essential dpkg-dev debhelper lintian librsvg2-bin optipng plymouth-theme-spinner fonts-inter fonts-jetbrains-mono \
-            dh-python python3-all python3-setuptools pybuild-plugin-pyproject >/dev/null
+            dh-python python3-all python3-setuptools pybuild-plugin-pyproject git >/dev/null
         useradd --create-home builder
         cp -a /src /home/builder/nexusos
         rm -rf /home/builder/nexusos/build
+        # A checkout on a Windows drive (WSL /mnt/c, /mnt/e) shows every file as executable;
+        # use the modes recorded in git so debhelper does not run config files as scripts.
+        python3 /home/builder/nexusos/scripts/package/normalize-modes.py /home/builder/nexusos
         chown -R builder:builder /home/builder/nexusos
         su builder -c "NEXUSOS_BUILD_DIR=/home/builder/build /home/builder/nexusos/scripts/package/build-deb.sh --out /home/builder/build/debs $*"
         cp /home/builder/build/debs/* /out/
